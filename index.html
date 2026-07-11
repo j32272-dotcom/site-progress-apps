@@ -145,6 +145,7 @@ table.matrix tbody td.floor-cell{position:sticky;left:0;z-index:3;background:var
 table.matrix tbody tr:nth-child(even) td.floor-cell{background:#EAEDF1;}
 table.matrix tbody td.mx-cell{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:5px;text-align:center;cursor:pointer;min-width:96px;}
 table.matrix tbody td.mx-cell:hover{background:var(--blue-soft);}
+table.matrix tbody td.mx-cell.mx-selected{box-shadow:inset 0 0 0 3px var(--orange);background:var(--orange-soft);}
 .cell-pill{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;min-height:38px;border-radius:7px;font-family:var(--font-mono);}
 .cell-pill .pct{font-size:13px;font-weight:700;} .cell-pill .cnt{font-size:9.5px;opacity:.75;}
 .cell-empty{color:var(--ink-faint);font-size:16px;}
@@ -487,6 +488,37 @@ const BUCKET_CLASS = { none:'st-none', progress:'st-progress', done:'st-done', d
 const FOLLOW_STATUSES = ['waiting_material','waiting_quote','waiting_contract','waiting_cutting','pending_confirm','blocked_predecessor','waiting_billing','delayed'];
 // 卡點原因選項（每筆進度記錄可選填）
 const BLOCK_REASONS = ['待料','圖面未確認','尺寸待收測','前工項未完成','工班未進場','人力不足','鷹架／遮斷影響','業主／監造待確認','待請款','其他'];
+// 甘特圖子工序：可於「管理甘特子工序」調整名稱、顯示／隱藏或新增。
+// 每一個施工工序底下都會共用這組子工序，排程可指定到其中一個子工序。
+const DEFAULT_GANTT_SUBPROCESS_NAMES = ['骨架施作','骨架收測','包版下料','包版安裝'];
+
+function ensureGanttSubprocesses(proj){
+  if(!proj) return [];
+  if(!Array.isArray(proj.ganttSubprocesses)) proj.ganttSubprocesses = [];
+  const existingNames = new Set(proj.ganttSubprocesses.map(x=>String(x.name||'').trim()).filter(Boolean));
+  DEFAULT_GANTT_SUBPROCESS_NAMES.forEach(name=>{
+    if(!existingNames.has(name)){ proj.ganttSubprocesses.push({id:uid('gsp'), name, visible:true}); existingNames.add(name); }
+  });
+  proj.ganttSubprocesses.forEach(sp=>{ if(sp.visible===undefined) sp.visible=true; if(!sp.id) sp.id=uid('gsp'); });
+  return proj.ganttSubprocesses;
+}
+function visibleGanttSubprocesses(proj){ return ensureGanttSubprocesses(proj).filter(sp=>sp.visible!==false && String(sp.name||'').trim()); }
+function ganttSubprocessName(proj, subProcessId){
+  if(!subProcessId) return '';
+  const sp = ensureGanttSubprocesses(proj).find(x=>x.id===subProcessId);
+  return sp ? sp.name : '';
+}
+function processSummaryInfo(proj, b, process){
+  const scheds = proj.schedules.filter(s=>s.buildingId===b.id && s.processId===process.id);
+  let range = null;
+  if(scheds.length){
+    const minStart = scheds.reduce((m,s)=>{const d=fromDateStr(s.startDate);return d<m?d:m;}, fromDateStr(scheds[0].startDate));
+    const maxEnd = scheds.reduce((m,s)=>{const d=fromDateStr(s.actualCompleteDate||s.endDate);return d>m?d:m;}, fromDateStr(scheds[0].actualCompleteDate||scheds[0].endDate));
+    range = {minStart, maxEnd};
+  }
+  const avgInfo = buildingProcessAverages(proj, b).find(x=>x.process.id===process.id);
+  return {range, avg: avgInfo ? avgInfo.avg : 0};
+}
 
 function uid(prefix){ return prefix+'_'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4); }
 function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -966,8 +998,9 @@ async function loadState(){
     if(p.handoverSummary===undefined) p.handoverSummary='';
     if(!Array.isArray(p.billingItems)) p.billingItems=[];
     (p.processes||[]).forEach(pr=>{ if(pr.groupId===undefined) pr.groupId=null; });
+    ensureGanttSubprocesses(p);
     (p.records||[]).forEach(r=>{ if(!r.status) r.status = r.progress>=100?'done':'not_started'; if(r.crew===undefined) r.crew=''; if(r.photo===undefined) r.photo=null; if(r.blockReason===undefined) r.blockReason=''; });
-    (p.schedules||[]).forEach(s=>{ if(s.actualCompleteDate===undefined) s.actualCompleteDate=null; if(!Array.isArray(s.dependsOn)) s.dependsOn=[]; });
+    (p.schedules||[]).forEach(s=>{ if(s.actualCompleteDate===undefined) s.actualCompleteDate=null; if(!Array.isArray(s.dependsOn)) s.dependsOn=[]; if(s.subProcessId===undefined) s.subProcessId=null; });
   });
   if(!Array.isArray(state.quickTemplates)) state.quickTemplates = [];
   if(!state.view) state.view = 'home';
@@ -2159,7 +2192,7 @@ function renderMatrixAll(proj){
       const head = processes.map(pr=>`<th>${esc(pr.name)}</th>`).join('');
       const rows = floors.map(fl=>{
         const cells = processes.map(pr=>`<td class="mx-cell" data-b="${b.id}" data-fl="${esc(fl)}" data-pr="${pr.id}"
-            onclick="handleCellClick('${b.id}','${esc(fl)}','${pr.id}')">${cellInnerHTML(proj,b.id,fl,pr.id)}</td>`).join('');
+            onmousedown="matrixDragStart(event,this)" onmouseenter="matrixDragEnter(event,this)" onclick="matrixCellClick(event,this)">${cellInnerHTML(proj,b.id,fl,pr.id)}</td>`).join('');
         return `<tr><td class="floor-cell">${esc(fl)}</td>${cells}</tr>`;
       }).join('');
       tableHtml = `<table class="matrix"><thead><tr><th class="floor-head">樓層</th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
@@ -2187,7 +2220,7 @@ function renderMatrixAll(proj){
       <span><span class="legend-sw" style="background:${STATUS.in_progress.bg};"></span>進行中／待料／待確認</span>
       <span><span class="legend-sw" style="background:${STATUS.done.bg};"></span>完成</span>
       <span><span class="legend-sw" style="background:${STATUS.delayed.bg};"></span>延誤</span>
-      <span style="color:var(--ink-faint);">點擊格子可開啟施作記錄；進度需於編輯視窗中手動調整</span>
+      <span style="color:var(--ink-faint);">點擊格子可開啟施作記錄；從已有資料的格子拖曳可矩形套用到選取範圍，套用前會再次確認</span>
     </div>`;
 }
 
@@ -2205,7 +2238,7 @@ function renderMatrix(proj){
   const head = proj.processes.map(pr=>`<th>${esc(pr.name)}</th>`).join('');
   const rows = b.floors.map(fl=>{
     const cells = proj.processes.map(pr=>`<td class="mx-cell" data-b="${b.id}" data-fl="${esc(fl)}" data-pr="${pr.id}"
-        onclick="handleCellClick('${b.id}','${esc(fl)}','${pr.id}')">${cellInnerHTML(proj,b.id,fl,pr.id)}</td>`).join('');
+        onmousedown="matrixDragStart(event,this)" onmouseenter="matrixDragEnter(event,this)" onclick="matrixCellClick(event,this)">${cellInnerHTML(proj,b.id,fl,pr.id)}</td>`).join('');
     return `<tr><td class="floor-cell">${esc(fl)}</td>${cells}</tr>`;
   }).join('');
   return `
@@ -2217,17 +2250,88 @@ function renderMatrix(proj){
       <span><span class="legend-sw" style="background:${STATUS.in_progress.bg};"></span>進行中／待料／待確認</span>
       <span><span class="legend-sw" style="background:${STATUS.done.bg};"></span>完成</span>
       <span><span class="legend-sw" style="background:${STATUS.delayed.bg};"></span>延誤</span>
-      <span style="color:var(--ink-faint);">點擊格子可開啟施作記錄；進度需於編輯視窗中手動調整（為避免誤觸，已取消點擊自動完成與拖曳批次完成）</span>
+      <span style="color:var(--ink-faint);">點擊格子可開啟施作記錄；從已有資料的格子拖曳可矩形套用到選取範圍，套用前會再次確認</span>
     </div>`;
 }
-/* 矩陣互動（安全模式）：點一下＝開啟該樓層/工序的施作記錄編輯視窗。
-   已取消「點擊自動標記100%完成」與「拖曳批次標記完成」，避免手機或滑鼠誤觸
-   造成多樓層進度被錯誤改成完成；進度需於編輯視窗中手動調整。 */
+/* 矩陣互動：點一下＝開啟該樓層/工序的施作記錄編輯視窗；
+   拖曳＝只套用反白矩形範圍。套用時會複製起始格的施作記錄並覆蓋選取格原紀錄，避免未選取格子被誤動。 */
+let matrixDragState = {active:false, start:null, current:null, moved:false, suppressClick:false};
+function matrixCellInfo(td){ return {td, buildingId:td.dataset.b, floor:td.dataset.fl, processId:td.dataset.pr, table:td.closest('table.matrix')}; }
+function clearMatrixSelection(){ document.querySelectorAll('td.mx-cell.mx-selected').forEach(td=>td.classList.remove('mx-selected')); }
+function matrixCellsBetween(startInfo, endInfo){
+  if(!startInfo || !endInfo || startInfo.table!==endInfo.table || startInfo.buildingId!==endInfo.buildingId) return [];
+  const r1 = startInfo.td.parentElement.rowIndex, r2 = endInfo.td.parentElement.rowIndex;
+  const c1 = startInfo.td.cellIndex, c2 = endInfo.td.cellIndex;
+  const rMin=Math.min(r1,r2), rMax=Math.max(r1,r2), cMin=Math.min(c1,c2), cMax=Math.max(c1,c2);
+  const rows=[...startInfo.table.rows];
+  const cells=[];
+  for(let r=rMin; r<=rMax; r++){
+    const row=rows[r]; if(!row) continue;
+    for(let c=cMin; c<=cMax; c++){
+      const td=row.cells[c];
+      if(td && td.classList.contains('mx-cell') && td.dataset.b===startInfo.buildingId) cells.push(td);
+    }
+  }
+  return cells;
+}
+function highlightMatrixCells(cells){ clearMatrixSelection(); cells.forEach(td=>td.classList.add('mx-selected')); }
+function matrixDragStart(ev, td){
+  if(ev.button!==0) return;
+  matrixDragState = {active:true, start:matrixCellInfo(td), current:matrixCellInfo(td), moved:false, suppressClick:false};
+  highlightMatrixCells([td]);
+  ev.preventDefault();
+}
+function matrixDragEnter(ev, td){
+  if(!matrixDragState.active) return;
+  const info = matrixCellInfo(td);
+  if(info.table!==matrixDragState.start.table || info.buildingId!==matrixDragState.start.buildingId) return;
+  matrixDragState.current = info;
+  const cells = matrixCellsBetween(matrixDragState.start, info);
+  matrixDragState.moved = cells.length>1;
+  highlightMatrixCells(cells);
+}
+function matrixCellClick(ev, td){
+  if(matrixDragState.suppressClick){ ev.preventDefault(); ev.stopPropagation(); return; }
+  const info = matrixCellInfo(td);
+  openCellModal(info.buildingId, info.floor, info.processId);
+}
+function applyMatrixDrag(){
+  if(!matrixDragState.active) return;
+  const cells = matrixCellsBetween(matrixDragState.start, matrixDragState.current);
+  const dragged = matrixDragState.moved && cells.length>1;
+  const startInfo = matrixDragState.start;
+  matrixDragState.active=false;
+  if(!dragged){ setTimeout(clearMatrixSelection, 80); return; }
+  matrixDragState.suppressClick=true;
+  setTimeout(()=>{ matrixDragState.suppressClick=false; }, 220);
+  const proj=currentProject();
+  const sourceRecs = getRecords(proj.id, startInfo.buildingId, startInfo.floor, startInfo.processId);
+  if(!sourceRecs.length){ clearMatrixSelection(); showToast('起始格沒有施作記錄，請先點擊新增記錄再拖曳套用','error'); return; }
+  const b = proj.buildings.find(x=>x.id===startInfo.buildingId);
+  const pr = proj.processes.find(x=>x.id===startInfo.processId);
+  const sourceLabel = `${b?b.name:''} ${startInfo.floor} ${pr?pr.name:''}`;
+  if(!confirm(`是否將起始格「${sourceLabel}」的 ${sourceRecs.length} 筆記錄，覆蓋套用到選取的 ${cells.length} 格？`)){
+    clearMatrixSelection(); return;
+  }
+  const selectedKeys = new Set(cells.map(td=>`${td.dataset.b}|${td.dataset.fl}|${td.dataset.pr}`));
+  proj.records = proj.records.filter(r=>!selectedKeys.has(`${r.buildingId}|${r.floor}|${r.processId}`));
+  const now = Date.now();
+  cells.forEach(td=>{
+    const info = matrixCellInfo(td);
+    sourceRecs.forEach(src=>{
+      proj.records.push({
+        ...src,
+        id:uid('r'), buildingId:info.buildingId, floor:info.floor, processId:info.processId,
+        partIds:[...(src.partIds||[])], updatedAt:now
+      });
+    });
+  });
+  scheduleSave(); clearMatrixSelection(); render(); showToast(`已套用 ${cells.length} 格矩陣進度`);
+}
+document.addEventListener('mouseup', applyMatrixDrag);
 function cellMouseDown(){ /* 保留空函式以相容既有模板呼叫 */ }
 function cellMouseEnter(){ /* 保留空函式以相容既有模板呼叫 */ }
-function handleCellClick(buildingId, floor, processId){
-  openCellModal(buildingId, floor, processId);
-}
+function handleCellClick(buildingId, floor, processId){ openCellModal(buildingId, floor, processId); }
 
 /* =====================  10. 甘特圖／預定工程進度表  ===================== */
 const GT_DAY_WIDTH = 34, GT_LABEL_WIDTH = 160;
@@ -2297,11 +2401,23 @@ function clipToWindow(sd, ed, winStart, winEnd){
   return { colStart: 2+diffDays(winStart, cs), span: Math.max(1, diffDays(cs, ce)+1) };
 }
 function dateRangeArray(start,end){ const arr=[]; let d=new Date(start); while(d<=end){ arr.push(new Date(d)); d=addDays(d,1); } return arr; }
+function pushGanttProcessRows(proj, rows, pr, indented, opts){
+  const subs = visibleGanttSubprocesses(proj);
+  if(subs.length){
+    const expandKey = (opts.keyPrefix||'')+'process:'+pr.id;
+    const expanded = opts.expandAll || formState.ganttExpanded[expandKey] !== false; // 預設展開，方便看到子工序
+    rows.push({type:'process', process:pr, indented, hasChildren:true, expandKey, expanded});
+    if(expanded) subs.forEach(sp=>rows.push({type:'subprocess', process:pr, sub:sp, indented:true, parentIndented:indented}));
+  }else{
+    rows.push({type:'process', process:pr, indented:false});
+  }
+}
 function buildGanttDisplayRows(proj, opts){
-  // 建立「大項目→子項目」的顯示順序；未分組的工序維持原本單一列顯示
+  // 建立「大項目→施工工序→子工序」的顯示順序；未分組的工序維持原本單一列顯示
   // opts.expandAll=true 時（PDF匯出）全部展開；否則依 formState.ganttExpanded 決定
-  // opts.keyPrefix 用於全棟模式下區分「同一分組在不同棟」的展開狀態
+  // opts.keyPrefix 用於全棟模式下區分不同棟別／分組／工序的展開狀態
   opts = opts || {};
+  ensureGanttSubprocesses(proj);
   if(!formState.ganttExpanded) formState.ganttExpanded = {};
   const rows = [];
   const grouped = new Set();
@@ -2312,9 +2428,9 @@ function buildGanttDisplayRows(proj, opts){
     const expandKey = (opts.keyPrefix||'')+g.id;
     const expanded = opts.expandAll || !!formState.ganttExpanded[expandKey];
     rows.push({type:'group', group:g, expandKey, expanded});
-    if(expanded) members.forEach(pr=>{ rows.push({type:'process', process:pr, indented:true}); });
+    if(expanded) members.forEach(pr=>pushGanttProcessRows(proj, rows, pr, true, opts));
   });
-  proj.processes.forEach(pr=>{ if(!grouped.has(pr.id)) rows.push({type:'process', process:pr, indented:false}); });
+  proj.processes.forEach(pr=>{ if(!grouped.has(pr.id)) pushGanttProcessRows(proj, rows, pr, false, opts); });
   return rows;
 }
 function toggleGanttGroup(expandKey){
@@ -2339,7 +2455,66 @@ function groupSummaryInfo(proj, b, group){
 function fmtShortDate(d){ return (d.getMonth()+1)+'/'+d.getDate(); }
 function scheduleLabel(proj, b, s){
   const pr = proj.processes.find(x=>x.id===s.processId);
-  return `${pr?pr.name:'(未知工序)'} ${compressFloorLabel(b, s.floors)}（${s.startDate}～${s.endDate}）`;
+  const sub = ganttSubprocessName(proj, s.subProcessId);
+  const name = `${pr?pr.name:'(未知工序)'}${sub?'／'+sub:''}`;
+  return `${name} ${compressFloorLabel(b, s.floors)}（${s.startDate}～${s.endDate}）`;
+}
+
+function renderGanttProcessLikeRow(proj, b, row, days, start, end, todayS, gridRow, allMode){
+  const pr = row.process;
+  if(row.type==='process' && row.hasChildren){
+    const info = processSummaryInfo(proj, b, pr);
+    const rangeText = info.range ? `${fmtShortDate(info.range.minStart)}～${fmtShortDate(info.range.maxEnd)}` : '未排程';
+    const pad = allMode ? (row.indented?'padding-left:40px;':'padding-left:22px;') : '';
+    const label = `<div class="gt-row-label gt-clickable ${row.indented?'gt-child-label':''}" style="grid-column:1;grid-row:${gridRow};${pad}" onclick="toggleGanttGroup('${row.expandKey}')" title="點擊${row.expanded?'收合':'展開'}子工序　${esc(pr.name)}　${rangeText}　平均 ${info.avg}%">
+      <span class="gt-caret">${row.expanded?'▼':'▶'}</span>
+      <span class="gt-gh-text"><span>${esc(pr.name)}</span><span class="gt-group-sub">${rangeText}・均 ${info.avg}%</span></span>
+    </div>`;
+    const trackCells = days.map((d,i)=>{
+      const isWeekend = d.getDay()===0||d.getDay()===6;
+      return `<div class="gt-day-cell gt-group-track ${isWeekend?'gt-weekend':''}" style="grid-column:${i+2};grid-row:${gridRow};" onclick="toggleGanttGroup('${row.expandKey}')"></div>`;
+    }).join('');
+    let summaryBar='';
+    if(info.range){
+      const clip = clipToWindow(info.range.minStart, info.range.maxEnd, start, end);
+      if(clip) summaryBar = `<div class="gt-group-bar" style="grid-column:${clip.colStart} / span ${clip.span};grid-row:${gridRow};pointer-events:none;" title="${esc(pr.name)}　${toDateStr(info.range.minStart)}～${toDateStr(info.range.maxEnd)}　平均 ${info.avg}%"></div>`;
+    }
+    return label+trackCells+summaryBar;
+  }
+
+  const sub = row.type==='subprocess' ? row.sub : null;
+  const rowLabel = sub ? sub.name : pr.name;
+  const fullTitle = sub ? `${pr.name}／${sub.name}` : pr.name;
+  const pad = allMode ? (sub ? 'padding-left:58px;' : (row.indented?'padding-left:40px;':'padding-left:22px;')) : '';
+  const labelClass = `${sub || row.indented ? 'gt-child-label' : ''}`;
+  const label = `<div class="gt-row-label ${labelClass}" style="grid-column:1;grid-row:${gridRow};${pad}" title="${esc(b.name)}　${esc(fullTitle)}">${sub?'└ ':''}${esc(rowLabel)}</div>`;
+  const dayCells = days.map((d,i)=>{
+    const isWeekend = d.getDay()===0||d.getDay()===6;
+    const subArg = sub ? `,'${sub.id}'` : '';
+    return `<div class="gt-day-cell ${isWeekend?'gt-weekend':''}" style="grid-column:${i+2};grid-row:${gridRow};" ondblclick="openScheduleCreateModal('${b.id}','${pr.id}','${toDateStr(d)}'${subArg})"></div>`;
+  }).join('');
+  const bars = proj.schedules.filter(s=>{
+    if(s.buildingId!==b.id || s.processId!==pr.id) return false;
+    if(sub) return s.subProcessId===sub.id;
+    return !s.subProcessId || !visibleGanttSubprocesses(proj).length;
+  }).map(s=>{
+    const sd=fromDateStr(s.startDate), ed=fromDateStr(s.endDate);
+    const clip = clipToWindow(sd, ed, start, end);
+    if(!clip) return ''; // 排程完全在顯示範圍之外
+    const floorLabel = compressFloorLabel(b, s.floors);
+    const isLate = !s.actualCompleteDate && ed < fromDateStr(todayS);
+    const isDone = !!s.actualCompleteDate;
+    const cls = isDone ? 'gt-done' : (isLate ? 'gt-late' : '');
+    const hasDep = (s.dependsOn||[]).length>0;
+    const depNames = hasDep ? (s.dependsOn.map(depId=>{ const dep=proj.schedules.find(x=>x.id===depId); return dep?scheduleLabel(proj,b,dep):null; }).filter(Boolean).join('；')) : '';
+    const subName = ganttSubprocessName(proj, s.subProcessId);
+    const tip = `${esc(pr.name)}${subName?'／'+esc(subName):''}　${esc(floorLabel)}　${esc(s.startDate)}～${esc(s.endDate)}${s.actualCompleteDate?'　實際完成:'+esc(s.actualCompleteDate):''}${s.note?'　'+esc(s.note):''}${hasDep?'　前置任務:'+esc(depNames):''}`;
+    return `<div class="gt-bar ${cls} ${hasDep?'gt-has-dep':''}" data-sid="${s.id}" style="grid-column:${clip.colStart} / span ${clip.span};grid-row:${gridRow};" title="${tip}">
+      <div class="gt-bar-body" onclick="openScheduleEditModal('${s.id}')">${esc(floorLabel)}</div>
+      <div class="gt-bar-handle" onmousedown="ganttResizeMouseDown(event,'${s.id}')"></div>
+    </div>`;
+  }).join('');
+  return label+dayCells+bars;
 }
 function renderScheduleAll(proj){
   if(proj.buildings.length===0){
@@ -2397,27 +2572,7 @@ function renderScheduleAll(proj){
       }
       return label+trackCells+summaryBar;
     }
-    const pr = row.process;
-    const label = `<div class="gt-row-label ${row.indented?'gt-child-label':''}" style="grid-column:1;grid-row:${gridRow};${row.indented?'padding-left:40px;':'padding-left:22px;'}" title="${esc(b.name)}　${esc(pr.name)}">${esc(pr.name)}</div>`;
-    const dayCells = days.map((d,i)=>{
-      const isWeekend = d.getDay()===0||d.getDay()===6;
-      return `<div class="gt-day-cell ${isWeekend?'gt-weekend':''}" style="grid-column:${i+2};grid-row:${gridRow};" ondblclick="openScheduleCreateModal('${b.id}','${pr.id}','${toDateStr(d)}')"></div>`;
-    }).join('');
-    const bars = proj.schedules.filter(s=>s.buildingId===b.id && s.processId===pr.id).map(s=>{
-      const sd=fromDateStr(s.startDate), ed=fromDateStr(s.endDate);
-      const clip = clipToWindow(sd, ed, start, end);
-      if(!clip) return ''; // 排程完全在顯示範圍之外
-      const floorLabel = compressFloorLabel(b, s.floors);
-      const isLate = !s.actualCompleteDate && ed < fromDateStr(todayS);
-      const isDone = !!s.actualCompleteDate;
-      const cls = isDone ? 'gt-done' : (isLate ? 'gt-late' : '');
-      const hasDep = (s.dependsOn||[]).length>0;
-      return `<div class="gt-bar ${cls} ${hasDep?'gt-has-dep':''}" data-sid="${s.id}" style="grid-column:${clip.colStart} / span ${clip.span};grid-row:${gridRow};" title="${esc(b.name)}　${esc(pr.name)}　${esc(floorLabel)}　${esc(s.startDate)}～${esc(s.endDate)}">
-        <div class="gt-bar-body" onclick="openScheduleEditModal('${s.id}')">${esc(floorLabel)}</div>
-        <div class="gt-bar-handle" onmousedown="ganttResizeMouseDown(event,'${s.id}')"></div>
-      </div>`;
-    }).join('');
-    return label+dayCells+bars;
+    return renderGanttProcessLikeRow(proj, b, row, days, start, end, todayS, gridRow, true);
   }).join('');
 
   return `
@@ -2438,6 +2593,7 @@ function renderScheduleAll(proj){
     <div style="margin-top:14px;">
       <button class="btn" onclick="exportGanttPDF()">${ICO.printer} 匯出 PDF（全棟，各棟分頁）</button>
       <button class="btn" onclick="openSettingsModal('groups')">${ICO.gear} 管理大項目分組</button>
+      <button class="btn" onclick="openGanttSubprocessSettingsModal()">${ICO.gear} 管理甘特子工序</button>
     </div>`;
 }
 function renderSchedulePage(proj){
@@ -2475,29 +2631,7 @@ function renderSchedulePage(proj){
       }
       return label+trackCells+summaryBar;
     }
-    const pr = row.process;
-    const label = `<div class="gt-row-label ${row.indented?'gt-child-label':''}" style="grid-column:1;grid-row:${gridRow};" title="${esc(pr.name)}">${esc(pr.name)}</div>`;
-    const dayCells = days.map((d,i)=>{
-      const isWeekend = d.getDay()===0||d.getDay()===6;
-      return `<div class="gt-day-cell ${isWeekend?'gt-weekend':''}" style="grid-column:${i+2};grid-row:${gridRow};" ondblclick="openScheduleCreateModal('${b.id}','${pr.id}','${toDateStr(d)}')"></div>`;
-    }).join('');
-    const bars = proj.schedules.filter(s=>s.buildingId===b.id && s.processId===pr.id).map(s=>{
-      const sd=fromDateStr(s.startDate), ed=fromDateStr(s.endDate);
-      const clip = clipToWindow(sd, ed, start, end);
-      if(!clip) return ''; // 排程完全在顯示範圍之外
-      const floorLabel = compressFloorLabel(b, s.floors);
-      const isLate = !s.actualCompleteDate && ed < fromDateStr(todayS);
-      const isDone = !!s.actualCompleteDate;
-      const cls = isDone ? 'gt-done' : (isLate ? 'gt-late' : '');
-      const hasDep = (s.dependsOn||[]).length>0;
-      const depNames = hasDep ? (s.dependsOn.map(depId=>{ const dep=proj.schedules.find(x=>x.id===depId); return dep?scheduleLabel(proj,b,dep):null; }).filter(Boolean).join('；')) : '';
-      const tip = `${esc(pr.name)}　${esc(floorLabel)}　${esc(s.startDate)}～${esc(s.endDate)}${s.actualCompleteDate?'　實際完成:'+esc(s.actualCompleteDate):''}${s.note?'　'+esc(s.note):''}${hasDep?'　前置任務:'+esc(depNames):''}`;
-      return `<div class="gt-bar ${cls} ${hasDep?'gt-has-dep':''}" data-sid="${s.id}" style="grid-column:${clip.colStart} / span ${clip.span};grid-row:${gridRow};" title="${tip}">
-        <div class="gt-bar-body" onclick="openScheduleEditModal('${s.id}')">${esc(floorLabel)}</div>
-        <div class="gt-bar-handle" onmousedown="ganttResizeMouseDown(event,'${s.id}')"></div>
-      </div>`;
-    }).join('');
-    return label+dayCells+bars;
+    return renderGanttProcessLikeRow(proj, b, row, days, start, end, todayS, gridRow, false);
   }).join('');
 
   return `
@@ -2518,6 +2652,7 @@ function renderSchedulePage(proj){
     <div style="margin-top:14px;">
       <button class="btn" onclick="exportGanttPDF()">${ICO.printer} 匯出 PDF（A4橫向，日期自動分頁接續）</button>
       <button class="btn" onclick="openSettingsModal('groups')">${ICO.gear} 管理大項目分組</button>
+      <button class="btn" onclick="openGanttSubprocessSettingsModal()">${ICO.gear} 管理甘特子工序</button>
     </div>`;
 }
 function refreshScheduleBarDOM(s){
@@ -2600,8 +2735,32 @@ function buildGanttPrintHTML(proj, b){
           return `<tr style="height:${rowMm}mm;"><td class="gp-row-label gp-group-label">${esc(row.group.name)}</td>${cells}</tr>`;
         }
         const pr = row.process;
+        const sub = row.type==='subprocess' ? row.sub : null;
+        if(row.type==='process' && row.hasChildren){
+          const info = processSummaryInfo(proj, b, pr);
+          let cells = '';
+          if(info.range){
+            const sd = info.range.minStart, ed = info.range.maxEnd;
+            if(!(ed < pageStart || sd > pageEnd)){
+              const clipStart = sd < pageStart ? pageStart : sd;
+              const clipEnd = ed > pageEnd ? pageEnd : ed;
+              const startIdx = diffDays(pageStart, clipStart);
+              const span = diffDays(clipStart, clipEnd)+1;
+              if(startIdx>0) cells += `<td class="gp-day-cell" colspan="${startIdx}"></td>`;
+              cells += `<td class="gp-bar-cell" colspan="${span}"><div class="gp-bar gp-group-bar"></div></td>`;
+              const endIdx = startIdx+span;
+              if(endIdx<days.length) cells += `<td class="gp-day-cell" colspan="${days.length-endIdx}"></td>`;
+            }
+          }
+          if(!cells) cells = `<td class="gp-day-cell" colspan="${days.length}"></td>`;
+          return `<tr style="height:${rowMm}mm;"><td class="gp-row-label gp-child-label">${esc('▾ '+pr.name)}</td>${cells}</tr>`;
+        }
         const segs = proj.schedules
-          .filter(s=>s.buildingId===b.id && s.processId===pr.id)
+          .filter(s=>{
+            if(s.buildingId!==b.id || s.processId!==pr.id) return false;
+            if(sub) return s.subProcessId===sub.id;
+            return !s.subProcessId || !visibleGanttSubprocesses(proj).length;
+          })
           .map(s=>{
             const sd = fromDateStr(s.startDate), ed = fromDateStr(s.endDate);
             if(ed < pageStart || sd > pageEnd) return null; // 此排程與本頁日期範圍無重疊
@@ -2621,7 +2780,6 @@ function buildGanttPrintHTML(proj, b){
         while(i < days.length){
           const seg = segs[segPtr];
           if(seg && seg.startIdx===i){
-            // 色塊文字寬度上限＝色塊實際寬度，超出以…截斷，不會撐出格子
             const segWidthMm = seg.span * dayMm - 2;
             cells += `<td class="gp-bar-cell" colspan="${seg.span}"><div class="gp-bar ${seg.cls}" style="max-width:${segWidthMm}mm;">${esc(seg.label)}</div></td>`;
             i += seg.span; segPtr++;
@@ -2630,8 +2788,8 @@ function buildGanttPrintHTML(proj, b){
             i += 1;
           }
         }
-        const labelText = (row.indented ? '　└ ' : '') + pr.name;
-        return `<tr style="height:${rowMm}mm;"><td class="gp-row-label ${row.indented?'gp-child-label':''}">${esc(labelText)}</td>${cells}</tr>`;
+        const labelText = sub ? ('　└ '+sub.name) : ((row.indented ? '　└ ' : '') + pr.name);
+        return `<tr style="height:${rowMm}mm;"><td class="gp-row-label ${sub||row.indented?'gp-child-label':''}">${esc(labelText)}</td>${cells}</tr>`;
       }).join('');
 
       const pageNo = dpIdx * rowChunks.length + rcIdx + 1;
@@ -2684,13 +2842,13 @@ document.addEventListener('mousemove', function(e){
 });
 document.addEventListener('mouseup', function(){ if(ganttResizeState.active){ scheduleSave(); ganttResizeState={active:false,scheduleId:null}; } });
 
-function openScheduleCreateModal(buildingId, processId, dateStr){
-  formState.schedForm = {mode:'create', buildingId, processId, startDate:dateStr, endDate:dateStr, actualCompleteDate:'', floors:[], note:'', dependsOn:[]};
+function openScheduleCreateModal(buildingId, processId, dateStr, subProcessId){
+  formState.schedForm = {mode:'create', buildingId, processId, subProcessId:subProcessId||'', startDate:dateStr, endDate:dateStr, actualCompleteDate:'', floors:[], note:'', dependsOn:[]};
   renderScheduleForm();
 }
 function openScheduleEditModal(scheduleId){
   const proj = currentProject(); const s = proj.schedules.find(x=>x.id===scheduleId); if(!s) return;
-  formState.schedForm = {mode:'edit', id:s.id, buildingId:s.buildingId, processId:s.processId, startDate:s.startDate, endDate:s.endDate, actualCompleteDate:s.actualCompleteDate||'', floors:[...s.floors], note:s.note||'', dependsOn:[...(s.dependsOn||[])]};
+  formState.schedForm = {mode:'edit', id:s.id, buildingId:s.buildingId, processId:s.processId, subProcessId:s.subProcessId||'', startDate:s.startDate, endDate:s.endDate, actualCompleteDate:s.actualCompleteDate||'', floors:[...s.floors], note:s.note||'', dependsOn:[...(s.dependsOn||[])]};
   renderScheduleForm();
 }
 // 檢查若把 candidateId 設為 forId 的前置任務，是否會造成循環相依
@@ -2712,6 +2870,7 @@ function renderScheduleForm(){
   const proj = currentProject(); const fs = formState.schedForm;
   const b = proj.buildings.find(x=>x.id===fs.buildingId); const pr = proj.processes.find(x=>x.id===fs.processId);
   const floorChips = b.floors.map(fl=>`<button type="button" class="chip chip-floor ${fs.floors.includes(fl)?'selected':''}" onclick="toggleSchedFloor('${esc(fl)}')">${esc(fl)}</button>`).join('');
+  const subOptions = ensureGanttSubprocesses(proj).filter(sp=>sp.visible!==false || sp.id===fs.subProcessId).map(sp=>`<option value="${sp.id}" ${fs.subProcessId===sp.id?'selected':''}>${esc(sp.name)}${sp.visible===false?'（已隱藏）':''}</option>`).join('');
   // 前置任務候選：同一棟別、非自己、且選了不會造成循環相依的其他排程
   const candidates = proj.schedules.filter(s=>s.buildingId===fs.buildingId && (fs.mode!=='edit' || s.id!==fs.id));
   const depChips = candidates.map(s=>{
@@ -2724,6 +2883,14 @@ function renderScheduleForm(){
       <form onsubmit="return submitScheduleForm(event)">
         <div class="modal-body">
           <div class="hint" style="margin-bottom:12px;">${esc(b.name)}　・　${esc(pr.name)}</div>
+          <div class="field">
+            <label>子工序（選填）</label>
+            <select id="sched-subprocess">
+              <option value="" ${!fs.subProcessId?'selected':''}>不指定子工序（主工序）</option>
+              ${subOptions}
+            </select>
+            <div class="hint">預設子工序為：骨架施作、骨架收測、包版下料、包版安裝；可在甘特圖下方「管理甘特子工序」編輯或隱藏。</div>
+          </div>
           <div class="field">
             <label>適用樓層（可複選）</label>
             <div style="display:flex;gap:8px;margin-bottom:8px;">
@@ -2771,6 +2938,7 @@ function submitScheduleForm(e){
   let startDate = document.getElementById('sched-start').value;
   let endDate = document.getElementById('sched-end').value;
   const actualCompleteDate = document.getElementById('sched-actual').value || null;
+  const subProcessId = document.getElementById('sched-subprocess')?.value || null;
   const note = document.getElementById('sched-note').value.trim();
   if(!startDate||!endDate) return false;
   if(fromDateStr(endDate) < fromDateStr(startDate)){ const t=startDate; startDate=endDate; endDate=t; }
@@ -2795,9 +2963,9 @@ function submitScheduleForm(e){
 
   if(fs.mode==='edit'){
     const s = proj.schedules.find(x=>x.id===fs.id);
-    s.floors=fs.floors; s.startDate=startDate; s.endDate=endDate; s.actualCompleteDate=actualCompleteDate; s.note=note; s.dependsOn=fs.dependsOn;
+    s.floors=fs.floors; s.startDate=startDate; s.endDate=endDate; s.actualCompleteDate=actualCompleteDate; s.subProcessId=subProcessId; s.note=note; s.dependsOn=fs.dependsOn;
   }else{
-    proj.schedules.push({id:uid('sc'), buildingId:fs.buildingId, processId:fs.processId, floors:fs.floors, startDate, endDate, actualCompleteDate, note, dependsOn:fs.dependsOn});
+    proj.schedules.push({id:uid('sc'), buildingId:fs.buildingId, processId:fs.processId, subProcessId, floors:fs.floors, startDate, endDate, actualCompleteDate, note, dependsOn:fs.dependsOn});
   }
   scheduleSave(); closeModal(); render();
   showToast(adjusted ? '已儲存，並依前置任務自動順延開始日為 '+startDate : '已儲存預定排程');
@@ -2810,6 +2978,69 @@ function deleteSchedule(id){
   proj.schedules.forEach(s=>{ s.dependsOn = (s.dependsOn||[]).filter(depId=>depId!==id); });
   scheduleSave(); closeModal(); render();
   showToast('已刪除排程');
+}
+
+function openGanttSubprocessSettingsModal(){
+  const proj = currentProject(); ensureGanttSubprocesses(proj);
+  const rows = proj.ganttSubprocesses.map((sp,i)=>`
+    <li>
+      <span class="order-num">${i+1}</span>
+      <input type="hidden" id="gsp-id-${i}" value="${sp.id}">
+      <input type="text" id="gsp-name-${i}" value="${esc(sp.name)}" style="flex:1;padding:8px 10px;border:1.5px solid var(--line-strong);border-radius:8px;">
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-mute);white-space:nowrap;"><input type="checkbox" id="gsp-visible-${i}" ${sp.visible!==false?'checked':''}>顯示</label>
+      <button class="icon-btn" onclick="removeGanttSubprocess('${sp.id}')">${ICO.trash}</button>
+    </li>`).join('');
+  openModal(`
+    <div class="modal modal-wide">
+      <div class="modal-head"><h3>管理甘特圖子工序</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
+      <div class="modal-body">
+        <div class="hint" style="margin-bottom:12px;">這些子工序會出現在每一個施工工序底下。可改名、取消顯示，或新增自己的子工序。</div>
+        <ul class="list-manage" id="gsp-list">${rows}</ul>
+        <div class="field-row" style="align-items:flex-end;margin-top:14px;">
+          <div class="field" style="margin-bottom:0;"><label>新增子工序名稱</label><input type="text" id="gsp-new-name" placeholder="例：矽膠施打、清潔修補"></div>
+          <div class="field" style="max-width:110px;margin-bottom:0;"><button type="button" class="btn btn-block" onclick="addGanttSubprocessFromModal()">新增</button></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" onclick="closeModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveGanttSubprocessSettings()">儲存</button>
+      </div>
+    </div>`);
+}
+function readGanttSubprocessInputs(){
+  const proj = currentProject(); const result=[];
+  (proj.ganttSubprocesses||[]).forEach((sp,i)=>{
+    const id = document.getElementById('gsp-id-'+i)?.value || sp.id;
+    const name = document.getElementById('gsp-name-'+i)?.value.trim() || sp.name;
+    const visible = !!document.getElementById('gsp-visible-'+i)?.checked;
+    if(name) result.push({id, name, visible});
+  });
+  return result;
+}
+function addGanttSubprocessFromModal(){
+  const proj=currentProject();
+  const current = readGanttSubprocessInputs();
+  const name = document.getElementById('gsp-new-name')?.value.trim();
+  if(!name){ showToast('請輸入子工序名稱','error'); return; }
+  current.push({id:uid('gsp'), name, visible:true});
+  proj.ganttSubprocesses=current;
+  openGanttSubprocessSettingsModal();
+}
+function removeGanttSubprocess(id){
+  const proj=currentProject();
+  const used = (proj.schedules||[]).some(s=>s.subProcessId===id);
+  if(used && !confirm('此子工序已有排程使用，隱藏會比刪除安全。仍要刪除嗎？')) return;
+  proj.ganttSubprocesses = readGanttSubprocessInputs().filter(sp=>sp.id!==id);
+  proj.schedules.forEach(s=>{ if(s.subProcessId===id) s.subProcessId=null; });
+  openGanttSubprocessSettingsModal();
+}
+function saveGanttSubprocessSettings(){
+  const proj=currentProject();
+  proj.ganttSubprocesses = readGanttSubprocessInputs();
+  if(proj.ganttSubprocesses.length===0){
+    DEFAULT_GANTT_SUBPROCESS_NAMES.forEach(name=>proj.ganttSubprocesses.push({id:uid('gsp'),name,visible:true}));
+  }
+  scheduleSave(); closeModal(); render(); showToast('已更新甘特圖子工序');
 }
 
 /* =====================  11. 施作紀錄（搜尋／分棟／連續樓層合併）  ===================== */
