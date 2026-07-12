@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>金屬工程專案管理｜移除請款・卡點必追合併樓層版</title>
+<title>金屬工程專案管理｜各棟預定工序獨立呈現版</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -1245,6 +1245,94 @@ td.actual-cell.actual-reset-selected{
   }
 }
 
+
+/* ---------- 各棟獨立工序／部位／實際進度表 ---------- */
+.building-config-select{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:10px 12px;margin:10px 0 12px;
+  border:1px solid #BED2E3;border-radius:10px;background:#F2F7FB;
+}
+.building-config-select label{font-size:12px;font-weight:800;color:var(--navy);}
+.building-config-select select{
+  min-width:180px;padding:7px 9px;border:1.5px solid var(--line-strong);
+  border-radius:8px;background:#fff;color:var(--ink);font:inherit;
+}
+.building-config-chip{
+  margin-left:auto;padding:5px 9px;border-radius:999px;
+  background:var(--navy);color:#fff;font-size:10px;font-weight:900;white-space:nowrap;
+}
+.independent-config-note{
+  margin:8px 0 12px;padding:9px 11px;border-radius:9px;
+  background:#FFF8E8;border:1px solid #E5C27C;color:#80500A;
+  font-size:11.5px;line-height:1.6;
+}
+
+
+/* ---------- 預定進度：各棟工序／部位獨立呈現 ---------- */
+.gantt-building-configs{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:10px;
+  margin-bottom:12px;
+}
+.gantt-building-config-card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-left:4px solid var(--orange);
+  border-radius:var(--radius);
+  padding:11px 12px;
+  box-shadow:var(--shadow-sm);
+}
+.gantt-building-config-card .gbc-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+}
+.gantt-building-config-card .gbc-head strong{
+  color:var(--navy);
+  font-size:13.5px;
+}
+.gantt-building-config-card .gbc-tag{
+  padding:4px 7px;
+  border-radius:999px;
+  background:var(--blue-soft);
+  color:var(--blue);
+  font-size:9.5px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.gantt-building-config-card .gbc-line{
+  margin-top:7px;
+  color:var(--ink-mute);
+  font-size:11px;
+  line-height:1.6;
+}
+.gantt-building-config-card .gbc-line b{
+  color:var(--ink);
+}
+.gantt-building-config-card .gbc-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:9px;
+}
+.gt-building-header{
+  cursor:pointer;
+}
+.gt-building-header:hover{
+  filter:brightness(.97);
+}
+.dual-group-label.dual-building-editable{
+  cursor:pointer;
+}
+.dual-group-label.dual-building-editable:hover{
+  filter:brightness(.96);
+}
+@media(max-width:620px){
+  .gantt-building-configs{grid-template-columns:1fr;}
+}
+
 </style>
 </head>
 <body>
@@ -2098,9 +2186,212 @@ const store = {
   }
 };
 
+
+/* ---------- 各棟獨立設定資料層 ---------- */
+function clonePlain(v){ return v==null?v:JSON.parse(JSON.stringify(v)); }
+function buildingById(proj, buildingId){
+  return proj?.buildings?.find(b=>b.id===buildingId) || null;
+}
+function processById(proj,id){ return (proj?.processes||[]).find(x=>x.id===id) || null; }
+function partById(proj,id){ return (proj?.parts||[]).find(x=>x.id===id) || null; }
+
+function buildingProcesses(proj, buildingOrId){
+  const b=typeof buildingOrId==='string'?buildingById(proj,buildingOrId):buildingOrId;
+  if(!b) return [];
+  const ids=new Set(b.processIds||[]);
+  return (proj.processes||[]).filter(x=>ids.has(x.id))
+    .sort((a,c)=>(b.processIds||[]).indexOf(a.id)-(b.processIds||[]).indexOf(c.id));
+}
+function buildingParts(proj, buildingOrId){
+  const b=typeof buildingOrId==='string'?buildingById(proj,buildingOrId):buildingOrId;
+  if(!b) return [];
+  const ids=new Set(b.partIds||[]);
+  return (proj.parts||[]).filter(x=>ids.has(x.id))
+    .sort((a,c)=>(b.partIds||[]).indexOf(a.id)-(b.partIds||[]).indexOf(c.id));
+}
+function buildingProcessGroups(proj, buildingOrId){
+  const b=typeof buildingOrId==='string'?buildingById(proj,buildingOrId):buildingOrId;
+  if(!b) return [];
+  const ids=new Set(b.processGroupIds||[]);
+  return (proj.processGroups||[]).filter(x=>ids.has(x.id))
+    .sort((a,c)=>(b.processGroupIds||[]).indexOf(a.id)-(b.processGroupIds||[]).indexOf(c.id));
+}
+function actualTableFor(proj, buildingId){
+  const b=buildingById(proj,buildingId) || currentBuilding();
+  if(!b) return null;
+  if(!b.actualTable || typeof b.actualTable!=='object'){
+    const tpl=proj.actualTableTemplate || proj.actualTable || {partGroups:cloneActualGroups(),sections:cloneActualSections(),cells:{}};
+    b.actualTable={
+      ...clonePlain(tpl),
+      partGroups:clonePlain(tpl.partGroups||cloneActualGroups()),
+      sections:clonePlain(tpl.sections||cloneActualSections()),
+      cells:{}
+    };
+  }
+  if(!b.actualTable.cells || typeof b.actualTable.cells!=='object') b.actualTable.cells={};
+  return b.actualTable;
+}
+function syncActiveActualTableAlias(proj,b){
+  if(proj&&b) proj.actualTable=actualTableFor(proj,b.id);
+}
+
+function cloneConfigToBuilding(proj,b,sourceB){
+  const sourceProcesses=sourceB?buildingProcesses(proj,sourceB):
+    (proj.processTemplateNames||defaultProcessNames()).map(name=>({id:null,name,groupId:null}));
+  const sourceParts=sourceB?buildingParts(proj,sourceB):
+    (proj.partTemplateNames||defaultPartNames()).map(name=>({id:null,name}));
+  const sourceGroups=sourceB?buildingProcessGroups(proj,sourceB):[];
+
+  const groupMap=new Map();
+  const newGroups=sourceGroups.map(g=>{
+    const ng={id:uid('grp'),name:g.name};
+    groupMap.set(g.id,ng.id); return ng;
+  });
+  const processMap=new Map();
+  const newProcesses=sourceProcesses.map(pr=>{
+    const np={id:uid('pr'),name:pr.name,groupId:pr.groupId?groupMap.get(pr.groupId)||null:null};
+    if(pr.id) processMap.set(pr.id,np.id);
+    return np;
+  });
+  const partMap=new Map();
+  const newParts=sourceParts.map(pt=>{
+    const np={id:uid('pt'),name:pt.name};
+    if(pt.id) partMap.set(pt.id,np.id);
+    return np;
+  });
+
+  proj.processGroups.push(...newGroups);
+  proj.processes.push(...newProcesses);
+  proj.parts.push(...newParts);
+  b.processGroupIds=newGroups.map(x=>x.id);
+  b.processIds=newProcesses.map(x=>x.id);
+  b.partIds=newParts.map(x=>x.id);
+
+  ensureGanttSubprocessStore(proj);
+  if(sourceB){
+    buildingProcesses(proj,sourceB).forEach(oldPr=>{
+      const newPid=processMap.get(oldPr.id);
+      if(!newPid) return;
+      proj.ganttSubprocessesByProcess[newPid]=(proj.ganttSubprocessesByProcess[oldPr.id]||[])
+        .map(sp=>({id:uid('gsp'),name:sp.name,visible:sp.visible!==false}));
+    });
+  }
+
+  const sourceTable=sourceB?actualTableFor(proj,sourceB.id):(proj.actualTableTemplate||proj.actualTable);
+  b.actualTable={
+    ...(clonePlain(sourceTable)||{}),
+    partGroups:clonePlain(sourceTable?.partGroups||cloneActualGroups()),
+    sections:clonePlain(sourceTable?.sections||cloneActualSections()),
+    cells:{}
+  };
+  return {processMap,partMap};
+}
+
+function migrateProjectToIndependentBuildings(proj){
+  if(!Array.isArray(proj.processes)) proj.processes=[];
+  if(!Array.isArray(proj.parts)) proj.parts=[];
+  if(!Array.isArray(proj.processGroups)) proj.processGroups=[];
+  if(!Array.isArray(proj.buildings)) proj.buildings=[];
+  ensureGanttSubprocessStore(proj);
+
+  if(proj.buildingConfigVersion>=2){
+    proj.buildings.forEach((b,i)=>{
+      if(!Array.isArray(b.processIds)||!Array.isArray(b.partIds)||!Array.isArray(b.processGroupIds)){
+        const source=proj.buildings.find((x,j)=>j!==i&&Array.isArray(x.processIds));
+        cloneConfigToBuilding(proj,b,source||null);
+      }
+      actualTableFor(proj,b.id);
+    });
+    return;
+  }
+
+  const oldProcesses=(proj.processes||[]).map(x=>({...x}));
+  const oldParts=(proj.parts||[]).map(x=>({...x}));
+  const oldGroups=(proj.processGroups||[]).map(x=>({...x}));
+  const oldSub=clonePlain(proj.ganttSubprocessesByProcess||{});
+  const oldActual=clonePlain(proj.actualTable||{partGroups:cloneActualGroups(),sections:cloneActualSections(),cells:{}});
+
+  proj.processTemplateNames=oldProcesses.length?oldProcesses.map(x=>x.name):defaultProcessNames();
+  proj.partTemplateNames=oldParts.length?oldParts.map(x=>x.name):defaultPartNames();
+  proj.actualTableTemplate={
+    ...clonePlain(oldActual),
+    partGroups:clonePlain(oldActual.partGroups||cloneActualGroups()),
+    sections:clonePlain(oldActual.sections||cloneActualSections()),
+    cells:{}
+  };
+
+  const newProcesses=[],newParts=[],newGroups=[],newSub={};
+
+  proj.buildings.forEach(b=>{
+    const groupMap=new Map();
+    const localGroups=oldGroups.map(g=>{
+      const ng={id:uid('grp'),name:g.name};
+      groupMap.set(g.id,ng.id); return ng;
+    });
+    const processMap=new Map();
+    const localProcesses=(oldProcesses.length?oldProcesses:makeProcesses(defaultProcessNames())).map(pr=>{
+      const np={id:uid('pr'),name:pr.name,groupId:pr.groupId?groupMap.get(pr.groupId)||null:null};
+      processMap.set(pr.id,np.id); return np;
+    });
+    const partMap=new Map();
+    const localParts=(oldParts.length?oldParts:makeParts(defaultPartNames())).map(pt=>{
+      const np={id:uid('pt'),name:pt.name};
+      partMap.set(pt.id,np.id); return np;
+    });
+
+    b.processGroupIds=localGroups.map(x=>x.id);
+    b.processIds=localProcesses.map(x=>x.id);
+    b.partIds=localParts.map(x=>x.id);
+
+    const subMap=new Map();
+    oldProcesses.forEach(op=>{
+      const npid=processMap.get(op.id);
+      if(!npid) return;
+      const list=(oldSub[op.id]||[]).map(sp=>{
+        const nsp={id:uid('gsp'),name:sp.name,visible:sp.visible!==false};
+        subMap.set(sp.id,nsp.id); return nsp;
+      });
+      newSub[npid]=list;
+    });
+
+    (proj.records||[]).filter(r=>r.buildingId===b.id).forEach(r=>{
+      r.processId=processMap.get(r.processId)||r.processId;
+      r.partIds=(r.partIds||[]).map(id=>partMap.get(id)||id).filter(id=>localParts.some(p=>p.id===id));
+    });
+    (proj.schedules||[]).filter(s=>s.buildingId===b.id).forEach(s=>{
+      s.processId=processMap.get(s.processId)||s.processId;
+      if(s.subProcessId) s.subProcessId=subMap.get(s.subProcessId)||null;
+    });
+
+    const localCells={};
+    Object.entries(oldActual.cells||{}).forEach(([k,v])=>{
+      if(k.startsWith(String(b.id)+'||')) localCells[k]=clonePlain(v);
+    });
+    b.actualTable={
+      ...clonePlain(oldActual),
+      partGroups:clonePlain(oldActual.partGroups||cloneActualGroups()),
+      sections:clonePlain(oldActual.sections||cloneActualSections()),
+      cells:localCells
+    };
+
+    newGroups.push(...localGroups);
+    newProcesses.push(...localProcesses);
+    newParts.push(...localParts);
+  });
+
+  proj.processGroups=newGroups;
+  proj.processes=newProcesses;
+  proj.parts=newParts;
+  proj.ganttSubprocessesByProcess=newSub;
+  proj.ganttSubprocesses=[];
+  proj.actualTable=proj.buildings[0]?.actualTable || proj.actualTableTemplate;
+  proj.buildingConfigVersion=2;
+}
+
 function normalizeStateShape(target){
   if(!target || !Array.isArray(target.projects)) return target;
   target.projects.forEach(p=>{
+    migrateProjectToIndependentBuildings(p);
     if(!Array.isArray(p.schedules)) p.schedules=[];
     if(!Array.isArray(p.processGroups)) p.processGroups=[];
     if(!Array.isArray(p.contacts)) p.contacts=[];
@@ -2403,7 +2694,7 @@ function disableSupabaseSync(){
 
 /* ---------- 取用輔助 ---------- */
 function currentProject(){ return state.projects.find(p=>p.id===state.activeProjectId) || null; }
-function currentBuilding(){ const proj=currentProject(); if(!proj) return null; return proj.buildings.find(b=>b.id===state.activeBuildingId) || proj.buildings[0] || null; }
+function currentBuilding(){ const proj=currentProject(); if(!proj) return null; const b=proj.buildings.find(b=>b.id===state.activeBuildingId) || proj.buildings[0] || null; if(b) syncActiveActualTableAlias(proj,b); return b; }
 function getRecords(projId, buildingId, floor, processId){
   const proj = state.projects.find(p=>p.id===projId); if(!proj) return [];
   return proj.records.filter(r=>r.buildingId===buildingId && r.floor===floor && r.processId===processId);
@@ -2419,14 +2710,14 @@ function cellBucket(records){
 
 // 找出矩陣此工序應納入計算的施工部位。
 // 若實際進度表已有柱位設定，優先採用實際進度表中的柱位；否則使用專案施工部位。
-function matrixConfiguredPartIds(proj){
+function matrixConfiguredPartIds(proj,buildingId){
   const actualNames=new Set(
-    (proj.actualTable?.partGroups||[])
+    (actualTableFor(proj,buildingId)?.partGroups||[])
       .flatMap(g=>g.parts||[])
       .map(normalizePartName)
       .filter(Boolean)
   );
-  const actualIds=(proj.parts||[])
+  const actualIds=buildingParts(proj,buildingId)
     .filter(p=>actualNames.has(normalizePartName(p.name)))
     .map(p=>p.id);
 
@@ -2434,35 +2725,35 @@ function matrixConfiguredPartIds(proj){
   if(actualIds.length) return actualIds;
 
   // 否則使用專案「部位分類」中全部有效部位。
-  return (proj.parts||[])
+  return buildingParts(proj,buildingId)
     .filter(p=>normalizePartName(p.name))
     .map(p=>p.id);
 }
 
-function matrixExpectedPartIds(proj, records){
+function matrixExpectedPartIds(proj, records, buildingId){
   const usedIds=[...new Set((records||[]).flatMap(r=>r.partIds||[]))];
   if(!usedIds.length) return [];
 
   const actualNames=new Set(
-    (proj.actualTable?.partGroups||[])
+    (actualTableFor(proj,buildingId)?.partGroups||[])
       .flatMap(g=>g.parts||[])
       .map(normalizePartName)
       .filter(Boolean)
   );
-  const actualIds=(proj.parts||[])
+  const actualIds=buildingParts(proj,buildingId)
     .filter(p=>actualNames.has(normalizePartName(p.name)))
     .map(p=>p.id);
 
   // 若這一格使用實況表柱位，分母採用全部實況表柱位。
   if(actualIds.length && usedIds.some(id=>actualIds.includes(id))) return actualIds;
 
-  return (proj.parts||[])
+  return buildingParts(proj,buildingId)
     .filter(p=>normalizePartName(p.name))
     .map(p=>p.id);
 }
 
 function matrixAutoSelectionStats(proj, selectedPartIds){
-  const expectedIds=matrixConfiguredPartIds(proj);
+  const expectedIds=matrixConfiguredPartIds(proj,currentBuilding()?.id);
   const expectedSet=new Set(expectedIds);
   const selected=[...new Set((selectedPartIds||[]).filter(id=>expectedSet.has(id)))];
   const total=expectedIds.length;
@@ -2479,7 +2770,7 @@ function matrixCellStats(proj, buildingId, floor, processId){
 
   const specific=records.filter(r=>(r.partIds||[]).length>0);
   if(specific.length){
-    const expectedIds=matrixExpectedPartIds(proj,specific);
+    const expectedIds=matrixExpectedPartIds(proj,specific,buildingId);
     if(expectedIds.length){
       const progressByPart=new Map(expectedIds.map(id=>[id,0]));
       specific.forEach(r=>{
@@ -2509,7 +2800,7 @@ function matrixCellStats(proj, buildingId, floor, processId){
 function partNames(proj, ids){ if(!ids||ids.length===0) return '全區域'; return ids.map(id=>{const p=proj.parts.find(x=>x.id===id);return p?p.name:null;}).filter(Boolean).join('、'); }
 // 該棟「樓層×工序」整體平均（含未施作項目視為0%）
 function buildingProcessAverages(proj, b){
-  return proj.processes.map(pr=>{
+  return buildingProcesses(proj,b).map(pr=>{
     let sum=0;
     b.floors.forEach(fl=>{ sum += matrixCellStats(proj,b.id,fl,pr.id).avg; });
     const avg = b.floors.length ? Math.round(sum/b.floors.length) : 0;
@@ -2725,7 +3016,7 @@ function renderTopbar(proj){
       </div>
       <div class="command-scope">${showBuildings && curMode!=='all' ? bChips : ''}</div>
       <div class="command-actions">
-        ${state.view!=='home' ? `<button class="btn btn-ghost" onclick="openSettingsModal('processes','${proj.id}')">${ICO.gear} 編輯工序及部位</button>` : ''}
+        ${state.view!=='home' ? `<button class="btn btn-ghost" onclick="openSettingsModal('processes','${proj.id}','${currentBuilding()?.id||''}')">${ICO.gear} 編輯目前棟工序及部位</button>` : ''}
         <button class="btn btn-ghost" onclick="manualRefresh()">${ICO.refresh} 更新</button>
         <button class="btn btn-primary" onclick="openQuickAddModal()">${ICO.plus} 快速回報</button>
       </div>
@@ -2892,8 +3183,8 @@ function isTemplateSetupState(){
 function renderTemplateSetupHome(){
   const p=currentProject();
   const bCount=(p.buildings||[]).length;
-  const processCount=(p.processes||[]).length;
-  const partCount=(p.parts||[]).length;
+  const processCount=(p.buildings||[]).reduce((n,b)=>n+buildingProcesses(p,b).length,0);
+  const partCount=(p.buildings||[]).reduce((n,b)=>n+buildingParts(p,b).length,0);
   return `
     <div class="safe-nav-banner">
       <div><strong>模板建立模式</strong>｜目前先把案場骨架建立完整，再逐步補施工資料。</div>
@@ -3279,39 +3570,46 @@ let suppressActualClick = false;
 function normalizePartName(name){ return String(name||'').replace(/\s+/g,'').replace(/[()（）]/g,''); }
 function cloneActualGroups(){ return ACTUAL_DEFAULT_PART_GROUPS.map(g=>({name:g.name, parts:[...g.parts]})); }
 function cloneActualSections(){ return ACTUAL_DEFAULT_SECTIONS.map(s=>({...s})); }
-function ensureActualProgressSetup(proj){
-  let changed = false;
-  if(!proj.actualTable || typeof proj.actualTable!=='object'){
-    proj.actualTable = {partGroups:cloneActualGroups(), sections:cloneActualSections(), cells:{}};
-    changed = true;
-  }
-  if(!Array.isArray(proj.actualTable.partGroups) || !proj.actualTable.partGroups.length){ proj.actualTable.partGroups = cloneActualGroups(); changed=true; }
-  if(!Array.isArray(proj.actualTable.sections) || !proj.actualTable.sections.length){ proj.actualTable.sections = cloneActualSections(); changed=true; }
-  if(!proj.actualTable.cells || typeof proj.actualTable.cells!=='object'){ proj.actualTable.cells = {}; changed=true; }
-  // 與既有快速新增／編輯視窗相容：讓位置與工序可被選到
-  proj.actualTable.partGroups.flatMap(g=>g.parts||[]).forEach(name=>{
-    if(name && !proj.parts.some(p=>normalizePartName(p.name)===normalizePartName(name))){ proj.parts.push({id:uid('pt'), name}); changed=true; }
+function ensureActualProgressSetup(proj,buildingId){
+  const b=buildingById(proj,buildingId)||currentBuilding();
+  if(!b)return;
+  const table=actualTableFor(proj,b.id);
+  proj.actualTable=table;
+  let changed=false;
+  if(!Array.isArray(table.partGroups)||!table.partGroups.length){table.partGroups=cloneActualGroups();changed=true;}
+  if(!Array.isArray(table.sections)||!table.sections.length){table.sections=cloneActualSections();changed=true;}
+  if(!table.cells||typeof table.cells!=='object'){table.cells={};changed=true;}
+  const localParts=buildingParts(proj,b);
+  table.partGroups.flatMap(g=>g.parts||[]).forEach(name=>{
+    if(name&&!localParts.some(p=>normalizePartName(p.name)===normalizePartName(name))){
+      const pt={id:uid('pt'),name};proj.parts.push(pt);b.partIds.push(pt.id);localParts.push(pt);changed=true;
+    }
   });
+  const localProcesses=buildingProcesses(proj,b);
   Object.values(ACTUAL_PROCESS_BY_STATUS).forEach(name=>{
-    if(name && !proj.processes.some(p=>p.name===name)){ proj.processes.push({id:uid('pr'), name, groupId:null}); changed=true; }
+    if(name&&!localProcesses.some(p=>p.name===name)){
+      const pr={id:uid('pr'),name,groupId:null};proj.processes.push(pr);b.processIds.push(pr.id);localProcesses.push(pr);
+      ensureGanttSubprocessStore(proj)[pr.id]=[];changed=true;
+    }
   });
   if(changed) scheduleSave();
 }
-function actualPartId(proj, partName){
-  const p = proj.parts.find(x=>normalizePartName(x.name)===normalizePartName(partName));
-  return p ? p.id : null;
+function actualPartId(proj,partName,buildingId){
+  const b=buildingById(proj,buildingId)||currentBuilding();
+  return buildingParts(proj,b).find(x=>normalizePartName(x.name)===normalizePartName(partName))?.id||null;
 }
-function actualKey(buildingId, sectionKey, floor, partName){ return [buildingId, sectionKey, floor, partName].map(x=>String(x??'')).join('||'); }
-function actualProcessIdForStatus(proj, statusKey){
-  const name = ACTUAL_PROCESS_BY_STATUS[statusKey] || ACTUAL_STATUS[statusKey]?.label || '實際進度';
-  let pr = proj.processes.find(p=>p.name===name);
-  if(!pr){ pr = {id:uid('pr'), name, groupId:null}; proj.processes.push(pr); }
+function actualKey(buildingId,sectionKey,floor,partName){return [buildingId,sectionKey,floor,partName].map(x=>String(x??'')).join('||');}
+function actualProcessIdForStatus(proj,statusKey,buildingId){
+  const b=buildingById(proj,buildingId)||currentBuilding();
+  const name=ACTUAL_PROCESS_BY_STATUS[statusKey]||ACTUAL_STATUS[statusKey]?.label||'實際進度';
+  let pr=buildingProcesses(proj,b).find(x=>x.name===name);
+  if(!pr){pr={id:uid('pr'),name,groupId:null};proj.processes.push(pr);b.processIds.push(pr.id);ensureGanttSubprocessStore(proj)[pr.id]=[];}
   return pr.id;
 }
-function actualAllowedStatusKeysForSection(proj, sectionKey){
+function actualAllowedStatusKeysForSection(proj, sectionKey, buildingId){
   // 實況表分成「骨架安裝」與「包板安裝」等左側分段。
   // 從 records 推算顏色時，必須依分段限制可顯示的工序，避免拖曳骨架時包板段也跟著顯示。
-  const sec = (proj.actualTable?.sections||[]).find(s=>s.key===sectionKey) || {};
+  const sec = (actualTableFor(proj,buildingId)?.sections||[]).find(s=>s.key===sectionKey) || {};
   const label = String((sec.label || sectionKey || '')).toLowerCase();
   if(label.includes('骨') || label.includes('frame')){
     return ['layout_done','frame_material','frame_install','frame_done','frame_survey'];
@@ -3322,9 +3620,9 @@ function actualAllowedStatusKeysForSection(proj, sectionKey){
   return ACTUAL_STATUS_ORDER.filter(k=>!['blank','slash','delayed'].includes(k));
 }
 function actualStatusFromRecord(proj, buildingId, floor, partName, sectionKey){
-  const pid = actualPartId(proj, partName);
-  const processNameById = new Map(proj.processes.map(p=>[p.id,p.name]));
-  const allowedStatusKeys = actualAllowedStatusKeysForSection(proj, sectionKey);
+  const pid = actualPartId(proj, partName, buildingId);
+  const processNameById = new Map(buildingProcesses(proj,buildingId).map(p=>[p.id,p.name]));
+  const allowedStatusKeys = actualAllowedStatusKeysForSection(proj, sectionKey, buildingId);
   const targetNames = allowedStatusKeys.map(st=>ACTUAL_PROCESS_BY_STATUS[st]).filter(Boolean);
   const recs = proj.records.filter(r=> r.buildingId===buildingId && r.floor===floor && targetNames.includes(processNameById.get(r.processId)) && (!r.partIds || r.partIds.length===0 || (pid && r.partIds.includes(pid))) );
   // 依工序前後優先顯示後段成果；只在同一左側分段內推算，不跨骨架／包板分段。
@@ -3337,9 +3635,9 @@ function actualStatusFromRecord(proj, buildingId, floor, partName, sectionKey){
   return {status:'blank', note:''};
 }
 function actualCellData(proj, buildingId, sectionKey, floor, partName){
-  ensureActualProgressSetup(proj);
+  ensureActualProgressSetup(proj,buildingId);
   const k = actualKey(buildingId, sectionKey, floor, partName);
-  return proj.actualTable.cells[k] || actualStatusFromRecord(proj, buildingId, floor, partName, sectionKey);
+  return actualTableFor(proj,buildingId).cells[k] || actualStatusFromRecord(proj, buildingId, floor, partName, sectionKey);
 }
 function actualCellPresentation(data){
   const st = ACTUAL_STATUS[data?.status || 'blank'] || ACTUAL_STATUS.blank;
@@ -3350,11 +3648,11 @@ function actualFloorsForSection(proj, b, key){
   return (b.floors||[]).filter(fl=>fl!=='全區');
 }
 function actualDisplayName(name){ return name==='' ? '' : String(name); }
-function actualHeaderGroups(proj){ ensureActualProgressSetup(proj); return proj.actualTable.partGroups; }
-function actualSections(proj){ ensureActualProgressSetup(proj); return proj.actualTable.sections; }
-function actualParts(proj){ return actualHeaderGroups(proj).flatMap(g=>g.parts||[]); }
-function renderActualHeader(proj){
-  const groups = actualHeaderGroups(proj);
+function actualHeaderGroups(proj,buildingId){const b=buildingById(proj,buildingId)||currentBuilding();ensureActualProgressSetup(proj,b?.id);return actualTableFor(proj,b?.id)?.partGroups||[];}
+function actualSections(proj,buildingId){const b=buildingById(proj,buildingId)||currentBuilding();ensureActualProgressSetup(proj,b?.id);return actualTableFor(proj,b?.id)?.sections||[];}
+function actualParts(proj,buildingId){return actualHeaderGroups(proj,buildingId).flatMap(g=>g.parts||[]);}
+function renderActualHeader(proj,buildingId){
+  const groups = actualHeaderGroups(proj,buildingId);
   return `<thead>
     <tr><th class="actual-stage-col"></th><th class="actual-floor-col"></th>${groups.map(g=>`<th class="actual-group-head" colspan="${(g.parts||[]).length||1}">${esc(actualDisplayName(g.name))}</th>`).join('')}</tr>
     <tr><th class="actual-stage-col"></th><th class="actual-floor-col">樓層</th>${groups.flatMap(g=>g.parts||['']).map(p=>`<th class="actual-part-head ${p===''?'actual-empty-name':''}">${esc(actualDisplayName(p))}</th>`).join('')}</tr>
@@ -3362,7 +3660,7 @@ function renderActualHeader(proj){
 }
 function renderActualSection(proj, b, section){
   const floors = actualFloorsForSection(proj, b, section.key);
-  const parts = actualParts(proj);
+  const parts = actualParts(proj,b.id);
   if(!floors.length) return '';
   return floors.map((fl, idx)=>{
     const stageCell = idx===0 ? `<td class="actual-section-label" rowspan="${floors.length}">${esc(section.label)}</td>` : '';
@@ -3382,12 +3680,12 @@ function renderActualLegend(){
   }).join('') + `<span><span class="sw" style="background:#fff"></span>空白</span><span><span class="sw" style="background:linear-gradient(to bottom right, transparent 45%, #111 47%, #111 53%, transparent 55%)"></span>斜線</span>`;
 }
 function renderActualProgress(proj){
-  ensureActualProgressSetup(proj);
   const b = currentBuilding();
+  ensureActualProgressSetup(proj,b?.id);
   if(!b){
     return `<div class="empty-state"><h3>尚未建立棟別</h3><p>請先新增棟別後，即可查看實際進度表。</p><button class="btn btn-primary" onclick="openAddBuildingModal()">${ICO.plus} 新增棟別</button></div>`;
   }
-  const rows = actualSections(proj).map(sec=>renderActualSection(proj,b,sec)).join('');
+  const rows = actualSections(proj,b.id).map(sec=>renderActualSection(proj,b,sec)).join('');
   return `
     ${renderModuleResetToolbar('actual')}
     <div class="actual-toolbar">
@@ -3399,14 +3697,14 @@ function renderActualProgress(proj){
       <div class="actual-note">以「樓層 × 位置」呈現各柱位與面向進度。點擊格子可手動設定工序；從已設定的格子拖曳時可選取矩形範圍；只會套用到同一個左側分段內反白的矩形格子，不會跨到骨架安裝／包板安裝另一段。</div>
     </div>
     <div class="actual-legend">${renderActualLegend()}</div>
-    <div class="actual-table-wrap"><table class="actual-grid" id="actual-grid">${renderActualHeader(proj)}<tbody>${rows}</tbody></table></div>`;
+    <div class="actual-table-wrap"><table class="actual-grid" id="actual-grid">${renderActualHeader(proj,b.id)}<tbody>${rows}</tbody></table></div>`;
 }
 function actualCellInfo(td){ return {buildingId:td.dataset.b, sectionKey:td.dataset.sec, floor:td.dataset.fl, part:td.dataset.part, partIndex:Number(td.dataset.partIndex||0)}; }
 function clearActualSelection(){ document.querySelectorAll('.actual-cell.actual-selected,.actual-cell.actual-reset-selected').forEach(td=>{td.classList.remove('actual-selected');td.classList.remove('actual-reset-selected');}); }
 function actualCellsBetween(start, end){
   if(!start || !end || start.buildingId!==end.buildingId || start.sectionKey!==end.sectionKey) return [];
   const proj=currentProject(); const b=currentBuilding(); if(!proj||!b) return [];
-  const floors=actualFloorsForSection(proj,b,start.sectionKey); const parts=actualParts(proj);
+  const floors=actualFloorsForSection(proj,b,start.sectionKey); const parts=actualParts(proj,b.id);
   const fi1=floors.indexOf(start.floor), fi2=floors.indexOf(end.floor);
   const pi1=start.partIndex, pi2=end.partIndex;
   if(fi1<0 || fi2<0 || pi1<0 || pi2<0) return [];
@@ -3476,14 +3774,15 @@ function actualCellClick(ev, td){
   openActualCellModal(actualCellInfo(td));
 }
 function setActualCellData(proj, buildingId, sectionKey, floor, part, data){
-  ensureActualProgressSetup(proj);
+  ensureActualProgressSetup(proj,buildingId);
+  const table=actualTableFor(proj,buildingId);
   const k=actualKey(buildingId,sectionKey,floor,part);
-  if(!data || data.status==='blank') delete proj.actualTable.cells[k];
-  else proj.actualTable.cells[k] = {status:data.status, note:data.note||'', text:data.text||'', updatedAt:data.updatedAt||Date.now()};
+  if(!data || data.status==='blank') delete table.cells[k];
+  else table.cells[k] = {status:data.status, note:data.note||'', text:data.text||'', updatedAt:data.updatedAt||Date.now()};
   // 同步寫入一筆 records，讓首頁、今日回報與施作紀錄也能追蹤（空白／斜線不建立）
   if(data && data.status && !['blank','slash'].includes(data.status)){
-    const prId = actualProcessIdForStatus(proj,data.status);
-    const partId = actualPartId(proj, part);
+    const prId = actualProcessIdForStatus(proj,data.status,buildingId);
+    const partId = actualPartId(proj, part, buildingId);
     const existing = proj.records.find(r=>r.buildingId===buildingId && r.floor===floor && r.processId===prId && partId && (r.partIds||[]).includes(partId));
     const recStatus = data.status==='delayed' ? 'delayed' : (['layout_done','frame_material','frame_done','frame_survey','panel_cutting','panel_done','silicone','repair','clean'].includes(data.status) ? 'done' : 'in_progress');
     const progress = recStatus==='done' ? 100 : (data.status==='delayed'?0:50);
@@ -3494,11 +3793,11 @@ function setActualCellData(proj, buildingId, sectionKey, floor, part, data){
 
 function removeActualRecordForCell(proj, cell){
   const allowedNames=new Set(
-    actualAllowedStatusKeysForSection(proj,cell.sectionKey)
+    actualAllowedStatusKeysForSection(proj,cell.sectionKey,cell.buildingId)
       .map(k=>ACTUAL_PROCESS_BY_STATUS[k]).filter(Boolean)
   );
-  const partId=actualPartId(proj,cell.part);
-  const processNameById=new Map(proj.processes.map(p=>[p.id,p.name]));
+  const partId=actualPartId(proj,cell.part,cell.buildingId);
+  const processNameById=new Map(buildingProcesses(proj,cell.buildingId).map(p=>[p.id,p.name]));
 
   const next=[];
   proj.records.forEach(r=>{
@@ -3524,17 +3823,17 @@ function removeActualRecordForCell(proj, cell){
 }
 function resetActualCells(cells){
   const proj=currentProject();
-  ensureActualProgressSetup(proj);
-  (cells||[]).forEach(c=>{
-    delete proj.actualTable.cells[actualKey(c.buildingId,c.sectionKey,c.floor,c.part)];
+    (cells||[]).forEach(c=>{
+    ensureActualProgressSetup(proj,c.buildingId);
+    delete actualTableFor(proj,c.buildingId).cells[actualKey(c.buildingId,c.sectionKey,c.floor,c.part)];
     removeActualRecordForCell(proj,c);
   });
 }
 function resetAllActualProgress(){
   const proj=currentProject(),b=currentBuilding();
   if(!proj||!b) return;
-  ensureActualProgressSetup(proj);
-  const sections=actualSections(proj);
+  ensureActualProgressSetup(proj,b.id);
+  const sections=actualSections(proj,b.id);
   const floors=b.floors||[];
   const parts=actualParts(proj);
   const cells=[];
@@ -3566,17 +3865,17 @@ function saveActualCell(buildingId, sectionKey, floor, part){
   scheduleSave(); closeModal(); render(); showToast('已更新實際進度表');
 }
 function deleteActualCell(buildingId, sectionKey, floor, part){
-  const proj=currentProject(); delete proj.actualTable.cells[actualKey(buildingId,sectionKey,floor,part)];
+  const proj=currentProject(); delete actualTableFor(proj,buildingId).cells[actualKey(buildingId,sectionKey,floor,part)];
   scheduleSave(); closeModal(); render(); showToast('已清除格子');
 }
 function openActualTableSettings(){
-  const proj=currentProject(); const b=currentBuilding(); ensureActualProgressSetup(proj);
-  const groupsText = proj.actualTable.partGroups.map(g=>`${g.name}:${(g.parts||[]).join(',')}`).join('\n');
+  const proj=currentProject(); const b=currentBuilding(); ensureActualProgressSetup(proj,b?.id);
+  const table=actualTableFor(proj,b.id); const groupsText = table.partGroups.map(g=>`${g.name}:${(g.parts||[]).join(',')}`).join('\n');
   const floorsText = (b?.floors||[]).join('\n');
-  const sectionsText = proj.actualTable.sections.map(s=>s.label).join('\n');
+  const sectionsText = table.sections.map(s=>s.label).join('\n');
   document.getElementById('modal-root').innerHTML = `<div class="modal-overlay" onclick="closeModal(event)"><div class="modal modal-wide" onclick="event.stopPropagation()">
-    <div class="modal-head"><h3>編輯實際進度表欄／列</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
-    <div class="modal-body">
+    <div class="modal-head"><h3>編輯實際進度表欄／列｜${esc(b?.name||'')}</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
+    <div class="modal-body"><div class="independent-config-note">目前只修改 ${esc(b?.name||'')} 的欄名、列名與左側分段；其他棟不會跟著變更。</div>
       <div class="field"><label>欄位群組與柱位</label><textarea id="actual-groups-input" rows="7">${esc(groupsText)}</textarea><div class="actual-settings-help">格式：群組名稱:欄1,欄2,欄3。欄名可留空，也可輸入 / 作為斜線欄名。</div></div>
       <div class="field-row"><div class="field"><label>列名稱 / 樓層</label><textarea id="actual-floors-input" rows="8">${esc(floorsText)}</textarea><div class="actual-settings-help">一列一個名稱，可留空或輸入 /。</div></div><div class="field"><label>左側分段名稱</label><textarea id="actual-sections-input" rows="8">${esc(sectionsText)}</textarea><div class="actual-settings-help">一列一個分段，例如：骨架安裝、包板安裝。</div></div></div>
     </div>
@@ -3584,7 +3883,7 @@ function openActualTableSettings(){
   </div></div>`;
 }
 function saveActualTableSettings(){
-  const proj=currentProject(); const b=currentBuilding(); ensureActualProgressSetup(proj);
+  const proj=currentProject(); const b=currentBuilding(); ensureActualProgressSetup(proj,b?.id);
   const groupsRaw=document.getElementById('actual-groups-input').value.split('\n');
   const groups=[];
   groupsRaw.forEach((line,i)=>{
@@ -3594,19 +3893,19 @@ function saveActualTableSettings(){
     const parts=line.slice(pos+1).split(',').map(x=>x.trim());
     groups.push({name, parts:parts.length?parts:['']});
   });
-  if(groups.length) proj.actualTable.partGroups=groups;
+  if(groups.length) table.partGroups=groups;
   const floors=document.getElementById('actual-floors-input').value.split('\n').map(x=>x.trim());
   if(b) b.floors=floors;
   const secs=document.getElementById('actual-sections-input').value.split('\n').map(x=>x.trim()).filter(Boolean);
-  if(secs.length) proj.actualTable.sections=secs.map((label,i)=>({key:'sec'+i,label}));
+  if(secs.length) table.sections=secs.map((label,i)=>({key:'sec'+i,label}));
   // 更新 parts 清單，讓 quick add 可選
-  groups.flatMap(g=>g.parts||[]).forEach(name=>{ if(name && !proj.parts.some(p=>normalizePartName(p.name)===normalizePartName(name))) proj.parts.push({id:uid('pt'),name}); });
+  groups.flatMap(g=>g.parts||[]).forEach(name=>{ if(name&&!buildingParts(proj,b).some(p=>normalizePartName(p.name)===normalizePartName(name))){const pt={id:uid('pt'),name};proj.parts.push(pt);b.partIds.push(pt.id);} });
   state.activeBuildingId = b?.id || state.activeBuildingId;
   scheduleSave(); closeModal(); render(); showToast('已更新實際進度表欄列');
 }
 function printActualProgress(){
   const proj=currentProject(); const b=currentBuilding(); if(!proj||!b) return;
-  const tableHTML = `<table class="actual-print-table actual-grid">${renderActualHeader(proj)}<tbody>${actualSections(proj).map(sec=>renderActualSection(proj,b,sec)).join('')}</tbody></table>`;
+  const tableHTML = `<table class="actual-print-table actual-grid">${renderActualHeader(proj,b.id)}<tbody>${actualSections(proj,b.id).map(sec=>renderActualSection(proj,b,sec)).join('')}</tbody></table>`;
   const legend = `<div class="actual-print-legend">${renderActualLegend()}</div>`;
   document.getElementById('print-root').innerHTML = `<div class="actual-print-page"><div class="actual-print-head"><div><strong>${esc(proj.name)}｜${esc(b.name)}｜實際進度表</strong><br>列印時間：${esc(new Date().toLocaleString('zh-TW'))}</div><div>實際進度表 A4 橫向</div></div>${tableHTML}${legend}</div>`;
   setTimeout(()=>window.print(),100);
@@ -3702,8 +4001,8 @@ function clearAllFilter(){ formState.allFilter = { building:'', process:'', stat
 // 依篩選條件計算某棟要顯示的樓層與工序
 function applyAllFilter(proj, b){
   const f = getAllFilter();
-  let processes = proj.processes;
-  if(f.process) processes = processes.filter(pr=>pr.id===f.process);
+  let processes = buildingProcesses(proj,b);
+  if(f.process) processes = processes.filter(pr=>pr.name===f.process);
   let floors = [...b.floors];
   // 樓層範圍（依該棟樓層順序取區間，輸入單邊也可）
   if(f.floorFrom || f.floorTo){
@@ -3733,7 +4032,8 @@ function applyAllFilter(proj, b){
 function renderMatrixFilterBar(proj){
   const f = getAllFilter();
   const bOpts = proj.buildings.map(b=>`<option value="${b.id}" ${f.building===b.id?'selected':''}>${esc(b.name)}</option>`).join('');
-  const prOpts = proj.processes.map(pr=>`<option value="${pr.id}" ${f.process===pr.id?'selected':''}>${esc(pr.name)}</option>`).join('');
+  const processNames=[...new Set(proj.buildings.flatMap(b=>buildingProcesses(proj,b).map(pr=>pr.name)))];
+  const prOpts=processNames.map(name=>`<option value="${esc(name)}" ${f.process===name?'selected':''}>${esc(name)}</option>`).join('');
   const stOpts = STATUS_ORDER.map(k=>`<option value="${k}" ${f.status===k?'selected':''}>${STATUS[k].label}</option>`).join('');
   return `
   <div class="filter-bar">
@@ -3820,13 +4120,14 @@ function renderMatrix(proj){
     return `<div class="empty-state"><h3>尚未建立棟別</h3><p>請先新增此案場的棟別以開始建立進度表。</p>
       <button class="btn btn-primary" onclick="openAddBuildingModal()">${ICO.plus} 新增棟別</button></div>`;
   }
-  if(proj.processes.length===0){
+  if(buildingProcesses(proj,b).length===0){
     return `<div class="empty-state"><h3>尚未設定工序</h3><p>請先於「工序／部位設定」建立施工工序項目。</p>
       <button class="btn btn-primary" onclick="openSettingsModal('processes')">${ICO.gear} 前往設定</button></div>`;
   }
-  const head = proj.processes.map(pr=>`<th>${esc(pr.name)}</th>`).join('');
+  const localProcesses=buildingProcesses(proj,b);
+  const head = localProcesses.map(pr=>`<th>${esc(pr.name)}</th>`).join('');
   const rows = b.floors.map(fl=>{
-    const cells = proj.processes.map(pr=>`<td class="mx-cell" data-b="${b.id}" data-fl="${esc(fl)}" data-pr="${pr.id}"
+    const cells = localProcesses.map(pr=>`<td class="mx-cell" data-b="${b.id}" data-fl="${esc(fl)}" data-pr="${pr.id}"
         onmousedown="matrixDragStart(event,this)" onmouseenter="matrixDragEnter(event,this)" onclick="matrixCellClick(event,this)">${cellInnerHTML(proj,b.id,fl,pr.id)}</td>`).join('');
     return `<tr><td class="floor-cell">${esc(fl)}</td>${cells}</tr>`;
   }).join('');
@@ -4041,8 +4342,11 @@ function buildGanttDisplayRows(proj, opts){
   if(!formState.ganttExpanded) formState.ganttExpanded = {};
   const rows = [];
   const grouped = new Set();
-  proj.processGroups.forEach(g=>{
-    const members = proj.processes.filter(pr=>pr.groupId===g.id);
+  const targetBuilding=buildingById(proj,opts.buildingId)||currentBuilding();
+  const localGroups=buildingProcessGroups(proj,targetBuilding);
+  const localProcesses=buildingProcesses(proj,targetBuilding);
+  localGroups.forEach(g=>{
+    const members = localProcesses.filter(pr=>pr.groupId===g.id);
     if(members.length===0) return; // 分組底下沒有工項時不顯示空的分組列
     members.forEach(pr=>grouped.add(pr.id));
     const expandKey = (opts.keyPrefix||'')+g.id;
@@ -4050,7 +4354,7 @@ function buildGanttDisplayRows(proj, opts){
     rows.push({type:'group', group:g, expandKey, expanded});
     if(expanded) members.forEach(pr=>pushGanttProcessRows(proj, rows, pr, true, opts));
   });
-  proj.processes.forEach(pr=>{ if(!grouped.has(pr.id)) pushGanttProcessRows(proj, rows, pr, false, opts); });
+  localProcesses.forEach(pr=>{ if(!grouped.has(pr.id)) pushGanttProcessRows(proj, rows, pr, false, opts); });
   return rows;
 }
 function toggleGanttGroup(expandKey){
@@ -4060,7 +4364,7 @@ function toggleGanttGroup(expandKey){
 }
 // 大項目摘要：大項目日期＝底下各「母工序」日期總和；母工序日期再由其子工序／排程彙總。
 function groupSummaryInfo(proj, b, group){
-  const members = proj.processes.filter(pr=>pr.groupId===group.id);
+  const members = buildingProcesses(proj,b).filter(pr=>pr.groupId===group.id);
   const ranges = members.map(pr=>processSummaryInfo(proj,b,pr).range).filter(Boolean);
   let range = null;
   if(ranges.length){
@@ -4141,8 +4445,8 @@ function renderScheduleAll(proj){
   if(proj.buildings.length===0){
     return `<div class="empty-state"><h3>尚未建立棟別</h3><button class="btn btn-primary" onclick="openAddBuildingModal()">${ICO.plus} 新增棟別</button></div>`;
   }
-  if(proj.processes.length===0){
-    return `<div class="empty-state"><h3>尚未設定工序</h3><button class="btn btn-primary" onclick="openSettingsModal('processes')">${ICO.gear} 前往設定</button></div>`;
+  if(!proj.buildings.some(b=>buildingProcesses(proj,b).length)){
+    return `<div class="empty-state"><h3>各棟尚未設定預定工序</h3><p>請選擇棟別分別設定；不同棟不會共用同一份工序。</p>${proj.buildings.map(b=>`<button class="btn" onclick="openSettingsModal('processes','${proj.id}','${b.id}')">設定 ${esc(b.name)}</button>`).join(' ')}</div>`;
   }
   const {start,end} = getScheduleWindow(proj);
   const days = dateRangeArray(start,end);
@@ -4151,7 +4455,7 @@ function renderScheduleAll(proj){
   const displayRows = [];
   proj.buildings.forEach(b=>{
     displayRows.push({type:'building', b});
-    buildGanttDisplayRows(proj, {keyPrefix:b.id+':'}).forEach(r=>displayRows.push({...r, b}));
+    buildGanttDisplayRows(proj, {keyPrefix:b.id+':',buildingId:b.id}).forEach(r=>displayRows.push({...r, b}));
   });
   const headerCells = days.map((d,i)=>{
     const isToday = toDateStr(d)===todayS, isWeekend = d.getDay()===0||d.getDay()===6;
@@ -4164,7 +4468,8 @@ function renderScheduleAll(proj){
     const b = row.b;
     if(row.type==='building'){
       const scheds = proj.schedules.filter(s=>s.buildingId===b.id);
-      const label = `<div class="gt-building-header" style="grid-column:1;grid-row:${gridRow};" title="棟別：${esc(b.name)}">${esc(b.name)}</div>`;
+      const localNames=buildingProcesses(proj,b).map(x=>x.name).join('、')||'尚未設定工序';
+      const label = `<div class="gt-building-header" style="grid-column:1;grid-row:${gridRow};" onclick="openSettingsModal('processes','${proj.id}','${b.id}')" title="${esc(b.name)}｜${esc(localNames)}｜點擊編輯本棟工序">${esc(b.name)}<span style="display:block;font-size:9px;font-weight:500;opacity:.82;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(localNames)}</span></div>`;
       const trackCells = days.map((d,i)=>`<div class="gt-day-cell gt-building-track" style="grid-column:${i+2};grid-row:${gridRow};"></div>`).join('');
       let bar='';
       if(scheds.length){
@@ -4197,6 +4502,7 @@ function renderScheduleAll(proj){
   }).join('');
 
   return `
+    ${renderGanttBuildingConfigPanel(proj,proj.buildings)}
     ${renderGanttRangeBar(proj)}
     <div class="gantt-scroll" style="max-height:min(78vh,900px);">
       <div class="gantt-grid" style="grid-template-columns:${GT_LABEL_WIDTH+30}px repeat(${days.length},${GT_DAY_WIDTH}px);grid-template-rows:40px repeat(${displayRows.length},42px);">
@@ -4213,19 +4519,18 @@ function renderScheduleAll(proj){
     </div>
     <div style="margin-top:14px;">
       <button class="btn" onclick="exportGanttPDF()">${ICO.printer} 匯出 PDF（全棟，各棟分頁）</button>
-      <button class="btn" onclick="openSettingsModal('groups')">${ICO.gear} 管理大項目分組</button>
-      <button class="btn" onclick="openGanttSubprocessSettingsModal()">${ICO.gear} 管理甘特子工序</button>
+      <span class="hint">工序、部位、大項目與子工序請由上方各棟卡片分別設定；不會跨棟同步。</span>
     </div>`;
 }
 function renderClassicSchedulePage(proj){
   if(state.ganttMode==='all') return renderScheduleAll(proj);
   const b = currentBuilding();
   if(!b) return `<div class="empty-state"><h3>尚未建立棟別</h3><p>請先新增此案場的棟別，才能建立預定工程進度表。</p><button class="btn btn-primary" onclick="openAddBuildingModal()">${ICO.plus} 新增棟別</button></div>`;
-  if(proj.processes.length===0) return `<div class="empty-state"><h3>尚未設定工序</h3><button class="btn btn-primary" onclick="openSettingsModal('processes')">${ICO.gear} 前往設定</button></div>`;
+  if(buildingProcesses(proj,b).length===0) return `<div class="empty-state"><h3>${esc(b.name)} 尚未設定工序</h3><p>此棟可單獨設定，不會套用到其他棟。</p><button class="btn btn-primary" onclick="openSettingsModal('processes','${proj.id}','${b.id}')">${ICO.gear} 設定 ${esc(b.name)} 工序及部位</button></div>`;
   const {start,end} = getScheduleWindow(proj);
   const days = dateRangeArray(start,end);
   const todayS = todayStr();
-  const displayRows = buildGanttDisplayRows(proj);
+  const displayRows = buildGanttDisplayRows(proj,{buildingId:b.id});
   const headerCells = days.map((d,i)=>{
     const isToday = toDateStr(d)===todayS, isWeekend = d.getDay()===0||d.getDay()===6;
     const wd = ['日','一','二','三','四','五','六'][d.getDay()];
@@ -4256,6 +4561,7 @@ function renderClassicSchedulePage(proj){
   }).join('');
 
   return `
+    ${renderGanttBuildingConfigPanel(proj,[b])}
     ${renderGanttRangeBar(proj)}
     <div class="gantt-scroll">
       <div class="gantt-grid" style="grid-template-columns:${GT_LABEL_WIDTH}px repeat(${days.length},${GT_DAY_WIDTH}px);grid-template-rows:40px repeat(${displayRows.length},44px);">
@@ -4272,8 +4578,8 @@ function renderClassicSchedulePage(proj){
     </div>
     <div style="margin-top:14px;">
       <button class="btn" onclick="exportGanttPDF()">${ICO.printer} 匯出 PDF（A4橫向，日期自動分頁接續）</button>
-      <button class="btn" onclick="openSettingsModal('groups')">${ICO.gear} 管理大項目分組</button>
-      <button class="btn" onclick="openGanttSubprocessSettingsModal()">${ICO.gear} 管理甘特子工序</button>
+      <button class="btn" onclick="openSettingsModal('groups','${proj.id}','${b.id}')">${ICO.gear} 管理 ${esc(b.name)} 大項目</button>
+      <button class="btn" onclick="openGanttSubprocessSettingsModal(null,'${b.id}')">${ICO.gear} 管理 ${esc(b.name)} 甘特子工序</button>
     </div>`;
 }
 
@@ -4432,6 +4738,30 @@ function setGanttPresentation(mode){
   formState.ganttPresentation = mode==='compare' ? 'compare' : 'classic';
   render();
 }
+
+function renderGanttBuildingConfigPanel(proj, buildings){
+  const list=(buildings||[]).filter(Boolean);
+  if(!list.length) return '';
+  return `<div class="gantt-building-configs">${list.map(b=>{
+    const processes=buildingProcesses(proj,b);
+    const parts=buildingParts(proj,b);
+    const processText=processes.length?processes.map(x=>x.name).join('、'):'尚未設定';
+    const partText=parts.length?parts.map(x=>x.name).join('、'):'尚未設定';
+    return `<div class="gantt-building-config-card">
+      <div class="gbc-head">
+        <strong>${esc(b.name)}</strong>
+        <span class="gbc-tag">本棟獨立設定</span>
+      </div>
+      <div class="gbc-line"><b>預定工序：</b>${esc(processText)}</div>
+      <div class="gbc-line"><b>施工部位：</b>${esc(partText)}</div>
+      <div class="gbc-actions">
+        <button class="btn btn-sm" onclick="openSettingsModal('processes','${proj.id}','${b.id}')">${ICO.gear} 編輯本棟工序及部位</button>
+        ${processes.length?`<button class="btn btn-sm" onclick="openGanttSubprocessSettingsModal(null,'${b.id}')">管理本棟甘特子工序</button>`:''}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
 function renderGanttPresentationSwitch(){
   const mode=formState.ganttPresentation||'classic';
   return `<div class="gantt-presentation-switch">
@@ -4549,7 +4879,8 @@ function renderDualTrackGantt(proj){
     const gr=ri+2;
     if(row.type==='building'){
       const cells=days.map((d,i)=>`<div class="dual-group-cell" style="grid-column:${i+2};grid-row:${gr};"></div>`).join('');
-      return `<div class="dual-group-label" style="grid-column:1;grid-row:${gr};background:var(--orange);">${esc(row.b.name)}</div>${cells}`;
+      const localNames=buildingProcesses(proj,row.b).map(x=>x.name).join('、')||'尚未設定工序';
+      return `<div class="dual-group-label dual-building-editable" style="grid-column:1;grid-row:${gr};background:var(--orange);" onclick="openSettingsModal('processes','${proj.id}','${row.b.id}')" title="${esc(localNames)}｜點擊編輯本棟工序">${esc(row.b.name)}<span style="display:block;font-size:9px;font-weight:500;opacity:.86;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(localNames)}</span></div>${cells}`;
     }
     if(row.type==='group'){
       const cells=days.map((d,i)=>`<div class="dual-group-cell" style="grid-column:${i+2};grid-row:${gr};"></div>`).join('');
@@ -4605,6 +4936,7 @@ function renderDualTrackGantt(proj){
     ?`<div class="dual-today-line" style="grid-column:${todayIdx+2};grid-row:1/span ${rows.length+1};"></div>`:'';
 
   return `
+    ${renderGanttBuildingConfigPanel(proj,buildings)}
     ${renderGanttRangeBar(proj)}
     <div class="dual-summary-row">
       <div class="dual-summary-card"><div class="dsc-label">目前計畫進度</div><div class="dsc-value">${avgPlan}%</div><div class="dsc-sub">依今日日期與預定工期推算</div></div>
@@ -4629,8 +4961,7 @@ function renderDualTrackGantt(proj){
     <div style="margin-top:14px;">
       <button class="btn" onclick="exportDualGanttPDF()">${ICO.printer} 匯出預計 vs 實際 PDF（A4橫向）</button>
       <button class="btn" onclick="setGanttPresentation('classic')">返回原甘特圖編輯排程</button>
-      <button class="btn" onclick="openSettingsModal('groups')">${ICO.gear} 管理大項目分組</button>
-      <button class="btn" onclick="openGanttSubprocessSettingsModal()">${ICO.gear} 管理甘特子工序</button>
+      <span class="hint">${allMode?'請由上方各棟卡片分別編輯工序與部位。':'目前只顯示 '+esc(buildings[0]?.name||'目前棟別')+' 的獨立工序。'}</span>
     </div>`;
 }
 
@@ -4667,7 +4998,7 @@ function buildGanttPrintHTML(proj, b){
   const maxDaysInPage = Math.max(1, ...dayPages.map(p=>p.length));
   const dayMm = Math.min(12, Math.floor(((PAGE_W - labelMm) / maxDaysInPage) * 10) / 10);
   // 列高依列數自適應：列多時自動壓縮（下限 5mm），仍放不下就垂直分頁
-  const allRows = buildGanttDisplayRows(proj, {expandAll:true});
+  const allRows = buildGanttDisplayRows(proj, {expandAll:true,buildingId:b.id});
   const dateRowMm = 8;
   const availH = PAGE_H - dateRowMm;
   let rowMm = 9;
@@ -5011,7 +5342,7 @@ function exportDualGanttPDF(){
 
 function exportGanttPDF(){
   const proj = currentProject();
-  if(proj.processes.length===0){ showToast('尚未設定工序','error'); return; }
+  if(!proj.buildings.some(b=>buildingProcesses(proj,b).length)){ showToast('尚未設定工序','error'); return; }
   const printRoot = document.getElementById('print-root');
   if(state.ganttMode==='all'){
     if(proj.buildings.length===0){ showToast('尚未建立棟別','error'); return; }
@@ -5182,40 +5513,63 @@ function deleteSchedule(id){
   showToast('已刪除排程');
 }
 
-function openGanttSubprocessSettingsModal(processId){
-  const proj = currentProject(); ensureGanttSubprocessStore(proj);
-  if(processId) formState.gspProcessId = processId;
-  if(!formState.gspProcessId || !proj.processes.some(pr=>pr.id===formState.gspProcessId)) formState.gspProcessId = proj.processes[0]?.id || '';
-  const selectedProcessId = formState.gspProcessId;
-  const selectedProcess = proj.processes.find(pr=>pr.id===selectedProcessId);
-  if(!selectedProcess){ showToast('請先建立工序','error'); return; }
-  const processOptions = proj.processes.map(pr=>`<option value="${pr.id}" ${pr.id===selectedProcessId?'selected':''}>${esc(pr.name)}</option>`).join('');
-  const list = ganttSubprocessesForProcess(proj, selectedProcessId, true);
-  const rows = list.map((sp,i)=>`
+function openGanttSubprocessSettingsModal(processId,buildingId){
+  const proj=currentProject();
+  ensureGanttSubprocessStore(proj);
+
+  if(buildingId) formState.gspBuildingId=buildingId;
+  const b=buildingById(proj,formState.gspBuildingId)||currentBuilding()||proj.buildings[0];
+  if(!b){showToast('請先建立棟別','error');return;}
+  formState.gspBuildingId=b.id;
+
+  const localProcesses=buildingProcesses(proj,b);
+  if(processId) formState.gspProcessId=processId;
+  if(!formState.gspProcessId||!localProcesses.some(pr=>pr.id===formState.gspProcessId)){
+    formState.gspProcessId=localProcesses[0]?.id||'';
+  }
+
+  const selectedProcessId=formState.gspProcessId;
+  const selectedProcess=localProcesses.find(pr=>pr.id===selectedProcessId);
+  if(!selectedProcess){
+    showToast(`${b.name} 尚未建立工序`,'error');
+    openSettingsModal('processes',proj.id,b.id);
+    return;
+  }
+
+  const buildingOptions=proj.buildings.map(x=>`<option value="${x.id}" ${x.id===b.id?'selected':''}>${esc(x.name)}</option>`).join('');
+  const processOptions=localProcesses.map(pr=>`<option value="${pr.id}" ${pr.id===selectedProcessId?'selected':''}>${esc(pr.name)}</option>`).join('');
+  const list=ganttSubprocessesForProcess(proj,selectedProcessId,true);
+  const rows=list.map((sp,i)=>`
     <li>
       <span class="order-num">${i+1}</span>
       <input type="hidden" id="gsp-id-${i}" value="${sp.id}">
       <input type="text" id="gsp-name-${i}" value="${esc(sp.name)}" style="flex:1;padding:8px 10px;border:1.5px solid var(--line-strong);border-radius:8px;">
       <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-mute);white-space:nowrap;"><input type="checkbox" id="gsp-visible-${i}" ${sp.visible!==false?'checked':''}>顯示</label>
       <button class="icon-btn" onclick="removeGanttSubprocess('${sp.id}')">${ICO.trash}</button>
-    </li>`).join('') || `<li><span class="hint">此母工序目前沒有子工序；可新增，或套用預設四項。</span></li>`;
+    </li>`).join('')||`<li><span class="hint">此母工序目前沒有子工序；可新增或套用預設。</span></li>`;
+
   openModal(`
     <div class="modal modal-wide">
-      <div class="modal-head"><h3>管理甘特圖子工序</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
+      <div class="modal-head"><h3>管理甘特圖子工序｜${esc(b.name)}</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
       <div class="modal-body">
-        <div class="field">
-          <label>選擇母工序</label>
-          <select id="gsp-process-select" onchange="switchGanttSubprocessSettings(this.value)">${processOptions}</select>
-          <div class="hint">目前管理：${esc(selectedProcess.name)}。子工序只會出現在這個母工序底下，不會套用到其他工序。</div>
+        <div class="building-config-select">
+          <label>目前棟別</label>
+          <select onchange="switchGanttSubprocessBuilding(this.value)">${buildingOptions}</select>
+          <span class="building-config-chip">各棟獨立</span>
         </div>
-        <div class="hint" style="margin-bottom:12px;">母工序日期會由它底下的子工序排程自動彙總；大項目日期再由母工序彙總，兩層不可混在一起。</div>
+        <div class="independent-config-note">此處新增或修改的子工序，只會套用到 ${esc(b.name)}。例如 AB棟可有「包板＋欄杆」，CD棟可只保留「欄杆」。</div>
+        <div class="field">
+          <label>選擇 ${esc(b.name)} 的母工序</label>
+          <select id="gsp-process-select" onchange="switchGanttSubprocessSettings(this.value)">${processOptions}</select>
+          <div class="hint">目前管理：${esc(selectedProcess.name)}。不會新增到其他棟的同名工序。</div>
+        </div>
         <ul class="list-manage" id="gsp-list">${rows}</ul>
         <div class="field-row" style="align-items:flex-end;margin-top:14px;">
           <div class="field" style="margin-bottom:0;"><label>新增子工序名稱</label><input type="text" id="gsp-new-name" placeholder="例：矽膠施打、清潔修補"></div>
           <div class="field" style="max-width:110px;margin-bottom:0;"><button type="button" class="btn btn-block" onclick="addGanttSubprocessFromModal()">新增</button></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-          <button type="button" class="btn" onclick="applyDefaultGanttSubprocessesFromModal()">套用預設：骨架施作／骨架收測／包版下料／包版安裝</button>
+          <button type="button" class="btn" onclick="applyDefaultGanttSubprocessesFromModal()">套用預設四項</button>
           <button type="button" class="btn" onclick="clearCurrentGanttSubprocesses()">清空此工序子工序</button>
         </div>
       </div>
@@ -5225,7 +5579,15 @@ function openGanttSubprocessSettingsModal(processId){
       </div>
     </div>`);
 }
-function switchGanttSubprocessSettings(processId){ formState.gspProcessId = processId; openGanttSubprocessSettingsModal(processId); }
+function switchGanttSubprocessSettings(processId){
+  formState.gspProcessId=processId;
+  openGanttSubprocessSettingsModal(processId,formState.gspBuildingId);
+}
+function switchGanttSubprocessBuilding(buildingId){
+  formState.gspBuildingId=buildingId;
+  formState.gspProcessId='';
+  openGanttSubprocessSettingsModal(null,buildingId);
+}
 function readGanttSubprocessInputs(){
   const proj = currentProject(); const processId=formState.gspProcessId; const current=ganttSubprocessesForProcess(proj, processId, true); const result=[];
   current.forEach((sp,i)=>{
@@ -5243,13 +5605,13 @@ function addGanttSubprocessFromModal(){
   if(!name){ showToast('請輸入子工序名稱','error'); return; }
   current.push({id:uid('gsp'), name, visible:true});
   ensureGanttSubprocessStore(proj)[processId]=current;
-  openGanttSubprocessSettingsModal(processId);
+  openGanttSubprocessSettingsModal(processId,formState.gspBuildingId);
 }
 function applyDefaultGanttSubprocessesFromModal(){
   const proj=currentProject(); const processId=formState.gspProcessId;
   ensureGanttSubprocessStore(proj)[processId] = readGanttSubprocessInputs();
   applyDefaultGanttSubprocesses(proj, processId);
-  openGanttSubprocessSettingsModal(processId);
+  openGanttSubprocessSettingsModal(processId,formState.gspBuildingId);
 }
 function clearCurrentGanttSubprocesses(){
   const proj=currentProject(); const processId=formState.gspProcessId;
@@ -5257,7 +5619,7 @@ function clearCurrentGanttSubprocesses(){
   if(used && !confirm('此母工序已有排程使用子工序。清空後，這些排程會改回母工序列。確定清空？')) return;
   ensureGanttSubprocessStore(proj)[processId]=[];
   proj.schedules.forEach(s=>{ if(s.processId===processId) s.subProcessId=null; });
-  openGanttSubprocessSettingsModal(processId);
+  openGanttSubprocessSettingsModal(processId,formState.gspBuildingId);
 }
 function removeGanttSubprocess(id){
   const proj=currentProject(); const processId=formState.gspProcessId;
@@ -5265,7 +5627,7 @@ function removeGanttSubprocess(id){
   if(used && !confirm('此子工序已有排程使用，隱藏會比刪除安全。仍要刪除嗎？')) return;
   ensureGanttSubprocessStore(proj)[processId] = readGanttSubprocessInputs().filter(sp=>sp.id!==id);
   proj.schedules.forEach(s=>{ if(s.processId===processId && s.subProcessId===id) s.subProcessId=null; });
-  openGanttSubprocessSettingsModal(processId);
+  openGanttSubprocessSettingsModal(processId,formState.gspBuildingId);
 }
 function saveGanttSubprocessSettings(){
   const proj=currentProject(); const processId=formState.gspProcessId;
@@ -5290,7 +5652,7 @@ function recordMatchesFilter(proj, b, pr, r, tokens, dateStr){
 function groupRecordsForDisplay(proj, b, tokens, dateStr){
   const idx = new Map(b.floors.map((f,i)=>[f,i]));
   const rows = [];
-  proj.processes.forEach(pr=>{
+  buildingProcesses(proj,b).forEach(pr=>{
     const recs = proj.records.filter(r=>r.buildingId===b.id && r.processId===pr.id && recordMatchesFilter(proj,b,pr,r,tokens,dateStr));
     if(recs.length===0) return;
     const bySig = new Map();
@@ -5441,10 +5803,13 @@ function submitAddBuilding(e){
   const top = document.getElementById('nb-top').value, rC = document.getElementById('nb-r').value, bottom = document.getElementById('nb-bottom').value;
   if(!name) return false;
   const floors = generateFloors(top, rC, bottom);
+  const sourceBuilding=currentBuilding();
   const b = {id:uid('b'), name, floors};
-  proj.buildings.push(b); state.activeBuildingId=b.id;
+  proj.buildings.push(b);
+  cloneConfigToBuilding(proj,b,sourceBuilding||null);
+  state.activeBuildingId=b.id;
   scheduleSave(); closeModal(); render();
-  showToast('已新增棟別「'+name+'」，共 '+floors.length+' 個樓層');
+  showToast('已新增棟別「'+name+'」，並複製一份獨立工序／部位模板');
   return false;
 }
 function openEditBuildingModal(id){
@@ -5482,211 +5847,182 @@ function submitEditBuilding(e,id){
 function deleteBuilding(id){
   const proj = currentProject(); const b = proj.buildings.find(x=>x.id===id); if(!b) return;
   if(!confirm(`確定要刪除棟別「${b.name}」嗎？此操作將刪除該棟所有進度記錄與排程，無法復原。`)) return;
+  const procIds=new Set(b.processIds||[]);
+  const partIds=new Set(b.partIds||[]);
+  const groupIds=new Set(b.processGroupIds||[]);
   proj.buildings = proj.buildings.filter(x=>x.id!==id);
   proj.records = proj.records.filter(r=>r.buildingId!==id);
   proj.schedules = proj.schedules.filter(s=>s.buildingId!==id);
+  proj.processes = proj.processes.filter(x=>!procIds.has(x.id));
+  proj.parts = proj.parts.filter(x=>!partIds.has(x.id));
+  proj.processGroups = proj.processGroups.filter(x=>!groupIds.has(x.id));
+  procIds.forEach(pid=>{ if(proj.ganttSubprocessesByProcess) delete proj.ganttSubprocessesByProcess[pid]; });
   if(state.activeBuildingId===id) state.activeBuildingId = proj.buildings[0]?.id || null;
   scheduleSave(); closeModal(); render();
   showToast('已刪除棟別');
 }
 
-/* ---------- 工序／部位／大項目分組 設定 ---------- */
-function openSettingsModal(tab, projectId){
+/* ---------- 工序／部位／大項目分組 設定（各棟獨立） ---------- */
+function openSettingsModal(tab, projectId, buildingId){
   formState.settingsProjectId = projectId || state.activeProjectId;
+  const proj=state.projects.find(p=>p.id===formState.settingsProjectId)||currentProject();
+  formState.settingsBuildingId = buildingId || state.activeBuildingId || proj?.buildings?.[0]?.id || '';
   formState.settingsTab = tab || 'processes';
   renderSettingsModal();
 }
 function settingsProject(){
   return state.projects.find(p=>p.id===formState.settingsProjectId) || currentProject();
 }
+function settingsBuilding(){
+  const proj=settingsProject();
+  return proj?.buildings?.find(b=>b.id===formState.settingsBuildingId) || proj?.buildings?.[0] || null;
+}
+function switchSettingsBuilding(id){
+  formState.settingsBuildingId=id;
+  renderSettingsModal();
+}
 function renderSettingsModal(){
-  const proj = settingsProject(); const tab = formState.settingsTab||'processes';
-  const groupOptions = proj.processGroups.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
-  const procList = proj.processes.map((pr,i)=>{
+  const proj=settingsProject(),b=settingsBuilding(),tab=formState.settingsTab||'processes';
+  if(!proj||!b){ showToast('請先建立棟別','error'); return; }
+  const processes=buildingProcesses(proj,b);
+  const parts=buildingParts(proj,b);
+  const groups=buildingProcessGroups(proj,b);
+  const groupOptions=groups.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
+  const buildingOptions=proj.buildings.map(x=>`<option value="${x.id}" ${x.id===b.id?'selected':''}>${esc(x.name)}</option>`).join('');
+
+  const procList=processes.map((pr,i)=>{
     const subCount=ganttSubprocessesForProcess(proj,pr.id,true).length;
     return `<li><span class="order-num">${i+1}</span>
       <span class="settings-item-name"><strong>${esc(pr.name)}</strong><small>${subCount?`${subCount} 個甘特子工序`:'未設定子工序'}</small></span>
-      <select class="proc-group-select" onchange="setProcessGroup('${pr.id}', this.value)" title="所屬大項目">
-        <option value="">未分組</option>${groupOptions.replace(`value="${pr.groupId}"`, `value="${pr.groupId}" selected`)}
+      <select class="proc-group-select" onchange="setProcessGroup('${pr.id}',this.value)">
+        <option value="">未分組</option>${groupOptions.replace(`value="${pr.groupId}"`,`value="${pr.groupId}" selected`)}
       </select>
-      <button class="icon-btn" onclick="renameProcess('${pr.id}')" title="重新命名">${ICO.edit}</button>
+      <button class="icon-btn" onclick="renameProcess('${pr.id}')">${ICO.edit}</button>
       <button class="icon-btn" onclick="moveProcess('${pr.id}',-1)" ${i===0?'disabled':''}>${ICO.up}</button>
-      <button class="icon-btn" onclick="moveProcess('${pr.id}',1)" ${i===proj.processes.length-1?'disabled':''}>${ICO.down}</button>
-      <button class="icon-btn" onclick="deleteProcess('${pr.id}')" title="刪除工序">${ICO.trash}</button>
+      <button class="icon-btn" onclick="moveProcess('${pr.id}',1)" ${i===processes.length-1?'disabled':''}>${ICO.down}</button>
+      <button class="icon-btn" onclick="deleteProcess('${pr.id}')">${ICO.trash}</button>
     </li>`;
-  }).join('') || '<li style="color:var(--ink-faint);">尚無工序，請於下方新增</li>';
-  const partList = proj.parts.map(pt=>`<li>
-    <span class="settings-item-name"><strong>${esc(pt.name)}</strong><small>只屬於 ${esc(proj.name)}</small></span>
-    <button class="icon-btn" onclick="renamePart('${pt.id}')" title="重新命名">${ICO.edit}</button>
-    <button class="icon-btn" onclick="deletePart('${pt.id}')" title="刪除部位">${ICO.trash}</button>
-  </li>`).join('') || '<li style="color:var(--ink-faint);">尚無部位分類，請於下方新增</li>';
-  const groupList = proj.processGroups.map(g=>{
-    const memberCount = proj.processes.filter(pr=>pr.groupId===g.id).length;
-    return `<li><span class="lname">${esc(g.name)}</span><span class="hint" style="margin:0 8px;">(${memberCount} 個工項)</span>
+  }).join('')||'<li class="hint">本棟尚無工序</li>';
+
+  const partList=parts.map(pt=>`<li>
+    <span class="settings-item-name"><strong>${esc(pt.name)}</strong><small>只屬於 ${esc(b.name)}</small></span>
+    <button class="icon-btn" onclick="renamePart('${pt.id}')">${ICO.edit}</button>
+    <button class="icon-btn" onclick="deletePart('${pt.id}')">${ICO.trash}</button>
+  </li>`).join('')||'<li class="hint">本棟尚無部位</li>';
+
+  const groupList=groups.map(g=>{
+    const memberCount=processes.filter(pr=>pr.groupId===g.id).length;
+    return `<li><span class="lname">${esc(g.name)}</span><span class="hint">(${memberCount} 個工項)</span>
       <button class="icon-btn" onclick="openRenameGroupModal('${g.id}')">${ICO.edit}</button>
       <button class="icon-btn" onclick="deleteProcessGroup('${g.id}')">${ICO.trash}</button></li>`;
-  }).join('') || '<li style="color:var(--ink-faint);">尚無大項目分組，請於下方新增</li>';
-  openModal(`
-    <div class="modal modal-wide">
-      <div class="modal-head"><h3>編輯工序及部位｜${esc(proj.name)}</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
-      <div class="modal-body">
-        <div class="project-setting-context">
-          <div><strong>目前只編輯：${esc(proj.name)}</strong><span>新增、重新命名、排序或刪除工序及部位，只會影響這個案場；其他案場的設定與資料不會跟著改變。</span></div>
-          <div class="project-setting-lock">案場獨立</div>
-        </div>
-        <div class="tabs" style="margin-top:0;display:flex;">
-          <button class="tab-btn ${tab==='processes'?'active':''}" onclick="formState.settingsTab='processes';renderSettingsModal()">施工工序</button>
-          <button class="tab-btn ${tab==='groups'?'active':''}" onclick="formState.settingsTab='groups';renderSettingsModal()">大項目分組</button>
-          <button class="tab-btn ${tab==='parts'?'active':''}" onclick="formState.settingsTab='parts';renderSettingsModal()">部位分類</button>
-        </div>
-        ${tab==='processes' ? `
-          <p class="hint" style="margin:12px 0;">工序將依序作為矩陣的欄位／甘特圖的子項目列，可用上下箭頭調整順序，並可指定所屬大項目分組（甘特圖會依分組整理顯示）。</p>
-          <ul class="list-manage">${procList}</ul>
-          <form onsubmit="return addProcess(event)" style="display:flex;gap:8px;margin-top:12px;">
-            <input type="text" id="new-process" placeholder="新增工序名稱，例：格柵" style="flex:1;padding:9px 11px;border:1.5px solid var(--line-strong);border-radius:8px;font-size:14px;">
-            <button type="submit" class="btn btn-primary">${ICO.plus} 新增</button>
-          </form>` : tab==='groups' ? `
-          <p class="hint" style="margin:12px 0;">大項目分組用於甘特圖呈現「大項目→子項目」的階層（如：外牆包板工程 → 包版下訂、包版到料、包版安裝⋯），子項目請於「施工工序」頁籤指定所屬分組。</p>
-          <ul class="list-manage">${groupList}</ul>
-          <form onsubmit="return addProcessGroup(event)" style="display:flex;gap:8px;margin-top:12px;">
-            <input type="text" id="new-group" placeholder="新增大項目名稱，例：機械停車安裝" style="flex:1;padding:9px 11px;border:1.5px solid var(--line-strong);border-radius:8px;font-size:14px;">
-            <button type="submit" class="btn btn-primary">${ICO.plus} 新增</button>
-          </form>` : `
-          <p class="hint" style="margin:12px 0;">部位分類用於標記施作部位，可複選（如：東側、C1柱及樑帶）。</p>
-          <ul class="list-manage">${partList}</ul>
-          <form onsubmit="return addPart(event)" style="display:flex;gap:8px;margin-top:12px;">
-            <input type="text" id="new-part" placeholder="新增部位分類，例：西側 / C2柱" style="flex:1;padding:9px 11px;border:1.5px solid var(--line-strong);border-radius:8px;font-size:14px;">
-            <button type="submit" class="btn btn-primary">${ICO.plus} 新增</button>
-          </form>`}
+  }).join('')||'<li class="hint">本棟尚無大項目分組</li>';
+
+  openModal(`<div class="modal modal-wide">
+    <div class="modal-head"><h3>編輯工序及部位｜${esc(proj.name)}・${esc(b.name)}</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
+    <div class="modal-body">
+      <div class="building-config-select">
+        <label>目前編輯棟別</label>
+        <select onchange="switchSettingsBuilding(this.value)">${buildingOptions}</select>
+        <span class="building-config-chip">各棟獨立</span>
       </div>
-      <div class="modal-foot"><button class="btn" onclick="closeModal()">完成</button></div>
-    </div>`);
+      <div class="independent-config-note">修改此棟的工序、部位、大項目或甘特子工序，不會改到其他棟。新增棟別時只會複製目前棟別作為起始模板，複製後即完全獨立。</div>
+      <div class="tabs" style="display:flex;">
+        <button class="tab-btn ${tab==='processes'?'active':''}" onclick="formState.settingsTab='processes';renderSettingsModal()">施工工序</button>
+        <button class="tab-btn ${tab==='groups'?'active':''}" onclick="formState.settingsTab='groups';renderSettingsModal()">大項目分組</button>
+        <button class="tab-btn ${tab==='parts'?'active':''}" onclick="formState.settingsTab='parts';renderSettingsModal()">部位分類</button>
+      </div>
+      ${tab==='processes'?`
+        <p class="hint" style="margin:12px 0;">本棟矩陣與甘特圖只讀取下列工序。</p>
+        <ul class="list-manage">${procList}</ul>
+        <form onsubmit="return addProcess(event)" style="display:flex;gap:8px;margin-top:12px;">
+          <input id="new-process" placeholder="新增本棟工序" style="flex:1;padding:9px;border:1.5px solid var(--line-strong);border-radius:8px">
+          <button class="btn btn-primary">新增</button>
+        </form>`:tab==='groups'?`
+        <p class="hint" style="margin:12px 0;">大項目分組只影響本棟甘特圖。</p>
+        <ul class="list-manage">${groupList}</ul>
+        <form onsubmit="return addProcessGroup(event)" style="display:flex;gap:8px;margin-top:12px;">
+          <input id="new-group" placeholder="新增本棟大項目" style="flex:1;padding:9px;border:1.5px solid var(--line-strong);border-radius:8px">
+          <button class="btn btn-primary">新增</button>
+        </form>`:`
+        <p class="hint" style="margin:12px 0;">本棟矩陣回報與實際進度表只使用下列部位。</p>
+        <ul class="list-manage">${partList}</ul>
+        <form onsubmit="return addPart(event)" style="display:flex;gap:8px;margin-top:12px;">
+          <input id="new-part" placeholder="新增本棟部位" style="flex:1;padding:9px;border:1.5px solid var(--line-strong);border-radius:8px">
+          <button class="btn btn-primary">新增</button>
+        </form>`}
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">完成</button></div>
+  </div>`);
 }
-
 function renameProcess(id){
-  const proj=settingsProject();
-  const pr=proj.processes.find(x=>x.id===id);
-  if(!pr) return;
-  const oldName=pr.name;
-  const value=prompt(`重新命名工序｜${proj.name}`,oldName);
-  if(value===null) return;
-  const name=value.trim();
-  if(!name || name===oldName) return;
-  if(proj.processes.some(x=>x.id!==id&&x.name===name)){
-    showToast('此案場已有相同工序名稱','error');
-    return;
-  }
-
-  pr.name=name;
-
-  // 實際進度表若剛好引用工序名稱，一併更新同案場設定。
-  if(proj.actualTable){
-    if(proj.actualTable.skeletonProcessName===oldName) proj.actualTable.skeletonProcessName=name;
-    if(proj.actualTable.panelProcessName===oldName) proj.actualTable.panelProcessName=name;
-  }
-
-  scheduleSave();
-  renderSettingsModal();
-  showToast(`已更新「${proj.name}」工序名稱`);
+  const proj=settingsProject(),b=settingsBuilding(),list=buildingProcesses(proj,b),pr=processById(proj,id);
+  if(!pr||!b) return;
+  const value=prompt(`重新命名工序｜${b.name}`,pr.name); if(value===null)return;
+  const name=value.trim(); if(!name||name===pr.name)return;
+  if(list.some(x=>x.id!==id&&x.name===name)){showToast('本棟已有相同工序','error');return;}
+  pr.name=name;scheduleSave();renderSettingsModal();showToast(`已更新 ${b.name} 工序`);
 }
-
 function renamePart(id){
-  const proj=settingsProject();
-  const pt=proj.parts.find(x=>x.id===id);
-  if(!pt) return;
-  const oldName=pt.name;
-  const value=prompt(`重新命名部位｜${proj.name}`,oldName);
-  if(value===null) return;
-  const name=value.trim();
-  if(!name || name===oldName) return;
-  if(proj.parts.some(x=>x.id!==id&&normalizePartName(x.name)===normalizePartName(name))){
-    showToast('此案場已有相同部位名稱','error');
-    return;
-  }
-
+  const proj=settingsProject(),b=settingsBuilding(),list=buildingParts(proj,b),pt=partById(proj,id);
+  if(!pt||!b)return;
+  const old=pt.name,value=prompt(`重新命名部位｜${b.name}`,old);if(value===null)return;
+  const name=value.trim();if(!name||name===old)return;
+  if(list.some(x=>x.id!==id&&normalizePartName(x.name)===normalizePartName(name))){showToast('本棟已有相同部位','error');return;}
   pt.name=name;
-
-  // 實際進度表的欄位以名稱保存，因此只更新目前案場中同名欄位。
-  if(proj.actualTable?.partGroups){
-    proj.actualTable.partGroups.forEach(g=>{
-      g.parts=(g.parts||[]).map(x=>normalizePartName(x)===normalizePartName(oldName)?name:x);
-    });
-  }
-
-  scheduleSave();
-  renderSettingsModal();
-  showToast(`已更新「${proj.name}」部位名稱`);
+  const table=actualTableFor(proj,b.id);
+  (table.partGroups||[]).forEach(g=>g.parts=(g.parts||[]).map(x=>normalizePartName(x)===normalizePartName(old)?name:x));
+  scheduleSave();renderSettingsModal();showToast(`已更新 ${b.name} 部位`);
 }
-
-function setProcessGroup(processId, groupId){
-  const proj = settingsProject(); const pr = proj.processes.find(x=>x.id===processId); if(!pr) return;
-  pr.groupId = groupId || null;
-  scheduleSave();
-}
+function setProcessGroup(processId,groupId){const pr=processById(settingsProject(),processId);if(pr){pr.groupId=groupId||null;scheduleSave();}}
 function addProcessGroup(e){
-  e.preventDefault(); const proj = settingsProject(); const input = document.getElementById('new-group'); const name = input.value.trim();
-  if(!name) return false;
-  if(proj.processGroups.some(g=>g.name===name)){ showToast('此大項目已存在','error'); return false; }
-  proj.processGroups.push({id:uid('grp'), name}); scheduleSave(); renderSettingsModal();
-  return false;
+  e.preventDefault();const proj=settingsProject(),b=settingsBuilding(),name=document.getElementById('new-group').value.trim();
+  if(!name)return false;if(buildingProcessGroups(proj,b).some(g=>g.name===name)){showToast('本棟已有相同大項目','error');return false;}
+  const g={id:uid('grp'),name};proj.processGroups.push(g);b.processGroupIds.push(g.id);scheduleSave();renderSettingsModal();return false;
 }
 function openRenameGroupModal(id){
-  const proj = settingsProject(); const g = proj.processGroups.find(x=>x.id===id); if(!g) return;
-  const newName = prompt('大項目名稱', g.name);
-  if(newName===null) return;
-  const trimmed = newName.trim();
-  if(!trimmed) return;
-  g.name = trimmed; scheduleSave(); renderSettingsModal();
+  const proj=settingsProject(),b=settingsBuilding(),g=(buildingProcessGroups(proj,b).find(x=>x.id===id));if(!g)return;
+  const n=prompt(`大項目名稱｜${b.name}`,g.name);if(n===null||!n.trim())return;g.name=n.trim();scheduleSave();renderSettingsModal();
 }
 function deleteProcessGroup(id){
-  const proj = settingsProject(); const g = proj.processGroups.find(x=>x.id===id); if(!g) return;
-  const memberCount = proj.processes.filter(pr=>pr.groupId===id).length;
-  const msg = memberCount>0 ? `此大項目底下有 ${memberCount} 個工項，刪除分組後這些工項會變成未分組（工項本身不會被刪除）。確定刪除「${g.name}」？` : `確定刪除大項目「${g.name}」？`;
-  if(!confirm(msg)) return;
-  proj.processes.forEach(pr=>{ if(pr.groupId===id) pr.groupId=null; });
-  proj.processGroups = proj.processGroups.filter(x=>x.id!==id);
-  scheduleSave(); renderSettingsModal();
+  const proj=settingsProject(),b=settingsBuilding(),groups=buildingProcessGroups(proj,b),g=groups.find(x=>x.id===id);if(!g)return;
+  const procs=buildingProcesses(proj,b),count=procs.filter(x=>x.groupId===id).length;
+  if(!confirm(`確定刪除 ${b.name} 的「${g.name}」？${count?'底下工序會改為未分組。':''}`))return;
+  procs.forEach(x=>{if(x.groupId===id)x.groupId=null;});b.processGroupIds=b.processGroupIds.filter(x=>x!==id);proj.processGroups=proj.processGroups.filter(x=>x.id!==id);
+  scheduleSave();renderSettingsModal();
 }
 function addProcess(e){
-  e.preventDefault(); const proj = settingsProject(); const input = document.getElementById('new-process'); const name = input.value.trim();
-  if(!name) return false;
-  if(proj.processes.some(p=>p.name===name)){ showToast('此工序已存在','error'); return false; }
-  proj.processes.push({id:uid('pr'), name, groupId:null}); scheduleSave(); renderSettingsModal();
-  return false;
+  e.preventDefault();const proj=settingsProject(),b=settingsBuilding(),name=document.getElementById('new-process').value.trim();
+  if(!name)return false;if(buildingProcesses(proj,b).some(x=>x.name===name)){showToast('本棟已有相同工序','error');return false;}
+  const pr={id:uid('pr'),name,groupId:null};proj.processes.push(pr);b.processIds.push(pr.id);ensureGanttSubprocessStore(proj)[pr.id]=[];
+  scheduleSave();renderSettingsModal();return false;
 }
 function deleteProcess(id){
-  const proj = settingsProject(); const pr = proj.processes.find(x=>x.id===id); if(!pr) return;
-  const affected = proj.records.filter(r=>r.processId===id).length;
-  const affectedSched = proj.schedules.filter(s=>s.processId===id).length;
-  const parts=[]; if(affected>0) parts.push(`${affected} 筆進度記錄`); if(affectedSched>0) parts.push(`${affectedSched} 筆預定排程`);
-  const msg = parts.length ? `此工序有 ${parts.join('、')}，刪除後將一併移除。確定刪除「${pr.name}」？` : `確定刪除工序「${pr.name}」？`;
-  if(!confirm(msg)) return;
-  proj.processes = proj.processes.filter(x=>x.id!==id);
-  proj.records = proj.records.filter(r=>r.processId!==id);
-  const removedSchedIds = new Set(proj.schedules.filter(s=>s.processId===id).map(s=>s.id));
-  proj.schedules = proj.schedules.filter(s=>s.processId!==id);
-  proj.schedules.forEach(s=>{ s.dependsOn = (s.dependsOn||[]).filter(depId=>!removedSchedIds.has(depId)); });
-  scheduleSave(); renderSettingsModal();
+  const proj=settingsProject(),b=settingsBuilding(),pr=processById(proj,id);if(!pr||!b)return;
+  const affected=proj.records.filter(r=>r.buildingId===b.id&&r.processId===id).length;
+  const sched=proj.schedules.filter(s=>s.buildingId===b.id&&s.processId===id).length;
+  if(!confirm(`刪除 ${b.name} 的工序「${pr.name}」？將移除 ${affected} 筆進度與 ${sched} 筆排程。`))return;
+  b.processIds=b.processIds.filter(x=>x!==id);proj.processes=proj.processes.filter(x=>x.id!==id);
+  proj.records=proj.records.filter(r=>!(r.buildingId===b.id&&r.processId===id));
+  const removed=new Set(proj.schedules.filter(s=>s.buildingId===b.id&&s.processId===id).map(s=>s.id));
+  proj.schedules=proj.schedules.filter(s=>!(s.buildingId===b.id&&s.processId===id));
+  proj.schedules.forEach(s=>s.dependsOn=(s.dependsOn||[]).filter(x=>!removed.has(x)));
+  delete proj.ganttSubprocessesByProcess[id];scheduleSave();renderSettingsModal();
 }
 function moveProcess(id,dir){
-  const proj = settingsProject(); const idx = proj.processes.findIndex(x=>x.id===id); const newIdx=idx+dir;
-  if(newIdx<0||newIdx>=proj.processes.length) return;
-  const [item] = proj.processes.splice(idx,1); proj.processes.splice(newIdx,0,item);
-  scheduleSave(); renderSettingsModal();
+  const b=settingsBuilding(),idx=b.processIds.indexOf(id),ni=idx+dir;if(idx<0||ni<0||ni>=b.processIds.length)return;
+  const [x]=b.processIds.splice(idx,1);b.processIds.splice(ni,0,x);scheduleSave();renderSettingsModal();
 }
 function addPart(e){
-  e.preventDefault(); const proj = settingsProject(); const input = document.getElementById('new-part'); const name = input.value.trim();
-  if(!name) return false;
-  if(proj.parts.some(p=>p.name===name)){ showToast('此部位分類已存在','error'); return false; }
-  proj.parts.push({id:uid('pt'), name}); scheduleSave(); renderSettingsModal();
-  return false;
+  e.preventDefault();const proj=settingsProject(),b=settingsBuilding(),name=document.getElementById('new-part').value.trim();
+  if(!name)return false;if(buildingParts(proj,b).some(x=>x.name===name)){showToast('本棟已有相同部位','error');return false;}
+  const pt={id:uid('pt'),name};proj.parts.push(pt);b.partIds.push(pt.id);scheduleSave();renderSettingsModal();return false;
 }
 function deletePart(id){
-  const proj = settingsProject(); const pt = proj.parts.find(x=>x.id===id); if(!pt) return;
-  if(!confirm(`確定刪除部位分類「${pt.name}」？既有記錄中的此標籤也會一併移除。`)) return;
-  proj.parts = proj.parts.filter(x=>x.id!==id);
-  proj.records.forEach(r=>{ r.partIds=(r.partIds||[]).filter(pid=>pid!==id); });
-  scheduleSave(); renderSettingsModal();
+  const proj=settingsProject(),b=settingsBuilding(),pt=partById(proj,id);if(!pt||!b)return;
+  if(!confirm(`確定刪除 ${b.name} 的部位「${pt.name}」？`))return;
+  b.partIds=b.partIds.filter(x=>x!==id);proj.parts=proj.parts.filter(x=>x.id!==id);
+  proj.records.filter(r=>r.buildingId===b.id).forEach(r=>r.partIds=(r.partIds||[]).filter(x=>x!==id));
+  scheduleSave();renderSettingsModal();
 }
 
 /* ---------- 儲存格詳情（清單＋新增/編輯記錄） ---------- */
@@ -5752,8 +6088,8 @@ function renderRecordForm(){
   const autoMode = !!fs.autoByParts;
   const autoStats = matrixAutoSelectionStats(proj, fs.partIds);
   const displayParts = autoMode
-    ? autoStats.expectedIds.map(id=>proj.parts.find(pt=>pt.id===id)).filter(Boolean)
-    : proj.parts;
+    ? autoStats.expectedIds.map(id=>partById(proj,id)).filter(Boolean)
+    : buildingParts(proj,b);
   const chips = displayParts.map(pt=>`<button type="button" class="chip ${fs.partIds.includes(pt.id)?'selected':''}" onclick="toggleRecPart('${pt.id}')">${esc(pt.name)}</button>`).join('');
   const statusBtns = STATUS_ORDER.map(k=>{ const s=STATUS[k]; return `<button type="button" class="status-btn ${fs.status===k?'selected':''}" style="color:${s.fg};" onclick="setRecStatus('${k}')"><span class="dot" style="background:${s.dot};width:8px;height:8px;border-radius:50%;display:inline-block;"></span>${s.label}</button>`; }).join('');
   openModal(`
@@ -5890,7 +6226,7 @@ function openQuickAddModal(presetBuildingId){
   const b = presetBuildingId ? proj.buildings.find(x=>x.id===presetBuildingId) : currentBuilding();
   formState.quickAdd = {
     projectId: proj.id, buildingId: b?b.id:(proj.buildings[0]?proj.buildings[0].id:null),
-    floors: [], partIds: [], processId: proj.processes[0]?proj.processes[0].id:null,
+    floors: [], partIds: [], processId: buildingProcesses(proj,b)[0]?buildingProcesses(proj,b)[0].id:null,
     progress: 50, status: 'in_progress', note: '', crew: '', photo: null, blockReason: ''
   };
   renderQuickAddForm();
@@ -5917,8 +6253,8 @@ function applyQuickTemplate(id){
   const fs = formState.quickAdd;
   fs.projectId = tp.projectId;
   fs.buildingId = proj.buildings.find(x=>x.id===tp.buildingId) ? tp.buildingId : (proj.buildings[0]?proj.buildings[0].id:null);
-  fs.partIds = tp.partIds.filter(pid=>proj.parts.some(pt=>pt.id===pid));
-  fs.processId = proj.processes.some(pr=>pr.id===tp.processId) ? tp.processId : (proj.processes[0]?proj.processes[0].id:null);
+  fs.partIds = tp.partIds.filter(pid=>buildingParts(proj,b).some(pt=>pt.id===pid));
+  fs.processId = buildingProcesses(proj,b).some(pr=>pr.id===tp.processId) ? tp.processId : (buildingProcesses(proj,b)[0]?.id||null);
   fs.status = tp.status; fs.crew = tp.crew||''; fs.note = tp.note||''; fs.blockReason = tp.blockReason||'';
   fs.floors = []; // 樓層與比例由使用者自行設定
   renderQuickAddForm();
@@ -5953,10 +6289,10 @@ function renderQuickAddForm(){
   const b = proj.buildings.find(x=>x.id===fs.buildingId) || proj.buildings[0];
   fs.buildingId = b.id;
   const buildingOpts = proj.buildings.map(x=>`<option value="${x.id}" ${x.id===fs.buildingId?'selected':''}>${esc(x.name)}</option>`).join('');
-  const processOpts = proj.processes.map(x=>`<option value="${x.id}" ${x.id===fs.processId?'selected':''}>${esc(x.name)}</option>`).join('');
+  const processOpts = buildingProcesses(proj,b).map(x=>`<option value="${x.id}" ${x.id===fs.processId?'selected':''}>${esc(x.name)}</option>`).join('');
   const floorChips = b.floors.map(fl=>`<button type="button" class="chip chip-floor ${fs.floors.includes(fl)?'selected':''}" onclick="toggleQuickFloor('${esc(fl)}')">${esc(fl)}</button>`).join('');
   const floorOpts = b.floors.map(fl=>`<option value="${esc(fl)}">${esc(fl)}</option>`).join('');
-  const partChips = proj.parts.map(pt=>`<button type="button" class="chip ${fs.partIds.includes(pt.id)?'selected':''}" onclick="toggleQuickPart('${pt.id}')">${esc(pt.name)}</button>`).join('');
+  const partChips = buildingParts(proj,b).map(pt=>`<button type="button" class="chip ${fs.partIds.includes(pt.id)?'selected':''}" onclick="toggleQuickPart('${pt.id}')">${esc(pt.name)}</button>`).join('');
   const statusBtns = STATUS_ORDER.map(k=>{ const s=STATUS[k]; return `<button type="button" class="status-btn ${fs.status===k?'selected':''}" style="color:${s.fg};" onclick="setQuickStatus('${k}')"><span class="dot" style="background:${s.dot};width:8px;height:8px;border-radius:50%;display:inline-block;"></span>${s.label}</button>`; }).join('');
 
   openModal(`
