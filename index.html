@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>工地現場進度管理</title>
+<title>金屬工程專案管理｜移除請款・卡點必追合併樓層版</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -221,6 +221,188 @@ table.matrix tbody td.mx-cell.mx-selected{box-shadow:inset 0 0 0 3px var(--orang
 .actual-print-table.actual-grid .actual-floor{position:static!important;left:auto!important;top:auto!important;z-index:auto!important;}
 .actual-print-legend{display:flex;flex-wrap:wrap;gap:2mm 4mm;font-size:7px;margin-top:1mm;}
 .actual-print-legend .sw{width:6mm;height:3mm;border:0.25mm solid #111!important;display:inline-block;margin-right:1mm;vertical-align:-0.6mm;}
+
+/* ---------- 預計 vs 實際雙軌甘特圖 PDF ---------- */
+.dual-print-page{
+  width:279mm;
+  min-height:192mm;
+  max-height:192mm;
+  overflow:hidden;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  color:#111;
+  background:#fff;
+}
+.dgp-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:5mm;
+  font-family:var(--font-body);
+  font-size:9px;
+  margin-bottom:1.5mm;
+  flex-shrink:0;
+}
+.dgp-header strong{
+  display:block;
+  font-size:13px;
+  color:#000;
+  margin-bottom:.7mm;
+}
+.dgp-summary{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1.5mm;
+  margin-bottom:1.5mm;
+  flex-shrink:0;
+}
+.dgp-summary-item{
+  border:.22mm solid #9AA7B4;
+  border-left:.9mm solid #445B70;
+  border-radius:1.2mm;
+  padding:1.2mm 1.6mm;
+  background:#F7F9FB;
+}
+.dgp-summary-item.good{border-left-color:#1E8E5A;}
+.dgp-summary-item.bad{border-left-color:#C6453A;}
+.dgp-summary-item span{
+  display:block;
+  font-size:6.4px;
+  color:#647383;
+}
+.dgp-summary-item b{
+  display:block;
+  margin-top:.3mm;
+  font-family:var(--font-mono);
+  font-size:10px;
+  color:#102A43;
+}
+.dgp-table-wrap{
+  flex:1;
+  display:block;
+  overflow:hidden;
+}
+.dgp-table{
+  border-collapse:collapse;
+  table-layout:fixed;
+  width:100%;
+  border:.35mm solid #111;
+  font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;
+}
+.dgp-table th,.dgp-table td{
+  border:.18mm solid #7F8B96;
+  padding:0;
+  overflow:hidden;
+  box-sizing:border-box;
+}
+.dgp-name-head,.dgp-track-head{
+  background:#102A43;
+  color:#fff;
+  font-size:7px;
+  text-align:center;
+  vertical-align:middle;
+}
+.dgp-date-head{
+  background:#102A43;
+  color:#fff;
+  font-size:6.2px;
+  line-height:1.25;
+  text-align:center;
+  vertical-align:middle;
+  font-family:var(--font-mono);
+}
+.dgp-date-head.weekend{background:#183B56;}
+.dgp-date-head.today{background:#E97B2F;}
+.dgp-name{
+  padding:0 1.2mm!important;
+  background:#F6F8FA;
+  color:#102A43;
+  text-align:left;
+  vertical-align:middle;
+}
+.dgp-name .dgp-main-label{
+  font-size:7.2px;
+  font-weight:900;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.dgp-name .sub{
+  margin-top:.35mm;
+  font-size:5.6px;
+  line-height:1.35;
+  color:#657586;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.dgp-name .variance{
+  margin-top:.35mm;
+  font-size:5.8px;
+  font-weight:800;
+}
+.dgp-name .variance.good{color:#1E8E5A;}
+.dgp-name .variance.bad{color:#C6453A;}
+.dgp-name .variance.neutral{color:#657586;}
+.dgp-track{
+  width:8mm;
+  text-align:center;
+  vertical-align:middle;
+  font-size:6px;
+  font-weight:900;
+  color:#445B70;
+  background:#F4F6F8;
+}
+.dgp-day{background:#fff;}
+.dgp-day.weekend{background:#F3F5F7;}
+.dgp-bar-cell{
+  padding:.45mm!important;
+  vertical-align:middle;
+}
+.dgp-bar{
+  width:100%;
+  height:2.2mm;
+  border-radius:1.1mm;
+  overflow:hidden;
+}
+.dgp-plan{
+  background:rgba(145,160,175,.18);
+  border:.35mm solid #91A0AF;
+}
+.dgp-actual{background:#E97B2F;}
+.dgp-actual.done{background:#1E8E5A;}
+.dgp-actual.late{background:#C6453A;}
+.dgp-actual.ahead{background:#2E6EA6;}
+.dgp-empty{
+  color:#8B98A5;
+  font-size:5.4px;
+  text-align:left;
+  padding-left:.8mm!important;
+}
+.dgp-legend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1mm 4mm;
+  align-items:center;
+  margin-top:1.2mm;
+  font-size:6px;
+  color:#526271;
+  flex-shrink:0;
+}
+.dgp-legend i{
+  display:inline-block;
+  width:6mm;
+  height:2.2mm;
+  border-radius:1.1mm;
+  margin-right:1mm;
+  vertical-align:-.4mm;
+}
+.dgp-legend i.plan{
+  background:rgba(145,160,175,.18);
+  border:.35mm solid #91A0AF;
+}
+
 /* ---------- Gantt ---------- */
 .gantt-scroll{overflow:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow-sm);max-height:min(72vh,700px);}
 .gantt-grid{display:grid;position:relative;}
@@ -418,9 +600,651 @@ table.matrix tbody td.mx-cell.mx-selected{box-shadow:inset 0 0 0 3px var(--orang
     page-break-inside:avoid; break-inside:avoid;
   }
   .gantt-print-page:last-child{ page-break-after:auto; break-after:auto; }
+  .dual-print-page{
+    page-break-after:always; break-after:page;
+    page-break-inside:avoid; break-inside:avoid;
+  }
+  .dual-print-page:last-child{ page-break-after:auto; break-after:auto; }
   .gp-table{ page-break-inside:auto; }
   .gp-table tr{ page-break-inside:avoid; break-inside:avoid; }
 }
+
+/* ======================================================================
+   正式體驗版 UI：金屬工程專案控制台
+   僅調整導覽、首頁資訊層級與新增照片／代辦中心，原資料結構與功能保留
+   ====================================================================== */
+:root{
+  --navy:#102A43; --navy-2:#183B56; --navy-3:#244D6C;
+  --paper:#F4F6F8; --surface:#FFFFFF; --line:#D8E0E7; --line-strong:#B8C5D0;
+  --ink:#10212F; --ink-mute:#627383; --ink-faint:#94A3AF;
+  --orange:#E97B2F; --orange-soft:#FFF0E5; --green:#1E8E5A; --green-soft:#E6F5ED;
+  --red:#C6453A; --red-soft:#FDE8E6; --blue:#2E6EA6; --blue-soft:#E8F1F8;
+  --amber:#B98612; --amber-soft:#FFF5DA; --purple:#7557B7; --purple-soft:#F0EBFB;
+  --shadow:0 8px 24px rgba(16,42,67,.08); --shadow-sm:0 2px 8px rgba(16,42,67,.06);
+  --radius:14px;
+}
+body{background:var(--paper);background-image:none;}
+.sidebar{width:258px;background:var(--navy);box-shadow:4px 0 18px rgba(16,42,67,.12);}
+.main{margin-left:258px;}
+.sidebar-brand{padding:20px 18px 14px;}
+.sidebar-brand .mark{font-size:17px;}
+.sidebar-brand .sub{font-size:10px;letter-spacing:.14em;}
+.sidebar-project-switch{padding:13px 14px 10px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sidebar-project-switch label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.48);margin:0 4px 6px;}
+.sidebar-project-switch select{width:100%;border:1px solid rgba(255,255,255,.2);border-radius:9px;background:rgba(255,255,255,.1);color:#fff;padding:9px 10px;font-size:13px;}
+.sidebar-project-switch option{color:#111;background:#fff;}
+.sidebar-project-actions{display:flex;gap:6px;margin-top:7px;}
+.sidebar-project-actions button{flex:1;border:1px solid rgba(255,255,255,.2);border-radius:8px;background:transparent;color:rgba(255,255,255,.78);padding:7px;font-size:11px;}
+.sidebar-nav-scroll{overflow-y:auto;flex:1;padding:5px 10px 12px;}
+.sidebar-nav-title{padding:11px 8px 5px;font-family:var(--font-mono);font-size:10px;letter-spacing:.11em;color:rgba(255,255,255,.38);}
+.sidebar-nav-btn{width:100%;border:0;background:transparent;color:rgba(255,255,255,.74);display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;text-align:left;font-size:12.8px;margin-bottom:2px;}
+.sidebar-nav-btn:hover{background:rgba(255,255,255,.07);color:#fff;}
+.sidebar-nav-btn.active{background:var(--orange);color:#fff;font-weight:700;}
+.sidebar-nav-btn svg{flex-shrink:0;}
+.sidebar-admin{margin-top:8px;border-top:1px solid rgba(255,255,255,.1);padding-top:8px;}
+.sidebar-admin summary{cursor:pointer;color:rgba(255,255,255,.58);font-size:11px;padding:7px 8px;}
+.sidebar-admin .project-list{padding:3px 0 0;max-height:170px;overflow:auto;}
+.sidebar-footer-tools{padding:9px 12px;border-top:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;gap:6px;}
+.sidebar-footer-tools .tool-row{display:flex;gap:6px;}
+.sidebar-footer-tools .btn{font-size:11px;padding:7px 8px;justify-content:center;background:transparent;color:rgba(255,255,255,.78);border-color:rgba(255,255,255,.22);}
+.sidebar-footer{padding:10px 14px;}
+.topbar{padding:11px 18px;background:rgba(255,255,255,.96);backdrop-filter:blur(9px);}
+.command-row{display:flex;align-items:center;gap:12px;min-width:0;}
+.command-title{min-width:190px;}
+.command-title .app-title{font-size:17px;}
+.command-title .site-sub{margin-top:2px;}
+.command-scope{flex:1;display:flex;gap:6px;overflow-x:auto;padding-bottom:1px;}
+.command-scope .building-chip{font-size:11.5px;padding:6px 11px;}
+.command-actions{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap;}
+.topbar-secondary{display:flex;align-items:center;gap:8px;margin-top:9px;overflow-x:auto;}
+.tabs{display:none!important;}
+.content{padding:17px 19px 90px;}
+.dashboard-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:13px;}
+.dashboard-head h1{margin:0;color:var(--navy);font-family:var(--font-display);font-size:22px;}
+.dashboard-head p{margin:4px 0 0;color:var(--ink-mute);font-size:12.5px;}
+.dashboard-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.dashboard-kpis{display:grid;grid-template-columns:repeat(5,minmax(145px,1fr));gap:10px;margin-bottom:13px;}
+.dashboard-kpi{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:13px 14px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;}
+.dashboard-kpi:before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--blue);}
+.dashboard-kpi.alert:before{background:var(--red);}.dashboard-kpi.warn:before{background:var(--amber);}.dashboard-kpi.ok:before{background:var(--green);}.dashboard-kpi.orange:before{background:var(--orange);}
+.dashboard-kpi .k-label{font-size:10.5px;color:var(--ink-mute);}
+.dashboard-kpi .k-num{font-family:var(--font-display);font-size:25px;font-weight:800;color:var(--navy);margin:4px 0 2px;}
+.dashboard-kpi .k-sub{font-size:10.5px;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.control-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:13px;margin-bottom:13px;}
+.control-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;}
+.control-card-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);}
+.control-card-head h3{margin:0;color:var(--navy);font-size:14px;}.control-card-head small{color:var(--ink-faint);font-size:10.5px;}
+.control-card-body{padding:8px 14px 12px;}
+.priority-row{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:9px;align-items:start;padding:9px 0;border-bottom:1px dashed var(--line);}
+.priority-row:last-child{border-bottom:0;}.priority-rank{width:24px;height:24px;border-radius:7px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;}
+.priority-title{font-size:12.5px;font-weight:700;color:var(--ink);}.priority-meta{font-size:10.5px;color:var(--ink-mute);margin-top:3px;line-height:1.5;}
+.mini-tag{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;font-size:9.5px;font-weight:700;white-space:nowrap;}
+.mini-tag.red{background:var(--red-soft);color:var(--red)}.mini-tag.amber{background:var(--amber-soft);color:#886100}.mini-tag.blue{background:var(--blue-soft);color:var(--blue)}.mini-tag.green{background:var(--green-soft);color:var(--green)}.mini-tag.purple{background:var(--purple-soft);color:var(--purple)}
+.risk-row{padding:9px 0;border-bottom:1px solid var(--line);}.risk-row:last-child{border-bottom:0;}.risk-top{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;}.risk-bar{height:7px;background:#edf1f4;border-radius:999px;overflow:hidden;margin-top:6px;}.risk-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--red));border-radius:999px;}
+.dashboard-section-title{display:flex;justify-content:space-between;align-items:center;margin:15px 0 9px;}.dashboard-section-title h2{margin:0;font-size:15px;color:var(--navy);}.dashboard-section-title small{color:var(--ink-faint);}
+.project-control-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:11px;margin-bottom:13px;}
+.project-control-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-sm);cursor:pointer;transition:.15s;}.project-control-card:hover{transform:translateY(-1px);box-shadow:var(--shadow);}
+.project-control-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}.project-control-name{font-size:15px;font-weight:800;color:var(--navy);}.project-control-pct{font-family:var(--font-display);font-size:24px;font-weight:800;color:var(--orange);}
+.project-control-meta{font-size:10.5px;color:var(--ink-mute);margin-top:3px;}.project-control-card .progress-bar{margin-top:9px;}
+.building-mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px;}.building-mini{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:7px;text-align:center;min-width:0;}.building-mini b{display:block;font-size:10px;color:var(--ink-mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.building-mini strong{font-size:13px;color:var(--navy);}
+.task-center-board{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:11px;overflow:auto;}.task-center-col{background:#EEF2F5;border:1px solid var(--line);border-radius:12px;padding:9px;min-height:420px;}.task-center-col h3{font-size:12px;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;}.task-center-item{background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:7px;box-shadow:0 2px 5px rgba(16,42,67,.04);cursor:pointer;}.task-center-item:hover{border-color:var(--orange);}.task-center-item b{font-size:11.5px;display:block;}.task-center-item p{font-size:10.5px;color:var(--ink-mute);line-height:1.45;margin:4px 0;}.task-center-meta{display:flex;justify-content:space-between;gap:6px;color:var(--ink-faint);font-size:9.5px;margin-top:7px;}
+.photo-center-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:11px;}.photo-center-card{background:#fff;border:1px solid var(--line);border-radius:11px;overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;}.photo-center-card:hover{border-color:var(--orange);}.photo-center-img{height:145px;background:#dce4ea;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);}.photo-center-img img{width:100%;height:100%;object-fit:cover;}.photo-center-info{padding:9px 10px;}.photo-center-info b{display:block;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.photo-center-info span{display:block;color:var(--ink-mute);font-size:10px;margin-top:3px;line-height:1.4;}
+.page-intro{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;}.page-intro h2{margin:0;color:var(--navy);font-size:19px;}.page-intro p{margin:4px 0 0;color:var(--ink-mute);font-size:11.5px;}.page-intro-actions{display:flex;gap:7px;flex-wrap:wrap;}
+.home-card,.bboard-card,.actual-toolbar,.actual-table-wrap,.gantt-scroll,.filter-bar,.suggest-panel,.matrix-wrap{box-shadow:var(--shadow-sm);}
+@media(max-width:1180px){.dashboard-kpis{grid-template-columns:repeat(3,1fr)}.control-grid{grid-template-columns:1fr}.task-center-board{grid-template-columns:repeat(4,250px)}}
+@media(max-width:860px){
+  .sidebar{width:82%;max-width:300px}.main{margin-left:0}.command-title{min-width:0}.command-title .app-title{font-size:15.5px}.command-scope{display:none}.command-actions .btn:not(.btn-primary){display:none}.topbar-secondary{margin-top:6px}.dashboard-head{flex-direction:column}.dashboard-kpis{grid-template-columns:1fr 1fr}.dashboard-kpi .k-num{font-size:22px}.building-mini-grid{grid-template-columns:repeat(3,1fr)}.content{padding:12px 10px 96px}.mobile-nav button{min-width:0}.fab{bottom:74px}.task-center-board{grid-template-columns:repeat(4,245px)}
+}
+
+
+/* ---------- 模板優先／安全導覽 ---------- */
+.safe-nav-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:#E8F1F8;border:1px solid #BFD4E5;border-radius:12px;
+  padding:10px 13px;margin-bottom:14px;color:#24577F;font-size:12px;
+}
+.safe-nav-banner strong{color:var(--navy);}
+.template-setup-grid{
+  display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:12px;margin-bottom:16px;
+}
+.template-step{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:15px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;min-height:168px;
+}
+.template-step .step-no{
+  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--navy);color:#fff;font-family:var(--font-mono);font-size:12px;font-weight:900;
+}
+.template-step h3{margin:10px 0 5px;color:var(--navy);font-size:15px;}
+.template-step p{margin:0;color:var(--ink-mute);font-size:12px;line-height:1.65;flex:1;}
+.template-step .btn{margin-top:12px;align-self:flex-start;}
+.template-module-grid{
+  display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:10px;margin-bottom:16px;
+}
+.template-module{
+  background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px;
+}
+.template-module b{display:block;color:var(--navy);font-size:13px;margin-bottom:5px;}
+.template-module span{display:block;color:var(--ink-mute);font-size:11px;line-height:1.55;}
+.project-control-card{cursor:default !important;}
+.project-control-card:hover{transform:none !important;}
+.project-control-actions{display:flex;justify-content:flex-end;margin-top:10px;}
+.task-row.safe-row{cursor:default;}
+.task-row.safe-row:hover{margin:0;padding:10px 0;background:transparent;}
+.safe-inline-action{flex-shrink:0;}
+.sidebar-nav-btn,.mobile-nav button,.btn,.building-chip{touch-action:manipulation;}
+.mobile-nav button{min-width:0;}
+.nav-safety-status{
+  font-family:var(--font-mono);font-size:10px;color:rgba(255,255,255,.55);
+  padding:4px 0 0;
+}
+@media(max-width:1050px){
+  .template-setup-grid{grid-template-columns:repeat(2,minmax(220px,1fr));}
+  .template-module-grid{grid-template-columns:repeat(2,minmax(180px,1fr));}
+}
+@media(max-width:700px){
+  .safe-nav-banner{align-items:flex-start;flex-direction:column;}
+  .template-setup-grid,.template-module-grid{grid-template-columns:1fr;}
+}
+
+
+
+/* ---------- 專案刪除／矩陣自動進度提示 ---------- */
+.sidebar-project-actions .project-delete-btn{
+  border-color:rgba(255,140,132,.55);
+  color:#FFD8D3;
+}
+.sidebar-project-actions .project-delete-btn:hover{
+  background:rgba(196,57,47,.28);
+  border-color:#FFB7AF;
+  color:#fff;
+}
+.matrix-auto-note{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 9px;border-radius:999px;
+  background:var(--blue-soft);color:var(--blue);
+  font-size:11px;font-weight:700;
+}
+.task-floor-range{
+  font-family:var(--font-mono);font-weight:900;color:var(--navy);
+}
+
+
+/* ---------- 矩陣：依部位數量自動計算完成度 ---------- */
+.auto-progress-box{
+  background:var(--blue-soft);
+  border:1px solid #BDD4E8;
+  border-radius:11px;
+  padding:12px 13px;
+  margin:4px 0 14px;
+}
+.auto-progress-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.auto-progress-top strong{
+  color:var(--navy);
+  font-size:13px;
+}
+.auto-progress-value{
+  font-family:var(--font-mono);
+  font-size:22px;
+  font-weight:900;
+  color:var(--blue);
+}
+.auto-progress-bar{
+  height:9px;
+  background:#D7E5F0;
+  border-radius:999px;
+  overflow:hidden;
+  margin-top:9px;
+}
+.auto-progress-bar span{
+  display:block;
+  height:100%;
+  background:linear-gradient(90deg,var(--orange),var(--green));
+  border-radius:999px;
+}
+.auto-progress-note{
+  margin-top:7px;
+  color:var(--ink-mute);
+  font-size:11.5px;
+  line-height:1.6;
+}
+.auto-part-empty{
+  background:var(--amber-soft);
+  color:#7D5A00;
+  border:1px solid #E8D39D;
+  border-radius:9px;
+  padding:10px 11px;
+  font-size:12px;
+  line-height:1.6;
+  margin-bottom:12px;
+}
+
+
+/* ---------- 甘特圖：原版／預計 vs 實際雙軌切換 ---------- */
+.gantt-presentation-switch{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;
+  box-shadow:var(--shadow-sm);
+}
+.gantt-presentation-switch .gps-copy strong{
+  display:block;font-size:13px;color:var(--navy);
+}
+.gantt-presentation-switch .gps-copy span{
+  display:block;margin-top:3px;font-size:11px;color:var(--ink-mute);
+}
+.gantt-presentation-switch .gps-buttons{
+  display:inline-flex;border:1.5px solid var(--line-strong);
+  border-radius:999px;overflow:hidden;background:var(--surface);
+}
+.gantt-presentation-switch .gps-buttons button{
+  border:0;background:transparent;padding:8px 15px;
+  font-size:12.5px;font-weight:800;color:var(--ink-mute);
+}
+.gantt-presentation-switch .gps-buttons button.active{
+  background:var(--navy);color:#fff;
+}
+.dual-summary-row{
+  display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));
+  gap:10px;margin-bottom:12px;
+}
+.dual-summary-card{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:11px;padding:11px 13px;box-shadow:var(--shadow-sm);
+}
+.dual-summary-card .dsc-label{
+  font-size:10.5px;color:var(--ink-mute);
+}
+.dual-summary-card .dsc-value{
+  margin-top:4px;font-family:var(--font-mono);font-size:20px;
+  font-weight:900;color:var(--navy);
+}
+.dual-summary-card .dsc-sub{
+  margin-top:3px;font-size:10.5px;color:var(--ink-faint);
+}
+.dual-summary-card.bad{border-left:4px solid var(--red);}
+.dual-summary-card.good{border-left:4px solid var(--green);}
+.dual-gantt-scroll{
+  overflow:auto;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--shadow-sm);
+  max-height:min(74vh,760px);
+}
+.dual-gantt-grid{
+  display:grid;position:relative;
+}
+.dual-corner{
+  position:sticky;top:0;left:0;z-index:12;
+  background:var(--navy);color:#fff;border-right:1px solid rgba(255,255,255,.15);
+  border-bottom:1px solid rgba(255,255,255,.15);
+  display:flex;align-items:center;padding:0 12px;
+  font-size:11px;font-weight:800;
+}
+.dual-head{
+  position:sticky;top:0;z-index:10;background:var(--navy);
+  color:rgba(255,255,255,.92);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;border-right:1px solid rgba(255,255,255,.1);
+  border-bottom:1px solid rgba(255,255,255,.15);font-family:var(--font-mono);
+}
+.dual-head.weekend{background:var(--navy-2);}
+.dual-head.today{background:var(--orange);color:#fff;}
+.dual-label{
+  position:sticky;left:0;z-index:7;background:var(--paper);
+  border-right:1px solid var(--line-strong);border-bottom:1px solid var(--line);
+  padding:7px 10px;overflow:hidden;cursor:pointer;
+}
+.dual-label:hover{background:var(--blue-soft);}
+.dual-label .dl-name{
+  font-size:12.5px;font-weight:850;color:var(--navy);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.dual-label .dl-meta{
+  margin-top:3px;font-family:var(--font-mono);font-size:9.8px;
+  color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.dual-label .dl-variance{
+  margin-top:3px;font-size:10.5px;font-weight:800;
+}
+.dual-label .dl-variance.good{color:var(--green);}
+.dual-label .dl-variance.bad{color:var(--red);}
+.dual-label .dl-variance.neutral{color:var(--ink-mute);}
+.dual-cell{
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  position:relative;background:var(--surface);
+}
+.dual-cell.weekend{background:#F7F8FA;}
+.dual-group-label{
+  position:sticky;left:0;z-index:8;background:var(--navy);color:#fff;
+  border-right:1px solid var(--line-strong);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;padding:0 12px;font-size:12px;font-weight:900;
+}
+.dual-group-cell{
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  background:#F2F5F8;
+}
+.dual-plan-bar{
+  position:relative;align-self:start;margin:9px 2px 0;height:10px;
+  border:1.5px solid #91A0AF;background:rgba(145,160,175,.16);
+  border-radius:6px;z-index:3;pointer-events:none;
+}
+.dual-actual-bar{
+  position:relative;align-self:end;margin:0 2px 9px;height:11px;
+  border-radius:6px;background:var(--orange);z-index:4;
+  box-shadow:0 1px 3px rgba(0,0,0,.18);cursor:pointer;min-width:6px;
+}
+.dual-actual-bar.done{background:var(--green);}
+.dual-actual-bar.late{background:var(--red);}
+.dual-actual-bar.ahead{background:var(--blue);}
+.dual-actual-pct{
+  position:relative;z-index:5;align-self:end;margin:0 0 4px 5px;
+  font-family:var(--font-mono);font-size:9px;font-weight:900;
+  color:var(--navy);pointer-events:none;white-space:nowrap;
+}
+.dual-today-line{
+  position:relative;z-index:6;border-left:2px solid var(--red);
+  pointer-events:none;
+}
+.dual-today-line::before{
+  content:'今';position:sticky;top:2px;margin-left:3px;
+  color:var(--red);font-size:9px;font-weight:900;
+}
+.dual-track-legend{
+  display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px;
+  font-size:11px;color:var(--ink-mute);
+}
+.dual-track-legend span{display:inline-flex;align-items:center;gap:5px;}
+.dual-track-legend i{display:inline-block;width:22px;height:9px;border-radius:5px;}
+.dual-track-legend .plan{border:1.5px solid #91A0AF;background:rgba(145,160,175,.16);}
+.dual-no-actual{
+  position:relative;z-index:4;align-self:end;margin:0 4px 8px;
+  font-size:9px;color:var(--ink-faint);white-space:nowrap;
+}
+@media(max-width:900px){
+  .dual-summary-row{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:620px){
+  .gantt-presentation-switch{align-items:stretch;flex-direction:column;}
+  .gantt-presentation-switch .gps-buttons{width:100%;}
+  .gantt-presentation-switch .gps-buttons button{flex:1;}
+  .dual-summary-row{grid-template-columns:1fr 1fr;}
+}
+
+
+/* ---------- 各案場獨立工序／部位設定 ---------- */
+.sidebar-project-actions{
+  flex-wrap:wrap;
+}
+.sidebar-project-actions .project-structure-btn{
+  flex-basis:100%;
+  background:rgba(242,139,43,.16);
+  border-color:rgba(242,139,43,.58);
+  color:#FFD7AD;
+  font-weight:800;
+}
+.sidebar-project-actions .project-structure-btn:hover{
+  background:rgba(242,139,43,.28);
+  color:#fff;
+}
+.project-setting-context{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  border:1px solid #BDD4E8;
+  background:var(--blue-soft);
+  color:var(--blue);
+  border-radius:11px;
+  padding:11px 13px;
+  margin:12px 0;
+}
+.project-setting-context strong{
+  display:block;
+  color:var(--navy);
+  font-size:13px;
+}
+.project-setting-context span{
+  display:block;
+  margin-top:3px;
+  font-size:11.5px;
+  line-height:1.6;
+}
+.project-setting-lock{
+  flex-shrink:0;
+  border-radius:999px;
+  background:var(--navy);
+  color:#fff;
+  padding:5px 9px;
+  font-size:10px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.settings-item-name{
+  flex:1;
+  min-width:0;
+}
+.settings-item-name strong{
+  display:block;
+  font-size:12.5px;
+  color:var(--navy);
+}
+.settings-item-name small{
+  display:block;
+  margin-top:2px;
+  font-size:10px;
+  color:var(--ink-faint);
+}
+
+
+/* ===== TEMPLATE VARIANT: 05_自適應平衡型_候選最佳 ===== */
+
+:root{--navy:#102C46;--navy-2:#173A58;--navy-3:#245B82;--paper:#F2F5F7;--surface:#FFFFFF;--line:#D9E1E7;--line-strong:#BFCBD5;--orange:#EC7A28;--orange-soft:#FFF0E5;--blue:#2D74A8;--blue-soft:#E8F1F7;--green:#1E8B59;--radius:12px;--shadow-sm:0 3px 12px rgba(16,44,70,.075)}
+body{background:#F2F5F7;background-image:none}
+.sidebar{width:242px;box-shadow:4px 0 18px rgba(16,44,70,.12)}
+.main{margin-left:242px}
+.sidebar-brand{padding:17px 15px 12px}
+.sidebar-brand .mark{font-size:16px}
+.sidebar-project-switch{padding:11px 11px 9px}
+.sidebar-project-actions{gap:5px}
+.sidebar-project-actions button{font-size:10.5px;padding:6px 5px}
+.sidebar-project-actions .project-structure-btn{font-size:11px;padding:7px}
+.sidebar-nav-scroll{padding:4px 8px 10px}
+.sidebar-nav-title{padding:10px 8px 4px}
+.sidebar-nav-btn{padding:8px 9px;font-size:12.2px;min-height:38px}
+.sidebar-footer-tools{padding:8px 10px}
+.topbar{padding:9px 16px;box-shadow:0 2px 9px rgba(16,44,70,.05)}
+.command-row{flex-wrap:nowrap}
+.app-title{font-size:18px}
+.command-title .site-sub{font-size:10.8px}
+.command-scope{min-width:0;overflow-x:auto;display:flex;gap:5px}
+.command-actions{flex-shrink:0}
+.btn{padding:8px 12px;border-radius:9px;font-size:12.5px}
+.content{padding:16px 18px 82px;max-width:1600px;width:100%;margin:0 auto}
+.safe-nav-banner{background:#EDF5FA;border-color:#C7DCEA;padding:9px 12px}
+.dashboard-head{margin-bottom:11px}
+.dashboard-head h1{font-size:22px;letter-spacing:-.01em}
+.dashboard-kpis{gap:9px;margin-bottom:11px}
+.dashboard-kpi{padding:12px 13px;box-shadow:var(--shadow-sm)}
+.dashboard-kpi .k-num{font-size:24px}
+.template-setup-grid{gap:10px;grid-template-columns:repeat(3,minmax(230px,1fr))}
+.template-step{padding:14px;min-height:148px;box-shadow:var(--shadow-sm);transition:.15s}
+.template-step:hover{transform:translateY(-1px);box-shadow:0 7px 18px rgba(16,44,70,.10)}
+.template-step h3{margin:8px 0 4px}
+.template-module-grid{gap:8px}
+.template-module{padding:10px 11px;background:#FBFCFD}
+.page-intro{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px 14px;box-shadow:var(--shadow-sm)}
+.table-wrap,.card,.home-card{box-shadow:var(--shadow-sm)}
+.fab{width:54px;height:54px;right:18px;bottom:18px}
+@media(max-width:960px){.command-actions .btn-ghost{display:none}.template-setup-grid{grid-template-columns:repeat(2,minmax(220px,1fr))}}
+@media(max-width:700px){
+  .sidebar{width:86%;max-width:310px}.content{padding:10px 10px 72px}.topbar{padding:8px 9px}.command-row{gap:8px}.hamburger{display:flex;min-width:38px;min-height:38px;align-items:center;justify-content:center}.app-title{font-size:16.5px}.command-title .site-sub{font-size:10px;max-width:180px}.command-actions .btn-primary{font-size:12px;padding:9px 11px}.dashboard-head{gap:9px}.dashboard-head h1{font-size:20px}.dashboard-head p{font-size:11px}.dashboard-kpis{grid-template-columns:1fr 1fr;gap:8px}.dashboard-kpi{padding:11px}.template-setup-grid,.template-module-grid{grid-template-columns:1fr}.template-step{padding:13px;min-height:0}.template-module{padding:10px}.mobile-nav{height:60px;box-shadow:0 -5px 18px rgba(16,44,70,.08)}.mobile-nav button{font-size:10px}.mobile-nav button svg{width:18px;height:18px}.safe-nav-banner{font-size:11px}.page-intro{padding:11px}.fab{display:none}
+}
+
+
+/* shared ergonomic refinements */
+.command-row{min-width:0}
+.command-title{min-width:0}
+.command-title .site-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sidebar-nav-btn{min-height:40px}
+.template-step .btn{min-height:38px}
+@media(max-width:700px){
+  .safe-nav-banner>div:last-child{display:none}
+  .safe-nav-banner{padding:9px 11px;margin-bottom:11px}
+  .command-title .site-sub{max-width:190px}
+  .command-actions .btn-primary{padding:9px 12px}
+  .fab{display:none}
+  .template-step{min-height:0}
+  .template-step .btn{width:100%;justify-content:center}
+  .dashboard-actions{width:100%}
+  .dashboard-actions .btn{flex:1;justify-content:center}
+}
+
+
+/* mobile width correction after all variant overrides */
+@media(max-width:700px){
+  .main{margin-left:0!important;width:100%;max-width:100%}
+  .sidebar{width:82%!important;max-width:300px!important}
+  .command-row{display:flex;flex-wrap:nowrap!important;width:100%;min-width:0}
+  .command-title{flex:1;min-width:0}
+  .command-actions{margin-left:0;flex:0 0 auto;min-width:0}
+  .command-actions .btn-primary{max-width:108px;overflow:hidden;text-overflow:ellipsis}
+  .content{width:100%;max-width:100%;overflow-x:hidden}
+  .project-control-grid{grid-template-columns:minmax(0,1fr)}
+  .project-control-card{width:100%;min-width:0}
+}
+
+/* ===== FINAL WINNER REFINEMENTS ===== */
+.control-grid{align-items:start}
+.control-card{align-self:start}
+.sidebar-footer-tools{padding:7px 10px}
+.sidebar-tools-details{width:100%}
+.sidebar-tools-details summary{
+  list-style:none;display:flex;align-items:center;justify-content:center;gap:6px;
+  min-height:34px;border:1px solid rgba(255,255,255,.22);border-radius:8px;
+  color:rgba(255,255,255,.78);font-size:10.8px;font-weight:700;cursor:pointer;
+}
+.sidebar-tools-details summary::-webkit-details-marker{display:none}
+.sidebar-tools-details[open] summary{margin-bottom:6px;background:rgba(255,255,255,.07)}
+.sidebar-tools-details .btn{width:100%;margin-top:5px}
+.sidebar-tools-details .tool-row{margin-top:0}
+.sidebar-tools-details .nav-safety-status{padding:2px 1px 3px;text-align:center}
+.dashboard-actions{align-items:center}
+@media(max-width:700px){
+  .command-scope{display:none!important}
+  .dashboard-actions .btn{min-width:0}
+  .dashboard-head{margin-bottom:9px}
+  .control-card-head small{display:none}
+  .project-control-grid{gap:9px}
+}
+
+/* ---------- 範圍重置／全部重置 ---------- */
+.module-reset-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:10px 12px;
+  margin-bottom:12px;
+  box-shadow:var(--shadow-sm);
+}
+.module-reset-toolbar .mrt-copy strong{
+  display:block;
+  color:var(--navy);
+  font-size:12.5px;
+}
+.module-reset-toolbar .mrt-copy span{
+  display:block;
+  margin-top:3px;
+  color:var(--ink-mute);
+  font-size:11px;
+  line-height:1.55;
+}
+.module-reset-toolbar .mrt-actions{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+}
+.btn-reset-range{
+  border-color:#D38A27!important;
+  color:#9A5C0A!important;
+  background:#FFF8E8!important;
+}
+.btn-reset-range.active{
+  background:#D97706!important;
+  border-color:#D97706!important;
+  color:#fff!important;
+  box-shadow:0 0 0 3px rgba(217,119,6,.17);
+}
+.btn-reset-all{
+  border-color:#C6453A!important;
+  color:#B3342B!important;
+  background:#FFF2F0!important;
+}
+.reset-mode-banner{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:#FFF3D8;
+  color:#815009;
+  border:1px solid #E7C179;
+  border-radius:9px;
+  padding:8px 10px;
+  font-size:11.5px;
+  font-weight:700;
+  margin-bottom:10px;
+}
+.reset-mode-banner::before{
+  content:"重置";
+  background:#D97706;
+  color:#fff;
+  border-radius:999px;
+  padding:3px 8px;
+  font-size:10px;
+}
+td.mx-cell.mx-reset-selected,
+td.actual-cell.actual-reset-selected{
+  box-shadow:inset 0 0 0 3px #D97706!important;
+  background-image:repeating-linear-gradient(
+    135deg,
+    rgba(217,119,6,.20) 0,
+    rgba(217,119,6,.20) 7px,
+    rgba(255,255,255,.16) 7px,
+    rgba(255,255,255,.16) 14px
+  )!important;
+}
+.gt-day-cell.gantt-reset-selected,
+.dual-cell.gantt-reset-selected{
+  background:#FFE1B5!important;
+  box-shadow:inset 0 0 0 2px #D97706;
+  z-index:5;
+}
+.gantt-reset-selection-count{
+  color:#A15C08;
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  font-weight:900;
+}
+@media(max-width:700px){
+  .module-reset-toolbar{
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .module-reset-toolbar .mrt-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .module-reset-toolbar .mrt-actions .btn{
+    width:100%;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -466,7 +1290,7 @@ table.matrix tbody td.mx-cell.mx-selected{box-shadow:inset 0 0 0 3px var(--orang
    ========================================================================= */
 
 /* =====================  1. 常數與工具函式  ===================== */
-const STORAGE_KEY = 'cpm_data_v8_floor_safe_click';
+const STORAGE_KEY = 'cpm_template_safe_nav_v1';
 
 // 工序狀態：矩陣顯示時歸類為 4 色（灰／橘／綠／紅）
 const STATUS = {
@@ -478,37 +1302,82 @@ const STATUS = {
   waiting_cutting:  { label:'待下料', fg:'#1f7a70', bg:'#E2F2F0', dot:'#1f7a70', bucket:'progress' },
   pending_confirm:  { label:'待確認', fg:'#2B6CB0', bg:'#E4EEF9', dot:'#2B6CB0', bucket:'progress' },
   blocked_predecessor:{ label:'卡前置', fg:'#9c4a13', bg:'#FBE9DC', dot:'#c0631f', bucket:'progress' },
-  waiting_billing:  { label:'待請款', fg:'#155e75', bg:'#E0F2F7', dot:'#155e75', bucket:'progress' },
   delayed:          { label:'延誤',   fg:'#a12a21', bg:'#FBE2E0', dot:'#C4392F', bucket:'delayed' },
   done:             { label:'完成',   fg:'#0e6d3c', bg:'#DFF3E7', dot:'#178A4C', bucket:'done' }
 };
-const STATUS_ORDER = ['not_started','in_progress','waiting_material','waiting_quote','waiting_contract','waiting_cutting','pending_confirm','blocked_predecessor','waiting_billing','delayed','done'];
+const STATUS_ORDER = ['not_started','in_progress','waiting_material','waiting_quote','waiting_contract','waiting_cutting','pending_confirm','blocked_predecessor','delayed','done'];
 const BUCKET_CLASS = { none:'st-none', progress:'st-progress', done:'st-done', delayed:'st-delayed' };
 // 需追蹤的狀態（交接總覽「本週必追」使用）
-const FOLLOW_STATUSES = ['waiting_material','waiting_quote','waiting_contract','waiting_cutting','pending_confirm','blocked_predecessor','waiting_billing','delayed'];
+const FOLLOW_STATUSES = ['waiting_material','waiting_quote','waiting_contract','waiting_cutting','pending_confirm','blocked_predecessor','delayed'];
 // 卡點原因選項（每筆進度記錄可選填）
-const BLOCK_REASONS = ['待料','圖面未確認','尺寸待收測','前工項未完成','工班未進場','人力不足','鷹架／遮斷影響','業主／監造待確認','待請款','其他'];
-// 甘特圖子工序：可於「管理甘特子工序」調整名稱、顯示／隱藏或新增。
-// 每一個施工工序底下都會共用這組子工序，排程可指定到其中一個子工序。
+const BLOCK_REASONS = ['待料','圖面未確認','尺寸待收測','前工項未完成','工班未進場','人力不足','鷹架／遮斷影響','業主／監造待確認','其他'];
+// 甘特圖子工序：改為「每一個母工序各自管理自己的子工序」。
+// 不會再把同一組子工序套到所有工序；需要子工序的母工序可套用預設或自行新增。
 const DEFAULT_GANTT_SUBPROCESS_NAMES = ['骨架施作','骨架收測','包版下料','包版安裝'];
 
-function ensureGanttSubprocesses(proj){
-  if(!proj) return [];
-  if(!Array.isArray(proj.ganttSubprocesses)) proj.ganttSubprocesses = [];
-  const existingNames = new Set(proj.ganttSubprocesses.map(x=>String(x.name||'').trim()).filter(Boolean));
-  DEFAULT_GANTT_SUBPROCESS_NAMES.forEach(name=>{
-    if(!existingNames.has(name)){ proj.ganttSubprocesses.push({id:uid('gsp'), name, visible:true}); existingNames.add(name); }
+function ensureGanttSubprocessStore(proj){
+  if(!proj) return {};
+  if(!Array.isArray(proj.schedules)) proj.schedules=[];
+  const legacyList = Array.isArray(proj.ganttSubprocesses) ? proj.ganttSubprocesses : [];
+  const needMigration = !proj.ganttSubprocessesByProcess || typeof proj.ganttSubprocessesByProcess!=='object' || Array.isArray(proj.ganttSubprocessesByProcess);
+  if(needMigration){
+    const store = {};
+    const legacyById = new Map(legacyList.map(sp=>[sp.id, sp]));
+    // 舊版是全域子工序；新版只把「已被排程使用」的子工序搬到該母工序底下，避免所有工序都冒出子工序。
+    proj.schedules.forEach(s=>{
+      if(!s.subProcessId || !s.processId) return;
+      if(!store[s.processId]) store[s.processId]=[];
+      const old = legacyById.get(s.subProcessId);
+      const oldName = old ? String(old.name||'子工序').trim() : '子工序';
+      let sp = store[s.processId].find(x=>String(x.name||'')===oldName);
+      if(!sp){
+        sp = {id:uid('gsp'), name:oldName, visible: old ? old.visible!==false : true};
+        store[s.processId].push(sp);
+      }
+      s.subProcessId = sp.id;
+    });
+    proj.ganttSubprocessesByProcess = store;
+    proj.ganttSubprocesses = []; // 保留欄位但不再作為全域設定使用
+  }
+  Object.keys(proj.ganttSubprocessesByProcess).forEach(pid=>{
+    const list = Array.isArray(proj.ganttSubprocessesByProcess[pid]) ? proj.ganttSubprocessesByProcess[pid] : [];
+    proj.ganttSubprocessesByProcess[pid] = list
+      .filter(sp=>sp && String(sp.name||'').trim())
+      .map(sp=>({id:sp.id||uid('gsp'), name:String(sp.name||'').trim(), visible:sp.visible!==false}));
   });
-  proj.ganttSubprocesses.forEach(sp=>{ if(sp.visible===undefined) sp.visible=true; if(!sp.id) sp.id=uid('gsp'); });
-  return proj.ganttSubprocesses;
+  return proj.ganttSubprocessesByProcess;
 }
-function visibleGanttSubprocesses(proj){ return ensureGanttSubprocesses(proj).filter(sp=>sp.visible!==false && String(sp.name||'').trim()); }
-function ganttSubprocessName(proj, subProcessId){
-  if(!subProcessId) return '';
-  const sp = ensureGanttSubprocesses(proj).find(x=>x.id===subProcessId);
+function ganttSubprocessesForProcess(proj, processId, includeHidden){
+  const store = ensureGanttSubprocessStore(proj);
+  if(!processId) return [];
+  if(!Array.isArray(store[processId])) store[processId]=[];
+  const list = store[processId];
+  return includeHidden ? list : list.filter(sp=>sp.visible!==false && String(sp.name||'').trim());
+}
+function visibleGanttSubprocesses(proj, processId){ return ganttSubprocessesForProcess(proj, processId, false); }
+function findGanttSubprocess(proj, processId, subProcessId){
+  if(!subProcessId) return null;
+  let sp = ganttSubprocessesForProcess(proj, processId, true).find(x=>x.id===subProcessId);
+  if(sp) return sp;
+  const store = ensureGanttSubprocessStore(proj);
+  for(const pid of Object.keys(store)){ sp = (store[pid]||[]).find(x=>x.id===subProcessId); if(sp) return sp; }
+  return null;
+}
+function ganttSubprocessName(proj, processId, subProcessId){
+  const sp = findGanttSubprocess(proj, processId, subProcessId);
   return sp ? sp.name : '';
 }
+function applyDefaultGanttSubprocesses(proj, processId){
+  const list = ganttSubprocessesForProcess(proj, processId, true);
+  const existing = new Set(list.map(sp=>String(sp.name||'').trim()).filter(Boolean));
+  DEFAULT_GANTT_SUBPROCESS_NAMES.forEach(name=>{
+    if(!existing.has(name)){ list.push({id:uid('gsp'), name, visible:true}); existing.add(name); }
+  });
+  ensureGanttSubprocessStore(proj)[processId] = list;
+  return list;
+}
 function processSummaryInfo(proj, b, process){
+  // 母工序日期＝此母工序底下所有排程／子工序排程的總範圍。
   const scheds = proj.schedules.filter(s=>s.buildingId===b.id && s.processId===process.id);
   let range = null;
   if(scheds.length){
@@ -554,6 +1423,200 @@ function compressFloorLabel(b, floorIds){
   return runs.map(r=> r.length>1 ? `${r[0]}–${r[r.length-1]}` : r[0]).join('、');
 }
 
+// 代辦使用的樓層顯示：一般樓層以低樓層到高樓層呈現，例如 18–20樓。
+function taskFloorLabel(b, floorIds){
+  const unique=[...new Set((floorIds||[]).filter(Boolean))];
+  if(!unique.length) return '';
+
+  const normal=unique
+    .map(f=>({raw:f,m:String(f).match(/^(\d+)F$/i)}))
+    .filter(x=>x.m)
+    .map(x=>Number(x.m[1]))
+    .sort((a,b)=>a-b);
+
+  const other=unique.filter(f=>!/^(\d+)F$/i.test(String(f)));
+
+  const labels=[];
+  if(normal.length){
+    let run=[normal[0]];
+    for(let i=1;i<normal.length;i++){
+      if(normal[i]===normal[i-1]+1) run.push(normal[i]);
+      else{ labels.push(run.length>1?`${run[0]}–${run[run.length-1]}樓`:`${run[0]}樓`); run=[normal[i]]; }
+    }
+    labels.push(run.length>1?`${run[0]}–${run[run.length-1]}樓`:`${run[0]}樓`);
+  }
+
+  if(other.length){
+    const idx=new Map((b?.floors||[]).map((f,i)=>[f,i]));
+    const sorted=[...other].sort((a,c)=>(idx.get(a)??999)-(idx.get(c)??999));
+    const runs=[]; let run=[];
+    sorted.forEach(f=>{
+      if(!run.length){ run=[f]; return; }
+      const prev=run[run.length-1];
+      if(idx.has(prev)&&idx.has(f)&&idx.get(f)===idx.get(prev)+1) run.push(f);
+      else{ runs.push(run); run=[f]; }
+    });
+    if(run.length) runs.push(run);
+    runs.forEach(r=>labels.push(r.length>1?`${r[0]}–${r[r.length-1]}`:r[0]));
+  }
+  return labels.join('、');
+}
+
+// 將文字中的樓層前綴移除，讓「18樓遮斷未施作、19樓遮斷未施作」可被視為同一件事。
+function normalizeTaskIssueText(text, floor){
+  let s=String(text||'').trim();
+  if(!s) return '';
+  const f=String(floor||'').trim();
+  const m=f.match(/^(\d+)F$/i);
+  if(m){
+    const n=m[1];
+    s=s.replace(new RegExp(`(^|[、，,\\s])${n}\\s*(?:F|樓)?\\s*`, 'ig'),'$1');
+  }else if(f){
+    s=s.replace(new RegExp(`(^|[、，,\\s])${f.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')}\\s*`, 'ig'),'$1');
+  }
+  return s.replace(/^[：:、，,\-\s]+/,'').replace(/\s+/g,' ').trim();
+}
+
+// 依棟別、工序、狀態、工班與相同事件內容合併連續樓層。
+
+// 交接頁樓層格式：16F、18F-20F；個別樓層與連續樓層可混合顯示。
+function handoverFloorLabel(b, floorIds){
+  const unique=[...new Set((floorIds||[]).filter(Boolean))];
+  if(!unique.length) return '';
+
+  const numeric=unique
+    .map(f=>({raw:String(f),m:String(f).match(/^(\d+)F$/i)}))
+    .filter(x=>x.m)
+    .map(x=>Number(x.m[1]))
+    .sort((a,c)=>a-c);
+
+  const labels=[];
+  if(numeric.length){
+    let run=[numeric[0]];
+    for(let i=1;i<numeric.length;i++){
+      if(numeric[i]===numeric[i-1]+1) run.push(numeric[i]);
+      else{
+        labels.push(run.length>1?`${run[0]}F-${run[run.length-1]}F`:`${run[0]}F`);
+        run=[numeric[i]];
+      }
+    }
+    labels.push(run.length>1?`${run[0]}F-${run[run.length-1]}F`:`${run[0]}F`);
+  }
+
+  const nonNumeric=unique.filter(f=>!/^(\d+)F$/i.test(String(f)));
+  if(nonNumeric.length){
+    const idx=new Map((b?.floors||[]).map((f,i)=>[f,i]));
+    nonNumeric
+      .sort((a,c)=>(idx.get(a)??999)-(idx.get(c)??999))
+      .forEach(f=>labels.push(String(f)));
+  }
+
+  return labels.join('、');
+}
+
+function followStatusPriority(status){
+  const order={
+    delayed:100,
+    blocked_predecessor:90,
+    waiting_material:80,
+    pending_confirm:70,
+    waiting_cutting:60,
+    waiting_contract:50,
+    waiting_quote:40,
+    in_progress:20,
+    not_started:10,
+    done:0
+  };
+  return order[status]??0;
+}
+
+// 同案場中，相同棟別＋工序＋敘述只顯示一筆，樓層自動合併。
+function groupHandoverRecords(proj, records){
+  const groups=new Map();
+
+  (records||[]).forEach(r=>{
+    const b=proj.buildings.find(x=>x.id===r.buildingId);
+    const pr=proj.processes.find(x=>x.id===r.processId);
+    if(!b||!pr) return;
+
+    const issueRaw=r.blockReason||r.note||statusInfo(r.status).label;
+    const issue=normalizeTaskIssueText(issueRaw,r.floor) || statusInfo(r.status).label;
+    const key=[
+      r.buildingId,
+      r.processId,
+      issue.toLowerCase()
+    ].join('|');
+
+    if(!groups.has(key)){
+      groups.set(key,{
+        b,pr,issue,
+        status:r.status,
+        floors:[],
+        records:[],
+        latestUpdate:0,
+        progressTotal:0
+      });
+    }
+
+    const g=groups.get(key);
+    g.floors.push(r.floor);
+    g.records.push(r);
+    g.latestUpdate=Math.max(g.latestUpdate,Number(r.updatedAt||0));
+    g.progressTotal+=Number(r.progress||0);
+
+    if(followStatusPriority(r.status)>followStatusPriority(g.status)){
+      g.status=r.status;
+    }
+  });
+
+  return [...groups.values()]
+    .map(g=>({
+      ...g,
+      floor:handoverFloorLabel(g.b,g.floors),
+      avgProgress:g.records.length?Math.round(g.progressTotal/g.records.length):0,
+      recordId:[...g.records].sort((a,c)=>(c.updatedAt||0)-(a.updatedAt||0))[0]?.id||'',
+      recordIds:g.records.map(r=>r.id)
+    }))
+    .sort((a,c)=>
+      followStatusPriority(c.status)-followStatusPriority(a.status) ||
+      c.latestUpdate-a.latestUpdate
+    );
+}
+
+function groupTaskRecordsByFloor(proj, records){
+  const groups=new Map();
+  (records||[]).forEach(r=>{
+    const b=proj.buildings.find(x=>x.id===r.buildingId);
+    const pr=proj.processes.find(x=>x.id===r.processId);
+    if(!b||!pr) return;
+
+    const issueRaw=r.blockReason||r.note||statusInfo(r.status).label;
+    const issue=normalizeTaskIssueText(issueRaw,r.floor) || statusInfo(r.status).label;
+    const key=[
+      r.buildingId,r.processId,r.status||'',
+      issue.toLowerCase(),String(r.crew||'').trim().toLowerCase()
+    ].join('|');
+
+    if(!groups.has(key)){
+      groups.set(key,{
+        b,pr,status:r.status,crew:r.crew||'',issue,
+        floors:[],records:[],latestUpdate:0
+      });
+    }
+    const g=groups.get(key);
+    g.floors.push(r.floor);
+    g.records.push(r);
+    g.latestUpdate=Math.max(g.latestUpdate,Number(r.updatedAt||0));
+  });
+
+  return [...groups.values()].map(g=>({
+    ...g,
+    floor:taskFloorLabel(g.b,g.floors),
+    recordId:g.records[0]?.id||'',
+    recordIds:g.records.map(r=>r.id)
+  })).sort((a,b)=>b.latestUpdate-a.latestUpdate);
+}
+
 /* =====================  2. 預設資料 / 種子資料  ===================== */
 function defaultProcessNames(){ return ['骨料進料','吊線放樣','骨料安裝','骨料收測','收測拆圖','包版下訂','包版到料','包版安裝','矽膠收縫','收尾清潔']; }
 function defaultPartNames(){ return ['東側','南側','北側','西側','樑帶','C1柱']; }
@@ -563,7 +1626,7 @@ function blankProject(name){
   return { id:uid('p'), name, createdAt:Date.now(),
     processes:makeProcesses(defaultProcessNames()), parts:makeParts(defaultPartNames()), processGroups:[],
     buildings:[], records:[], schedules:[],
-    contacts:[], vendors:[], storageArea:'', entryRules:'', handoverSummary:'', billingItems:[] };
+    contacts:[], vendors:[], storageArea:'', entryRules:'', handoverSummary:'', billingItems:[], billingRecords:[] };
 }
 
 function seedDemoProject(){
@@ -647,7 +1710,7 @@ function buildHandoverProject(cfg){
     records: [], schedules: [],
     contacts: cfg.contacts||[], vendors: cfg.vendors||[],
     storageArea: cfg.storageArea||'', entryRules: cfg.entryRules||'',
-    handoverSummary: cfg.handoverSummary||'', billingItems: cfg.billingItems||[] };
+    handoverSummary: cfg.handoverSummary||'', billingItems: cfg.billingItems||[], billingRecords: cfg.billingRecords||[] };
   const now = Date.now();
   (cfg.items||[]).forEach(it=>{
     const b = p.buildings.find(x=>x.name===it.b) || p.buildings[0];
@@ -680,17 +1743,15 @@ function seedHandoverProjects(){
       {name:'CD棟', floors:['RF', ...floorsSpan(20,1)]},
       {name:'EF棟', floors:['RF', ...floorsSpan(21,1)]},
     ],
-    processNames:['RF造型包板','包柱包板','樑帶包板','C側燈槽包板','矽利康收縫','改板／換板','燒焊傷修復','請款'],
+    processNames:['RF造型包板','包柱包板','樑帶包板','C側燈槽包板','矽利康收縫','改板／換板','燒焊傷修復'],
     items:[
       // AB棟 RF以上 → RF
       {b:'AB棟', fl:'RF', pr:'燒焊傷修復', st:'not_started', note:'磁磚燒焊傷未清理'},
       // AB棟 遮斷層以上 → 11F以上
       {b:'AB棟', fl:scAboveAB, pr:'包柱包板', st:'in_progress', note:'小ㄇ處優先完成，回報處長改架，上裕鑫格柵施作', blk:'鷹架／遮斷影響'},
       {b:'AB棟', fl:'11F', pr:'樑帶包板', st:'pending_confirm', note:'確認拆架時間，安排11F未完成處施作', blk:'鷹架／遮斷影響'},
-      {b:'AB棟', fl:scAboveAB, pr:'改板／換板', st:'waiting_billing', note:'工班改板費用數量計價', blk:'待請款'},
       // AB棟 遮斷層以下 → 10F以下
       {b:'AB棟', fl:'3F', pr:'樑帶包板', st:'pending_confirm', note:'確認3F包板收尾方式', blk:'圖面未確認'},
-      {b:'AB棟', fl:scBelowAB, pr:'改板／換板', st:'waiting_billing', note:'工班改板費用數量計價', blk:'待請款'},
       {b:'AB棟', fl:floorsSpan(10,4), pr:'改板／換板', st:'in_progress', note:'4F外各樓層剩料、換板清除'},
       // CD棟 RF以上 → RF
       {b:'CD棟', fl:'RF', pr:'包柱包板', st:'in_progress', note:'小ㄇ橫樑上燈具補強骨架'},
@@ -715,21 +1776,19 @@ function seedHandoverProjects(){
     vendors:['AB、EF棟工班：濠傑（李華養、小范）','CD棟工班：鴻展（黃老板、阿發）','矽利康：彥駿','協力廠商：禧燁、寶誼、赫泰扁管、鴻傑角鐵、金通螺絲'],
     storageArea:'B3F',
     entryRules:'',
-    handoverSummary:'三棟（AB/CD/EF）依 RF以上／遮斷層以上／遮斷層以下 分區管理。AB棟收尾與改板計價中；CD棟骨架補強與包板下料中；EF棟待貨櫃到料後安排堆高機與工班分料安裝。',
-    billingItems:['AB棟 遮斷層以上：工班改板費用數量計價','AB棟 遮斷層以下：工班改板費用數量計價'],
+    handoverSummary:'三棟（AB/CD/EF）依 RF以上／遮斷層以上／遮斷層以下 分區管理。AB棟收尾與改板確認中；CD棟骨架補強與包板下料中；EF棟待貨櫃到料後安排堆高機與工班分料安裝。',
+    billingItems:[],
   }));
 
   // ---------- 案場二：變電站 ----------
   projects.push(buildHandoverProject({
     name:'變電站',
     buildings:[{name:'全案場', floors:['全區']}],
-    processNames:['格柵踏板','人孔蓋','爬梯','R1F欄杆','2F可拆式欄杆','A樓梯扶手','A扶壁式扶手','B樓梯扶手','C樓梯扶手','請款'],
+    processNames:['格柵踏板','人孔蓋','爬梯','R1F欄杆','2F可拆式欄杆','A樓梯扶手','A扶壁式扶手','B樓梯扶手','C樓梯扶手'],
     items:[
       {b:'全案場', pr:'格柵踏板', st:'in_progress', note:'重電室截油槽格柵踏板18座'},
-      {b:'全案場', pr:'格柵踏板', st:'waiting_billing', note:'合約請款50%，7/20前送請款單剩餘50%', blk:'待請款'},
       {b:'全案場', pr:'格柵踏板', st:'pending_confirm', note:'A9、A10角鐵框未灌無收縮', blk:'業主／監造待確認'},
       {b:'全案場', pr:'格柵踏板', st:'in_progress', note:'G6一踏板請工班修改尺寸'},
-      {b:'全案場', pr:'人孔蓋', st:'waiting_billing', note:'7/20前送請款單剩餘50%', blk:'待請款'},
       {b:'全案場', pr:'爬梯', st:'pending_confirm', note:'追爬梯護籠何時可安裝', blk:'業主／監造待確認'},
       {b:'全案場', pr:'爬梯', st:'in_progress', note:'B1消防水箱內爬梯拉脹處補打矽利康'},
       {b:'全案場', pr:'爬梯', st:'pending_confirm', note:'電梯機坑尚未收測製作', blk:'尺寸待收測'},
@@ -741,11 +1800,11 @@ function seedHandoverProjects(){
       {b:'全案場', pr:'C樓梯扶手', st:'in_progress', pg:60, note:'7/10前完成'},
       {b:'全案場', pr:'A扶壁式扶手', st:'in_progress', note:'無障礙梯，高度850'},
     ],
-    contacts:['請款窗口：工程師憲憲'],
+    contacts:[],
     vendors:['烤漆美容：寶誼'],
     storageArea:'', entryRules:'',
-    handoverSummary:'格柵踏板／人孔蓋合約已請款50%，7/20前送請款單請剩餘50%。三支樓梯扶手7/10前完成，完成後一併檢查R1F欄杆烤漆瑕疵。',
-    billingItems:['格柵踏板：7/20前送請款單剩餘50%','人孔蓋：7/20前送請款單剩餘50%','補工需10日以前提報數量給工程師憲憲','20日前送請款，需附發票、請款單、施作照'],
+    handoverSummary:'三支樓梯扶手需依排程完成，完成後一併檢查R1F欄杆烤漆瑕疵；格柵踏板、人孔蓋與爬梯持續追蹤現場條件。',
+    billingItems:[],
   }));
 
   // ---------- 案場三：康橋 ----------
@@ -805,10 +1864,28 @@ function importHandoverProjects(){
   showToast('已匯入 '+toAdd.length+' 個交接案場雛型');
 }
 
+function seedTemplateProject(){
+  const p = blankProject('新案場模板');
+  const b = {id:uid('b'), name:'A棟', floors:['RF', ...Array.from({length:10},(_,i)=>(10-i)+'F')]};
+  p.buildings = [b];
+  p.handoverSummary = '請逐步補上：承攬範圍、目前進度、近期重要事項與待確認內容。';
+  p.storageArea = '';
+  p.entryRules = '';
+  p.contacts = [];
+  p.vendors = [];
+  p.billingItems = [];
+  p.billingRecords = [];
+  return p;
+}
 function defaultState(){
-  const demo = seedDemoProject();
-  const handover = seedHandoverProjects();
-  return { projects:[demo, ...handover], activeProjectId:demo.id, activeBuildingId:demo.buildings[0].id, view:'home' };
+  const template = seedTemplateProject();
+  return {
+    projects:[template],
+    activeProjectId:template.id,
+    activeBuildingId:template.buildings[0].id,
+    view:'home',
+    templateMode:true
+  };
 }
 
 /* =====================  3. 狀態容器與存取層  ===================== */
@@ -826,6 +1903,49 @@ const SUPABASE_SYNC_CONFIG_KEY = 'cpm_supabase_sync_config_v1';
 const SUPABASE_TABLE_DEFAULT = 'site_progress_state';
 const SUPABASE_ROW_DEFAULT = 'main';
 const SYNC_POLL_INTERVAL_MS = 15000;
+
+const UI_STATE_KEY = STORAGE_KEY + '_local_ui_v2';
+const UI_STATE_FIELDS = [
+  'view','activeProjectId','activeBuildingId',
+  'matrixMode','ganttMode','ganttRange'
+];
+
+function readLocalUiState(){
+  try{
+    const raw = localStorage.getItem(UI_STATE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  }catch(e){ return {}; }
+}
+function currentUiState(source){
+  source = source || state || {};
+  const ui = {};
+  UI_STATE_FIELDS.forEach(k=>{
+    if(source[k] !== undefined) ui[k] = source[k];
+  });
+  return ui;
+}
+function persistLocalUiState(){
+  if(!state) return;
+  try{ localStorage.setItem(UI_STATE_KEY, JSON.stringify(currentUiState(state))); }catch(e){}
+}
+function applyLocalUiState(target, ui){
+  if(!target) return target;
+  ui = ui || {};
+  UI_STATE_FIELDS.forEach(k=>{
+    if(ui[k] !== undefined) target[k] = ui[k];
+  });
+  return target;
+}
+function persistentStatePayload(source){
+  const cloned = JSON.parse(JSON.stringify(source || state || {}));
+  UI_STATE_FIELDS.forEach(k=>delete cloned[k]);
+  return cloned;
+}
+function persistentFingerprint(source){
+  try{ return JSON.stringify(persistentStatePayload(source)); }
+  catch(e){ return ''; }
+}
+
 let supabaseClient = null;
 let supabaseLoadPromise = null;
 
@@ -978,17 +2098,9 @@ const store = {
   }
 };
 
-async function loadState(){
-  try{
-    const res = await store.get(STORAGE_KEY);
-    state = (res && res.value) ? JSON.parse(res.value) : null;
-  }catch(e){ state = null; }
-  if(!state || !Array.isArray(state.projects) || state.projects.length===0){
-    state = defaultState();
-    try{ await store.set(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
-  }
-  // 向下相容：補齊可能缺少的欄位
-  state.projects.forEach(p=>{
+function normalizeStateShape(target){
+  if(!target || !Array.isArray(target.projects)) return target;
+  target.projects.forEach(p=>{
     if(!Array.isArray(p.schedules)) p.schedules=[];
     if(!Array.isArray(p.processGroups)) p.processGroups=[];
     if(!Array.isArray(p.contacts)) p.contacts=[];
@@ -997,29 +2109,82 @@ async function loadState(){
     if(p.entryRules===undefined) p.entryRules='';
     if(p.handoverSummary===undefined) p.handoverSummary='';
     if(!Array.isArray(p.billingItems)) p.billingItems=[];
+    if(!Array.isArray(p.billingRecords)) p.billingRecords=[];
+
     (p.processes||[]).forEach(pr=>{ if(pr.groupId===undefined) pr.groupId=null; });
-    ensureGanttSubprocesses(p);
-    (p.records||[]).forEach(r=>{ if(!r.status) r.status = r.progress>=100?'done':'not_started'; if(r.crew===undefined) r.crew=''; if(r.photo===undefined) r.photo=null; if(r.blockReason===undefined) r.blockReason=''; });
-    (p.schedules||[]).forEach(s=>{ if(s.actualCompleteDate===undefined) s.actualCompleteDate=null; if(!Array.isArray(s.dependsOn)) s.dependsOn=[]; if(s.subProcessId===undefined) s.subProcessId=null; });
+    ensureGanttSubprocessStore(p);
+    (p.records||[]).forEach(r=>{
+      if(!r.status) r.status = r.progress>=100?'done':'not_started';
+      if(r.status==='waiting_billing') r.status='pending_confirm';
+      if(r.crew===undefined) r.crew='';
+      if(r.photo===undefined) r.photo=null;
+      if(r.blockReason===undefined) r.blockReason='';
+      if(r.blockReason==='待請款') r.blockReason='';
+    });
+    (p.schedules||[]).forEach(s=>{
+      if(s.actualStartDate===undefined) s.actualStartDate=null;
+      if(s.actualCompleteDate===undefined) s.actualCompleteDate=null;
+      if(!Array.isArray(s.dependsOn)) s.dependsOn=[];
+      if(s.subProcessId===undefined) s.subProcessId=null;
+    });
   });
-  if(!Array.isArray(state.quickTemplates)) state.quickTemplates = [];
-  if(!state.view) state.view = 'home';
-  if(!state.matrixMode) state.matrixMode = 'single';
-  if(!state.ganttMode) state.ganttMode = 'single';
-  if(!state.ganttRange) state.ganttRange = {start:'', end:''};
-  if(!state.activeProjectId || !state.projects.find(p=>p.id===state.activeProjectId)) state.activeProjectId = state.projects[0].id;
-  const proj = currentProject();
-  if(proj && (!state.activeBuildingId || !proj.buildings.find(b=>b.id===state.activeBuildingId))){
-    state.activeBuildingId = proj.buildings[0] ? proj.buildings[0].id : null;
+
+  if(!Array.isArray(target.quickTemplates)) target.quickTemplates = [];
+  if(!target.view) target.view = 'home';
+  if(!target.matrixMode) target.matrixMode = 'single';
+  if(!target.ganttMode) target.ganttMode = 'single';
+  if(!target.ganttRange) target.ganttRange = {start:'', end:''};
+  if(!target.activeProjectId || !target.projects.find(p=>p.id===target.activeProjectId)){
+    target.activeProjectId = target.projects[0]?.id || null;
   }
+  const proj = target.projects.find(p=>p.id===target.activeProjectId);
+  if(proj && (!target.activeBuildingId || !proj.buildings.find(b=>b.id===target.activeBuildingId))){
+    target.activeBuildingId = proj.buildings[0] ? proj.buildings[0].id : null;
+  }
+  const validViews = ['home','handover','buildings','matrix','actual','schedule','records','tasks','photos'];
+  if(target.view==='billing' || !validViews.includes(target.view)) target.view='home';
+  return target;
+}
+
+function mergeRemoteKeepingLocalPage(remote){
+  const ui = currentUiState(state);
+  state = normalizeStateShape(remote);
+  applyLocalUiState(state, ui);
+  normalizeStateShape(state);
+  persistLocalUiState();
+  return state;
+}
+
+async function loadState(){
+  const localUi = readLocalUiState();
+  try{
+    const res = await store.get(STORAGE_KEY);
+    state = (res && res.value) ? JSON.parse(res.value) : null;
+  }catch(e){ state = null; }
+
+  if(!state || !Array.isArray(state.projects) || state.projects.length===0){
+    state = defaultState();
+    try{ await store.set(STORAGE_KEY, JSON.stringify(persistentStatePayload(state))); }catch(e){}
+  }
+
+  normalizeStateShape(state);
+  applyLocalUiState(state, localUi);
+  normalizeStateShape(state);
+  persistLocalUiState();
   render();
   startAutoRefresh();
 }
 function scheduleSave(){
+  persistLocalUiState();
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async ()=>{
-    try{ await store.set(STORAGE_KEY, JSON.stringify(state)); setSyncStatus(true); }
-    catch(e){ setSyncStatus(false); showToast('儲存失敗，請檢查網路連線','error'); }
+    try{
+      await store.set(STORAGE_KEY, JSON.stringify(persistentStatePayload(state)));
+      setSyncStatus(true);
+    }catch(e){
+      setSyncStatus(false);
+      showToast('儲存失敗，請檢查網路連線','error');
+    }
   }, 350);
 }
 function setSyncStatus(ok){
@@ -1028,18 +2193,20 @@ function setSyncStatus(ok){
 }
 function startAutoRefresh(){
   clearInterval(refreshTimer);
-  if(!isCloudEnabled()) return; // 本機模式無雲端資料可輪詢
+  if(!isCloudEnabled()) return;
   refreshTimer = setInterval(async ()=>{
     if(document.hidden || document.querySelector('.modal-overlay')) return;
     try{
       const res = await store.get(STORAGE_KEY);
       if(res && res.value){
         const remote = JSON.parse(res.value);
-        if(JSON.stringify(remote)!==JSON.stringify(state)){
-          state = remote;
-          if(!state.projects.find(p=>p.id===state.activeProjectId)) state.activeProjectId = state.projects[0]?.id;
+        // 只比較工程資料，不比較目前頁面／目前案場等本機 UI 狀態。
+        if(persistentFingerprint(remote)!==persistentFingerprint(state)){
+          const y = window.scrollY;
+          mergeRemoteKeepingLocalPage(remote);
           setSyncStatus(true);
           render();
+          requestAnimationFrame(()=>window.scrollTo(0,y));
         }
       }
     }catch(e){ setSyncStatus(false); }
@@ -1049,16 +2216,25 @@ async function manualRefresh(){
   if(!isCloudEnabled()){ showToast('目前為本機模式（無雲端同步）'); return; }
   try{
     const res = await store.get(STORAGE_KEY);
-    if(res && res.value){ state=JSON.parse(res.value); render(); showToast('已更新至最新資料'); }
-    else showToast('雲端尚無資料，可先到同步設定上傳目前資料');
+    if(res && res.value){
+      const y = window.scrollY;
+      mergeRemoteKeepingLocalPage(JSON.parse(res.value));
+      render();
+      requestAnimationFrame(()=>window.scrollTo(0,y));
+      showToast('資料已更新，目前頁面保持不變');
+    }else{
+      showToast('雲端尚無資料，可先到同步設定上傳目前資料');
+    }
     setSyncStatus(true);
+  }catch(e){
+    setSyncStatus(false);
+    showToast('更新失敗，請檢查同步設定','error');
   }
-  catch(e){ setSyncStatus(false); showToast('更新失敗，請檢查同步設定','error'); }
 }
 
 /* ---------- 資料備份：匯出 JSON 檔／匯入 JSON 檔（版本搬移、跨環境轉移用） ---------- */
 function exportBackup(){
-  const payload = JSON.stringify(state, null, 1);
+  const payload = JSON.stringify(persistentStatePayload(state), null, 1);
   const blob = new Blob([payload], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1076,8 +2252,9 @@ async function importBackupFile(e){
     const data = JSON.parse(text);
     if(!data || !Array.isArray(data.projects)) throw new Error('格式不符');
     if(!confirm(`確定匯入備份？將以備份內容（${data.projects.length} 個案場）覆蓋目前所有資料，此操作無法復原。`)){ e.target.value=''; return; }
-    state = data;
-    await store.set(STORAGE_KEY, JSON.stringify(state));
+    state = normalizeStateShape(data);
+    applyLocalUiState(state, readLocalUiState());
+    await store.set(STORAGE_KEY, JSON.stringify(persistentStatePayload(state)));
     e.target.value='';
     loadState(); // 走一次正規化流程補齊欄位
     showToast('已匯入備份資料');
@@ -1205,9 +2382,9 @@ async function uploadCurrentDataToCloud(){
   if(!confirm('確定要把目前這台裝置的資料上傳到雲端？雲端 main 資料會被目前內容覆蓋。')) return;
   try{
     applySyncConfig(cfg);
-    await store.set(STORAGE_KEY, JSON.stringify(state));
+    await store.set(STORAGE_KEY, JSON.stringify(persistentStatePayload(state)));
     setSyncStatus(true);
-    showToast('已上傳目前資料到雲端');
+    showToast('已上傳目前工程資料；目前頁面不會同步到其他裝置');
     closeModal(); render();
   }catch(err){
     setSyncStatus(false);
@@ -1233,18 +2410,108 @@ function getRecords(projId, buildingId, floor, processId){
 }
 function cellBucket(records){
   if(records.length===0) return {bucket:'none', avg:0, count:0};
-  const avg = Math.round(records.reduce((s,r)=>s+r.progress,0)/records.length);
+  const avg = Math.round(records.reduce((s,r)=>s+Number(r.progress||0),0)/records.length);
   let bucket = 'progress';
   if(records.some(r=>r.status==='delayed')) bucket='delayed';
-  else if(records.every(r=>r.status==='done')) bucket='done';
+  else if(avg>=100) bucket='done';
   return {bucket, avg, count:records.length};
+}
+
+// 找出矩陣此工序應納入計算的施工部位。
+// 若實際進度表已有柱位設定，優先採用實際進度表中的柱位；否則使用專案施工部位。
+function matrixConfiguredPartIds(proj){
+  const actualNames=new Set(
+    (proj.actualTable?.partGroups||[])
+      .flatMap(g=>g.parts||[])
+      .map(normalizePartName)
+      .filter(Boolean)
+  );
+  const actualIds=(proj.parts||[])
+    .filter(p=>actualNames.has(normalizePartName(p.name)))
+    .map(p=>p.id);
+
+  // 有建立實況表柱位時，矩陣優先用實況表的柱位總數。
+  if(actualIds.length) return actualIds;
+
+  // 否則使用專案「部位分類」中全部有效部位。
+  return (proj.parts||[])
+    .filter(p=>normalizePartName(p.name))
+    .map(p=>p.id);
+}
+
+function matrixExpectedPartIds(proj, records){
+  const usedIds=[...new Set((records||[]).flatMap(r=>r.partIds||[]))];
+  if(!usedIds.length) return [];
+
+  const actualNames=new Set(
+    (proj.actualTable?.partGroups||[])
+      .flatMap(g=>g.parts||[])
+      .map(normalizePartName)
+      .filter(Boolean)
+  );
+  const actualIds=(proj.parts||[])
+    .filter(p=>actualNames.has(normalizePartName(p.name)))
+    .map(p=>p.id);
+
+  // 若這一格使用實況表柱位，分母採用全部實況表柱位。
+  if(actualIds.length && usedIds.some(id=>actualIds.includes(id))) return actualIds;
+
+  return (proj.parts||[])
+    .filter(p=>normalizePartName(p.name))
+    .map(p=>p.id);
+}
+
+function matrixAutoSelectionStats(proj, selectedPartIds){
+  const expectedIds=matrixConfiguredPartIds(proj);
+  const expectedSet=new Set(expectedIds);
+  const selected=[...new Set((selectedPartIds||[]).filter(id=>expectedSet.has(id)))];
+  const total=expectedIds.length;
+  const done=selected.length;
+  const percent=total ? Math.round(done/total*100) : 0;
+  return {expectedIds,selected,total,done,percent};
+}
+
+// 矩陣自動進度：每個施工部位取最高完成度，再除以總部位數。
+// 例：共 10 柱，5 柱完成 100%，其餘未施作，即自動顯示 50%。
+function matrixCellStats(proj, buildingId, floor, processId){
+  const records=getRecords(proj.id,buildingId,floor,processId);
+  if(!records.length) return {bucket:'none',avg:0,count:0,usesParts:false,doneParts:0,totalParts:0};
+
+  const specific=records.filter(r=>(r.partIds||[]).length>0);
+  if(specific.length){
+    const expectedIds=matrixExpectedPartIds(proj,specific);
+    if(expectedIds.length){
+      const progressByPart=new Map(expectedIds.map(id=>[id,0]));
+      specific.forEach(r=>{
+        const value=r.status==='done'?100:clamp(Number(r.progress||0),0,100);
+        (r.partIds||[]).forEach(id=>{
+          if(progressByPart.has(id)){
+            progressByPart.set(id,Math.max(progressByPart.get(id)||0,value));
+          }
+        });
+      });
+      const vals=[...progressByPart.values()];
+      const avg=Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
+      const doneParts=vals.filter(v=>v>=100).length;
+      let bucket='progress';
+      if(records.some(r=>r.status==='delayed')) bucket='delayed';
+      else if(avg>=100) bucket='done';
+      return {
+        bucket,avg,count:records.length,usesParts:true,
+        doneParts,totalParts:expectedIds.length
+      };
+    }
+  }
+
+  const base=cellBucket(records);
+  return {...base,usesParts:false,doneParts:0,totalParts:0};
 }
 function partNames(proj, ids){ if(!ids||ids.length===0) return '全區域'; return ids.map(id=>{const p=proj.parts.find(x=>x.id===id);return p?p.name:null;}).filter(Boolean).join('、'); }
 // 該棟「樓層×工序」整體平均（含未施作項目視為0%）
 function buildingProcessAverages(proj, b){
   return proj.processes.map(pr=>{
     let sum=0;
-    b.floors.forEach(fl=>{ sum += cellBucket(getRecords(proj.id,b.id,fl,pr.id)).avg; });
+    b.floors.forEach(fl=>{ sum += matrixCellStats(proj,b.id,fl,pr.id).avg; });
     const avg = b.floors.length ? Math.round(sum/b.floors.length) : 0;
     return {process:pr, avg};
   });
@@ -1261,16 +2528,30 @@ function projectOverallAvg(proj){
 // 專案內所有「延誤」來源：狀態=delayed 的記錄 ＋ 已逾預定完成日卻未填實際完成日的排程
 function projectDelayItems(proj){
   const items = [];
-  proj.records.filter(r=>r.status==='delayed').forEach(r=>{
-    const b = proj.buildings.find(x=>x.id===r.buildingId); const pr = proj.processes.find(x=>x.id===r.processId);
-    if(!b||!pr) return;
-    items.push({type:'record', proj, b, pr, floor:r.floor, note:r.note, updatedAt:r.updatedAt, recordId:r.id});
+
+  const delayedGroups=groupTaskRecordsByFloor(
+    proj,
+    proj.records.filter(r=>r.status==='delayed')
+  );
+  delayedGroups.forEach(g=>{
+    items.push({
+      type:'record',proj,b:g.b,pr:g.pr,floor:g.floor,
+      note:g.issue,updatedAt:g.latestUpdate,
+      recordId:g.recordId,recordIds:g.recordIds
+    });
   });
+
   const today = todayStr();
   proj.schedules.filter(s=>!s.actualCompleteDate && s.endDate < today).forEach(s=>{
-    const b = proj.buildings.find(x=>x.id===s.buildingId); const pr = proj.processes.find(x=>x.id===s.processId);
+    const b = proj.buildings.find(x=>x.id===s.buildingId);
+    const pr = proj.processes.find(x=>x.id===s.processId);
     if(!b||!pr) return;
-    items.push({type:'schedule', proj, b, pr, floor:compressFloorLabel(b,s.floors), note:s.note, updatedAt:fromDateStr(s.endDate).getTime(), scheduleId:s.id, endDate:s.endDate});
+    items.push({
+      type:'schedule',proj,b,pr,
+      floor:taskFloorLabel(b,s.floors),
+      note:s.note,updatedAt:fromDateStr(s.endDate).getTime(),
+      scheduleId:s.id,endDate:s.endDate
+    });
   });
   return items;
 }
@@ -1279,7 +2560,7 @@ function projectTodayTasks(proj){
   const today = todayStr();
   return proj.schedules.filter(s=>!s.actualCompleteDate && s.startDate<=today && s.endDate>=today).map(s=>{
     const b = proj.buildings.find(x=>x.id===s.buildingId); const pr = proj.processes.find(x=>x.id===s.processId);
-    return b&&pr ? {proj,b,pr,floor:compressFloorLabel(b,s.floors),scheduleId:s.id,endDate:s.endDate} : null;
+    return b&&pr ? {proj,b,pr,floor:taskFloorLabel(b,s.floors),scheduleId:s.id,endDate:s.endDate} : null;
   }).filter(Boolean);
 }
 
@@ -1345,52 +2626,80 @@ function renderViewContent(proj){
     case 'actual': return renderActualProgress(proj);
     case 'schedule': return renderSchedulePage(proj);
     case 'records': return renderRecordsPage(proj);
+    case 'tasks': return renderTaskCenter(proj);
+    case 'photos': return renderPhotoCenter(proj);
     default: return renderHome();
   }
 }
 function renderMobileNav(){
   const items = [
     {v:'home', ico:ICO.home, label:'首頁'},
-    {v:'handover', ico:ICO.clipboard, label:'交接'},
-    {v:'matrix', ico:ICO.grid, label:'矩陣'},
     {v:'actual', ico:ICO.grid, label:'實況'},
-    {v:'schedule', ico:ICO.gantt, label:'甘特圖'},
-    {v:'records', ico:ICO.list, label:'紀錄'},
+    {v:'schedule', ico:ICO.gantt, label:'甘特'},
+    {v:'records', ico:ICO.list, label:'日誌'},
+    {v:'tasks', ico:ICO.clipboard, label:'代辦'},
   ];
   return `<nav class="mobile-nav">${items.map(it=>`
     <button class="${state.view===it.v?'active':''}" onclick="setView('${it.v}')">${it.ico}<span>${it.label}</span></button>`).join('')}</nav>`;
 }
 
 function renderSidebar(){
+  const proj = currentProject();
+  const options = state.projects.map(p=>`<option value="${p.id}" ${p.id===state.activeProjectId?'selected':''}>${esc(p.name)}</option>`).join('');
   const items = state.projects.map(p=>`
     <li class="project-item ${p.id===state.activeProjectId?'active':''}">
-      <span class="p-name" onclick="selectProject('${p.id}')" title="${esc(p.name)}">${esc(p.name)}</span>
+      <span class="p-name" onclick="switchProjectKeepView('${p.id}')" title="${esc(p.name)}">${esc(p.name)}</span>
       <span class="p-actions">
         <button class="icon-btn" onclick="openRenameProjectModal('${p.id}')" title="重新命名">${ICO.edit}</button>
         <button class="icon-btn" onclick="deleteProject('${p.id}')" title="刪除">${ICO.trash}</button>
       </span>
     </li>`).join('');
+  const navBtn=(v,ico,label)=>`<button class="sidebar-nav-btn ${state.view===v?'active':''}" onclick="setView('${v}')">${ico}<span>${label}</span></button>`;
   return `
   <aside class="sidebar ${formState.sidebarOpen?'open':''}">
     <div class="sidebar-brand">
-      <div class="mark">${ICO.building} 工地現場進度管理</div>
-      <div class="sub">SITE PROGRESS CONTROL</div>
+      <div class="mark">${ICO.building} 金屬工程專案控制台</div>
+      <div class="sub">ADAPTIVE PRO / 五款評選最高分</div>
     </div>
-    <div class="sidebar-section"><span>案場清單</span><button onclick="openAddProjectModal()" title="新增案場">${ICO.plus}</button></div>
-    <ul class="project-list">${items}</ul>
-    <div style="padding:8px 14px;display:flex;flex-direction:column;gap:6px;">
-      <button class="btn btn-sm" style="width:100%;justify-content:center;background:transparent;border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.8);" onclick="importHandoverProjects()">${ICO.clipboard} 匯入交接案件雛型</button>
-      <div style="display:flex;gap:6px;">
-        <button class="btn btn-sm" style="flex:1;justify-content:center;background:transparent;border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.8);" onclick="exportBackup()">匯出備份</button>
-        <button class="btn btn-sm" style="flex:1;justify-content:center;background:transparent;border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.8);" onclick="importBackupTrigger()">匯入備份</button>
+    <div class="sidebar-project-switch">
+      <label>目前案場</label>
+      <select onchange="switchProjectKeepView(this.value)">${options}</select>
+      <div class="sidebar-project-actions">
+        <button onclick="openAddProjectModal()">＋ 新增案場</button>
+        <button onclick="${proj?`openRenameProjectModal('${proj.id}')`:`openAddProjectModal()`}">編輯名稱</button>
+        <button class="project-delete-btn" onclick="${proj?`deleteProject('${proj.id}')`:`showToast('目前沒有可刪除的案場','error')`}">刪除案場</button>
+        <button class="project-structure-btn" onclick="${proj?`openSettingsModal('processes','${proj.id}')`:`showToast('請先建立案場','error')`}">${ICO.gear} 編輯本案工序及部位</button>
       </div>
-      <button class="btn btn-sm" style="width:100%;justify-content:center;background:transparent;border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.8);" onclick="openSyncSettingsModal()">手機／電腦同步設定</button>
+    </div>
+    <div class="sidebar-nav-scroll">
+      <div class="sidebar-nav-title">現場控制</div>
+      ${navBtn('home',ICO.home,'今日控制台')}
+      ${navBtn('actual',ICO.grid,'案件實際進度')}
+      ${navBtn('matrix',ICO.grid,'樓層／工序矩陣')}
+      ${navBtn('records',ICO.list,'施作日誌／紀錄')}
+      ${navBtn('photos',ICO.camera,'工程照片')}
+      <div class="sidebar-nav-title">計畫與追蹤</div>
+      ${navBtn('schedule',ICO.gantt,'預計進度甘特圖')}
+      ${navBtn('tasks',ICO.clipboard,'日期代辦與提醒')}
+      <div class="sidebar-nav-title">專案資料</div>
+      ${navBtn('buildings',ICO.building,'棟別進度看板')}
+      ${navBtn('handover',ICO.clipboard,'專案內容／交接')}
+      <details class="sidebar-admin">
+        <summary>案場管理與切換</summary>
+        <ul class="project-list">${items}</ul>
+      </details>
+    </div>
+    <div class="sidebar-footer-tools">
+      <details class="sidebar-tools-details">
+        <summary>${ICO.gear} 同步、備份與匯入</summary>
+        <div class="nav-safety-status">安全導覽：拖曳或滑動時不會切換頁面</div>
+        <button class="btn" onclick="importHandoverProjects()">${ICO.clipboard} 匯入交接案件雛型</button>
+        <div class="tool-row"><button class="btn" style="flex:1" onclick="exportBackup()">匯出備份</button><button class="btn" style="flex:1" onclick="importBackupTrigger()">匯入備份</button></div>
+        <button class="btn" onclick="openSyncSettingsModal()">手機／電腦同步設定</button>
+      </details>
       <input type="file" id="backup-file-input" accept=".json,application/json" style="display:none;" onchange="importBackupFile(event)">
     </div>
-    <div class="sidebar-footer">
-      <span><span class="sync-dot" id="sync-indicator"></span>${syncModeDetail()}</span>
-      <button class="icon-btn" onclick="manualRefresh()" title="立即更新">${ICO.refresh}</button>
-    </div>
+    <div class="sidebar-footer"><span><span class="sync-dot" id="sync-indicator"></span>${syncModeDetail()}</span><button class="icon-btn" onclick="manualRefresh()" title="立即更新">${ICO.refresh}</button></div>
   </aside>`;
 }
 
@@ -1400,45 +2709,95 @@ function renderTopbar(proj){
     <button class="building-chip ${x.id===state.activeBuildingId?'active':''}" onclick="selectBuilding('${x.id}')">
       ${esc(x.name)}<span class="bc-edit" onclick="event.stopPropagation();openEditBuildingModal('${x.id}')" title="編輯棟別">${ICO.edit}</span>
     </button>`).join('');
-  const titleMap = {home:'首頁總覽', handover:'交接總覽', buildings:'棟別進度看板', matrix:'樓層 × 工序矩陣', actual:'實際進度表', schedule:'預定工程進度表（甘特圖）', records:'施作紀錄'};
+  const titleMap = {home:'今日控制台', handover:'專案內容／交接', buildings:'棟別進度看板', matrix:'樓層／工序矩陣', actual:'案件實際進度', schedule:'預計進度甘特圖', records:'施作日誌／紀錄', tasks:'日期代辦與提醒', photos:'工程照片'};
+  const subMap = {home:'跨案場風險、今日工作與進度差異', handover:'聯絡人、工班、置料與交接重點', buildings:'各棟總進度與目前施工階段', matrix:'快速查看各樓層工序完成度', actual:'樓層 × 位置 × 施工階段', schedule:'保留原甘特圖，並可切換預計 vs 實際雙軌比較', records:'依日期與關鍵字查詢施工回報', tasks:'由排程、卡點與截止日自動彙整', photos:'依案場位置與工序整理施工照片'};
   const modeKey = state.view==='matrix' ? 'matrixMode' : (state.view==='schedule' ? 'ganttMode' : null);
   const curMode = modeKey ? state[modeKey] : null;
-  const modeToggle = modeKey ? `
-    <div class="mode-toggle">
-      <button class="${curMode==='single'?'active':''}" onclick="setScopeMode('${modeKey}','single')">單棟模式</button>
-      <button class="${curMode==='all'?'active':''}" onclick="setScopeMode('${modeKey}','all')">全棟模式</button>
-    </div>` : '';
+  const modeToggle = modeKey ? `<div class="mode-toggle"><button class="${curMode==='single'?'active':''}" onclick="setScopeMode('${modeKey}','single')">單棟</button><button class="${curMode==='all'?'active':''}" onclick="setScopeMode('${modeKey}','all')">全棟</button></div>` : '';
+  const showBuildings = ['matrix','actual','schedule'].includes(state.view);
   return `
   <header class="topbar">
-    <div class="topbar-row1">
+    <div class="command-row">
       <button class="hamburger" onclick="toggleSidebar(true)">${ICO.menu}</button>
-      <div>
-        <div class="app-title">${state.view==='home' ? '工地現場進度管理' : esc(proj.name)}</div>
-        <div class="site-sub">${state.view==='home' ? '所有案場總覽' : titleMap[state.view]||''}</div>
+      <div class="command-title">
+        <div class="app-title">${titleMap[state.view]||'金屬工程專案控制台'}</div>
+        <div class="site-sub">${state.view==='home'?'所有案場':esc(proj.name)}｜${subMap[state.view]||''}</div>
       </div>
-      <div class="topbar-actions">
-        ${state.view!=='home' ? `<button class="btn btn-ghost" onclick="openSettingsModal('processes')">${ICO.gear} 工序／部位設定</button>` : ''}
-        <button class="btn btn-ghost" onclick="openSyncSettingsModal()">${ICO.refresh} 同步設定</button>
-        <button class="btn btn-primary" onclick="openQuickAddModal()">${ICO.plus} 快速新增進度</button>
+      <div class="command-scope">${showBuildings && curMode!=='all' ? bChips : ''}</div>
+      <div class="command-actions">
+        ${state.view!=='home' ? `<button class="btn btn-ghost" onclick="openSettingsModal('processes','${proj.id}')">${ICO.gear} 編輯工序及部位</button>` : ''}
+        <button class="btn btn-ghost" onclick="manualRefresh()">${ICO.refresh} 更新</button>
+        <button class="btn btn-primary" onclick="openQuickAddModal()">${ICO.plus} 快速回報</button>
       </div>
     </div>
-    <div class="tabs">
-      <button class="tab-btn ${state.view==='home'?'active':''}" onclick="setView('home')">${ICO.home} 首頁</button>
-      <button class="tab-btn ${state.view==='handover'?'active':''}" onclick="setView('handover')">${ICO.clipboard} 交接總覽</button>
-      <button class="tab-btn ${state.view==='buildings'?'active':''}" onclick="setView('buildings')">${ICO.building} 棟別看板</button>
-      <button class="tab-btn ${state.view==='matrix'?'active':''}" onclick="setView('matrix')">${ICO.grid} 樓層×工序矩陣</button>
-      <button class="tab-btn ${state.view==='actual'?'active':''}" onclick="setView('actual')">${ICO.grid} 實際進度表</button>
-      <button class="tab-btn ${state.view==='schedule'?'active':''}" onclick="setView('schedule')">${ICO.gantt} 甘特圖</button>
-      <button class="tab-btn ${state.view==='records'?'active':''}" onclick="setView('records')">${ICO.list} 施作紀錄</button>
-    </div>
-    ${modeKey ? `<div class="building-tabs">${modeToggle}${curMode==='single' ? bChips : ''}</div>` : (state.view==='actual' ? `<div class="building-tabs">${bChips}</div>` : '')}
+    ${(modeKey||showBuildings) ? `<div class="topbar-secondary">${modeToggle}${showBuildings && curMode==='all'?'全棟資料將於下方分區顯示':''}</div>` : ''}
   </header>`;
 }
-function setScopeMode(key, mode){ state[key]=mode; scheduleSave(); render(); }
+function setScopeMode(key, mode){ state[key]=mode; persistLocalUiState(); render(); }
 function toggleSidebar(open){ formState.sidebarOpen = (open!==undefined)?open:!formState.sidebarOpen; render(); }
-function setView(v){ state.view = v; render(); }
-function selectProject(id){ state.activeProjectId=id; const p=currentProject(); state.activeBuildingId=p.buildings[0]?p.buildings[0].id:null; formState.sidebarOpen=false; if(state.view==='home') state.view='buildings'; scheduleSave(); render(); }
-function selectBuilding(id){ state.activeBuildingId=id; render(); }
+
+/* 安全導覽：
+   - 拖曳／滑動後 450ms 內不切頁
+   - 已在同一頁時不重複重繪
+   - 切換案場只換資料，不強制跳到別頁 */
+let navBlockedUntil = 0;
+let navPointerStart = null;
+document.addEventListener('pointerdown', e=>{
+  navPointerStart = {x:e.clientX, y:e.clientY};
+}, true);
+document.addEventListener('pointermove', e=>{
+  if(!navPointerStart) return;
+  if(Math.hypot(e.clientX-navPointerStart.x, e.clientY-navPointerStart.y) > 9){
+    navBlockedUntil = Date.now()+450;
+  }
+}, true);
+document.addEventListener('pointerup', ()=>{ navPointerStart=null; }, true);
+
+let navSwitchLock = false;
+function setView(v){
+  if(Date.now() < navBlockedUntil || navSwitchLock) return;
+  const validViews = ['home','handover','buildings','matrix','actual','schedule','records','tasks','photos'];
+  if(!validViews.includes(v)) return;
+
+  if(state.view===v){
+    if(formState.sidebarOpen){
+      formState.sidebarOpen=false;
+      render();
+    }
+    return;
+  }
+
+  navSwitchLock = true;
+  state.view = v;
+  formState.sidebarOpen = false;
+  persistLocalUiState();
+  render();
+  setTimeout(()=>{ navSwitchLock=false; }, 260);
+}
+function selectProject(id){
+  state.activeProjectId=id;
+  const p=currentProject();
+  state.activeBuildingId=p?.buildings[0]?.id || null;
+  formState.sidebarOpen=false;
+  persistLocalUiState();
+  render();
+}
+function selectBuilding(id){
+  state.activeBuildingId=id;
+  persistLocalUiState();
+  render();
+}
+function switchProjectKeepView(id){
+  state.activeProjectId=id;
+  const p=currentProject();
+  if(!p) return;
+  if(!p.buildings.some(b=>b.id===state.activeBuildingId)){
+    state.activeBuildingId=p.buildings[0]?.id || null;
+  }
+  formState.sidebarOpen=false;
+  persistLocalUiState();
+  render();
+}
 function goToSite(projId){ selectProject(projId); }
 
 /* =====================  7. 首頁 Home Dashboard  ===================== */
@@ -1520,139 +2879,246 @@ function renderTodayReport(){
   </div>`;
 }
 
-function renderHome(){
-  const projects = state.projects;
-  // 今日待辦（跨所有案場）
-  const todayTasks = [];
-  projects.forEach(p=> projectTodayTasks(p).forEach(t=>todayTasks.push(t)) );
-  todayTasks.sort((a,c)=>a.endDate.localeCompare(c.endDate));
-  // 延誤項目（跨所有案場）
-  const delays = [];
-  projects.forEach(p=> projectDelayItems(p).forEach(d=>delays.push(d)) );
-  delays.sort((a,c)=>c.updatedAt-a.updatedAt);
-  // 最近更新（跨所有案場）
-  const recent = [];
-  projects.forEach(p=> p.records.forEach(r=> recent.push({p,r})) );
-  recent.sort((a,c)=>c.r.updatedAt-a.r.updatedAt);
-  const recentTop = recent.slice(0,8);
+function dashboardPhaseAverage(proj,b,terms){
+  const list=buildingProcessAverages(proj,b).filter(x=>terms.some(t=>String(x.process.name||'').includes(t)));
+  return list.length?Math.round(list.reduce((s,x)=>s+x.avg,0)/list.length):0;
+}
 
-  const todayHtml = todayTasks.length ? todayTasks.slice(0,8).map(t=>`
-    <div class="task-row" onclick="goToSite('${t.proj.id}')">
-      <div class="t-main">
-        <div class="t-title">${esc(t.proj.name)}　${esc(t.b.name)}　${esc(t.floor)}・${esc(t.pr.name)}</div>
-        <div class="t-sub">預定完成：${esc(t.endDate)}</div>
-      </div>
-      <span class="badge" style="background:${STATUS.in_progress.bg};color:${STATUS.in_progress.fg};"><span class="dot" style="background:${STATUS.in_progress.dot};"></span>進行中</span>
-    </div>`).join('') : '<div class="empty-mini">今天沒有排定中的工項，太好了！</div>';
-
-  const delayHtml = delays.length ? delays.slice(0,8).map(d=>`
-    <div class="task-row" onclick="goToSite('${d.proj.id}')">
-      <div class="t-main">
-        <div class="t-title">${esc(d.proj.name)}　${esc(d.b.name)}　${esc(d.floor)}・${esc(d.pr.name)}</div>
-        <div class="t-sub">${d.type==='schedule' ? '預定完成日已過：'+esc(d.endDate) : (d.note?esc(d.note):'已標記延誤')}</div>
-      </div>
-      <span class="badge" style="background:${STATUS.delayed.bg};color:${STATUS.delayed.fg};"><span class="dot" style="background:${STATUS.delayed.dot};"></span>延誤</span>
-    </div>`).join('') : '<div class="empty-mini">目前沒有延誤項目</div>';
-
-  const siteHtml = projects.length ? projects.map(p=>{
-    const avg = projectOverallAvg(p);
-    const dCount = projectDelayItems(p).length;
-    return `<div class="site-progress-row" onclick="goToSite('${p.id}')">
-      <div class="spr-top"><span class="spr-name">${esc(p.name)}</span><span class="spr-pct">${avg}%</span></div>
-      <div class="progress-bar"><div style="width:${avg}%;"></div></div>
-      <div class="spr-meta">${p.buildings.length} 棟建物　${dCount>0?`・ <span style="color:var(--red-dk);font-weight:700;">${dCount} 項延誤</span>`:'・ 無延誤項目'}</div>
-    </div>`;
-  }).join('') : '<div class="empty-mini">尚未建立案場</div>';
-
-  const recentHtml = recentTop.length ? recentTop.map(({p,r})=>{
-    const b = p.buildings.find(x=>x.id===r.buildingId); const pr = p.processes.find(x=>x.id===r.processId);
-    const si = statusInfo(r.status);
-    return `<div class="task-row" onclick="openCellModal('${b?b.id:''}','${esc(r.floor)}','${r.processId}');selectProject('${p.id}')">
-      <div class="t-main">
-        <div class="t-title">${esc(p.name)}　${esc(b?b.name:'')}　${esc(r.floor)}・${esc(pr?pr.name:'')}</div>
-        <div class="t-sub">${fmtTime(r.updatedAt)}${r.crew?' ・ '+esc(r.crew):''}</div>
-      </div>
-      <span class="badge" style="background:${si.bg};color:${si.fg};"><span class="dot" style="background:${si.dot};"></span>${r.progress}%</span>
-    </div>`;
-  }).join('') : '<div class="empty-mini">尚無施作紀錄</div>';
-
+function isTemplateSetupState(){
+  return state.projects.length===1 &&
+    state.projects[0].records.length===0 &&
+    state.projects[0].schedules.length===0;
+}
+function renderTemplateSetupHome(){
+  const p=currentProject();
+  const bCount=(p.buildings||[]).length;
+  const processCount=(p.processes||[]).length;
+  const partCount=(p.parts||[]).length;
   return `
-    <div class="hero-actions">
-      <button class="btn btn-primary btn-lg" onclick="openQuickAddModal()">${ICO.bigplus} 快速新增進度</button>
-      <button class="btn btn-lg ${formState.reportMode?'btn-navy-active':''}" onclick="toggleReportMode()">${ICO.list} 今日回報模式${formState.reportMode?'（開啟中）':''}</button>
-      <button class="btn btn-lg" onclick="setView('records')">${ICO.search} 搜尋施作紀錄</button>
-      <button class="btn btn-lg" onclick="openAddProjectModal()">${ICO.plus} 新增案場</button>
+    <div class="safe-nav-banner">
+      <div><strong>模板建立模式</strong>｜目前先把案場骨架建立完整，再逐步補施工資料。</div>
+      <div>安全導覽已啟用：只有明確按下導覽或按鈕才會切頁。</div>
     </div>
-    ${formState.reportMode ? renderTodayReport() : ''}
-    <div class="home-grid">
-      <div class="home-card">
-        <h4>今日需處理事項 <span class="cnt-pill">${todayTasks.length}</span></h4>
-        ${todayHtml}
-      </div>
-      <div class="home-card">
-        <h4>延誤項目 <span class="cnt-pill ${delays.length?'warn':''}">${delays.length}</span></h4>
-        ${delayHtml}
+    <div class="dashboard-head">
+      <div><h1>先建立案場模板</h1><p>建議依照以下順序完成；不用一次填完，資料可以之後慢慢補。</p></div>
+      <div class="dashboard-actions">
+        <button class="btn" onclick="exportBackup()">匯出目前模板</button>
+        <button class="btn btn-primary" onclick="openQuickAddModal()">${ICO.plus} 測試一筆現場回報</button>
       </div>
     </div>
-    <div class="home-card" style="margin-bottom:18px;">
-      <h4>各案場總進度</h4>
-      ${siteHtml}
+    <div class="dashboard-kpis">
+      <div class="dashboard-kpi"><div class="k-label">目前案場</div><div class="k-num" style="font-size:21px">${esc(p.name)}</div><div class="k-sub">可於左側編輯名稱</div></div>
+      <div class="dashboard-kpi"><div class="k-label">棟別</div><div class="k-num">${bCount}</div><div class="k-sub">先建立每棟樓層</div></div>
+      <div class="dashboard-kpi"><div class="k-label">母工序</div><div class="k-num">${processCount}</div><div class="k-sub">各工序可個別設定子工序</div></div>
+      <div class="dashboard-kpi"><div class="k-label">施工部位</div><div class="k-num">${partCount}</div><div class="k-sub">面向、柱位、樑帶等</div></div>
+      <div class="dashboard-kpi"><div class="k-label">施工紀錄</div><div class="k-num">0</div><div class="k-sub">模板尚未開始填資料</div></div>
     </div>
-    <div class="home-card">
-      <h4>最近更新紀錄</h4>
-      ${recentHtml}
+    <div class="template-setup-grid">
+      <div class="template-step"><div class="step-no">1</div><h3>專案內容與交接</h3><p>先填案場名稱、承攬範圍、聯絡人、工班、協力廠商、置料區與進場規定。</p><button class="btn" onclick="setView('handover')">建立專案內容</button></div>
+      <div class="template-step"><div class="step-no">2</div><h3>棟別與樓層</h3><p>依實際案場建立多棟樓層，例如 AB棟、CD棟、EF棟，以及 RF、21F～1F。</p><button class="btn" onclick="setView('buildings')">設定棟別樓層</button></div>
+      <div class="template-step"><div class="step-no">3</div><h3>工序與施工部位</h3><p>建立包板、欄杆、格柵等母工序；每個母工序可自行決定是否新增子工序。</p><button class="btn" onclick="openSettingsModal('processes','${p.id}')">設定工序與部位</button></div>
+      <div class="template-step"><div class="step-no">4</div><h3>實際進度表模板</h3><p>建立分區、面向、柱位與樓層。實況表與矩陣都保留矩形拖曳，但不會跨施工階段誤改。</p><button class="btn" onclick="setView('actual')">設定實際進度表</button></div>
+      <div class="template-step"><div class="step-no">5</div><h3>甘特圖階層</h3><p>建立「大項目 → 母工序 → 子工序」。母工序日期由其子工序彙整，大項目再由母工序彙整。</p><button class="btn" onclick="setView('schedule')">建立預計進度</button></div>
+      <div class="template-step"><div class="step-no">6</div><h3>開始現場回報</h3><p>模板完成後，再逐筆補施工日誌、完成範圍、照片、工班、卡點與下一步。</p><button class="btn btn-primary" onclick="openQuickAddModal()">新增第一筆回報</button></div>
+    </div>
+    <div class="dashboard-section-title"><h2>模板內保留的功能模組</h2><small>現在先建立結構，之後資料可慢慢補齊</small></div>
+    <div class="template-module-grid">
+      <div class="template-module"><b>今日控制台</b><span>日後自動彙整延誤、今日施工、待確認與最近更新。</span></div>
+      <div class="template-module"><b>案件實際進度</b><span>多棟、多樓層、多分區、多柱位，支援同階段矩形拖曳與 PDF。</span></div>
+      <div class="template-module"><b>樓層／工序矩陣</b><span>以樓層檢視各工序完成度，矩形拖曳後再確認套用。</span></div>
+      <div class="template-module"><b>預計進度甘特圖</b><span>大項目、母工序與個別子工序，支援日期與排程管理。</span></div>
+      <div class="template-module"><b>施作日誌與照片</b><span>每筆回報可帶日期、工班、備註、卡點、完成比例與照片。</span></div>
+      <div class="template-module"><b>日期代辦提醒</b><span>從甘特排程、延誤與待確認資料自動整理。</span></div>
+      <div class="template-module"><b>專案內容／交接</b><span>聯絡人、工班、協力廠商、置料區、進場規定與交接重點。</span></div>
+      <div class="template-module"><b>同步與備份</b><span>保留 JSON 備份、Supabase 多裝置同步與 GitHub Pages 部署能力。</span></div>
     </div>`;
 }
 
-/* =====================  7b. 交接總覽  ===================== */
-function renderHandover(proj){
-  // 本週必追：需追蹤狀態的記錄（含卡點）
-  const followRecs = proj.records
-    .filter(r=> FOLLOW_STATUSES.includes(r.status) || (r.blockReason && r.status!=='done'))
-    .sort((a,c)=>{ const ai=FOLLOW_STATUSES.indexOf(a.status), ci=FOLLOW_STATUSES.indexOf(c.status); return (ci===-1?-1:ci) - (ai===-1?-1:ai) || c.updatedAt-a.updatedAt; });
-  // 卡點／待確認：有卡點原因或狀態為待確認者
-  const blockedRecs = proj.records.filter(r=> r.status!=='done' && (r.blockReason || r.status==='pending_confirm'));
-  // 待請款：狀態為待請款的記錄
-  const billingRecs = proj.records.filter(r=> r.status==='waiting_billing');
+function renderHome(){
+  if(isTemplateSetupState()) return renderTemplateSetupHome();
+  const projects=state.projects;
+  const allToday=[],allDelays=[],allFollow=[],recent=[];
+  projects.forEach(p=>{
+    projectTodayTasks(p).forEach(x=>allToday.push(x));
+    projectDelayItems(p).forEach(x=>allDelays.push(x));
+    const followGroups=groupHandoverRecords(
+      p,
+      p.records.filter(r=>r.status!=='done'&&(FOLLOW_STATUSES.includes(r.status)||r.blockReason))
+    );
+    followGroups.forEach(g=>allFollow.push({p,g}));
+    p.records.forEach(r=>recent.push({p,r}));
+  });
+  allToday.sort((a,b)=>a.endDate.localeCompare(b.endDate));
+  allDelays.sort((a,b)=>b.updatedAt-a.updatedAt);
+  recent.sort((a,b)=>b.r.updatedAt-a.r.updatedAt);
+  const overall=projects.length?Math.round(projects.reduce((s,p)=>s+projectOverallAvg(p),0)/projects.length):0;
+  const todayUpdated=recent.filter(x=>toDateStr(new Date(x.r.updatedAt))===todayStr()).length;
+  const priority=[];
+  allDelays.slice(0,4).forEach(d=>priority.push({kind:'delay',title:`${d.proj.name}｜${d.b.name}｜${d.floor}・${d.pr.name}`,meta:d.type==='schedule'?`預定完成 ${d.endDate}，尚未完成`:(d.note||'已標記延誤'),tag:'延誤',cls:'red',action:d.type==='record'?`editRecordFromHome('${d.proj.id}','${d.recordId}')`:`reportFromSchedule('${d.proj.id}','${d.scheduleId}')`}));
+  allToday.filter(t=>!priority.some(x=>x.title.includes(t.proj.name)&&x.title.includes(t.pr.name))).slice(0,4).forEach(t=>priority.push({kind:'today',title:`${t.proj.name}｜${t.b.name}｜${t.floor}・${t.pr.name}`,meta:`今日施工，預定完成 ${t.endDate}`,tag:'今日',cls:'amber',action:`reportFromSchedule('${t.proj.id}','${t.scheduleId}')`}));
+  allFollow.slice(0,4).forEach(({p,g})=>{
+    if(priority.length>=8)return;
+    priority.push({
+      kind:'follow',
+      title:`${p.name}｜${g.b.name}｜${g.pr.name} ${g.floor}`,
+      meta:g.issue||statusInfo(g.status).label,
+      tag:'待追',
+      cls:'purple',
+      action:`editRecordFromHome('${p.id}','${g.recordId}')`
+    });
+  });
+  const blockMap={};
+  allFollow.forEach(({g})=>{
+    const k=g.issue||statusInfo(g.status).label||'其他';
+    blockMap[k]=(blockMap[k]||0)+1;
+  });
+  const risks=Object.entries(blockMap).sort((a,b)=>b[1]-a[1]).slice(0,5); const riskMax=Math.max(1,...risks.map(x=>x[1]));
+  const projectCards=projects.map(p=>{
+    const avg=projectOverallAvg(p),del=projectDelayItems(p).length;
+    const minis=p.buildings.slice(0,3).map(b=>`<div class="building-mini"><b>${esc(b.name)}</b><strong>${buildingOverallAvg(p,b)}%</strong></div>`).join('');
+    return `<div class="project-control-card"><div class="project-control-top"><div><div class="project-control-name">${esc(p.name)}</div><div class="project-control-meta">${p.buildings.length} 棟｜${del?`${del} 件延誤`:'目前無延誤'}</div></div><div class="project-control-pct">${avg}%</div></div><div class="progress-bar"><div style="width:${avg}%"></div></div><div class="building-mini-grid">${minis||'<div class="building-mini"><b>尚未建立棟別</b><strong>—</strong></div>'}</div><div class="project-control-actions"><button class="btn btn-sm" onclick="switchProjectKeepView('${p.id}');setView('buildings')">查看案場</button></div></div>`;
+  }).join('');
+  const recentHtml=recent.slice(0,8).map(({p,r})=>{const b=p.buildings.find(x=>x.id===r.buildingId),pr=p.processes.find(x=>x.id===r.processId),si=statusInfo(r.status);if(!b||!pr)return'';return `<div class="task-row safe-row"><div class="t-main"><div class="t-title">${esc(p.name)}｜${esc(b.name)}｜${esc(r.floor)}・${esc(pr.name)}</div><div class="t-sub">${fmtTime(r.updatedAt)}${r.crew?' ・ '+esc(r.crew):''}${r.note?' ・ '+esc(r.note):''}</div></div><span class="badge" style="background:${si.bg};color:${si.fg}">${r.progress}%</span><button class="btn btn-sm safe-inline-action" onclick="editRecordFromHome('${p.id}','${r.id}')">查看</button></div>`;}).join('')||'<div class="empty-mini">尚無施作紀錄</div>';
+  return `
+    <div class="dashboard-head"><div><h1>今天先處理什麼</h1><p>把會影響工期、材料、工班與現場協調的事情集中在第一屏。</p></div><div class="dashboard-actions"><button class="btn ${formState.reportMode?'btn-navy-active':''}" onclick="toggleReportMode()">${ICO.list} 今日回報模式</button><button class="btn" onclick="setView('tasks')">${ICO.clipboard} 查看全部代辦</button></div></div>
+    <div class="dashboard-kpis">
+      <div class="dashboard-kpi"><div class="k-label">全部案場平均進度</div><div class="k-num">${overall}%</div><div class="k-sub">共 ${projects.length} 個案場</div></div>
+      <div class="dashboard-kpi alert"><div class="k-label">卡點／延誤</div><div class="k-num">${allDelays.length}</div><div class="k-sub">需優先處理的工期風險</div></div>
+      <div class="dashboard-kpi warn"><div class="k-label">今日施工排程</div><div class="k-num">${allToday.length}</div><div class="k-sub">由甘特圖日期自動彙整</div></div>
+      <div class="dashboard-kpi ok"><div class="k-label">今日完成回報</div><div class="k-num">${todayUpdated}</div><div class="k-sub">今日更新的施工紀錄</div></div>
+      <div class="dashboard-kpi orange"><div class="k-label">本週必追</div><div class="k-num">${allFollow.length}</div><div class="k-sub">相同敘述已合併樓層顯示</div></div>
+    </div>
+    ${formState.reportMode?renderTodayReport():''}
+    <div class="control-grid">
+      <div class="control-card"><div class="control-card-head"><h3>今日控制清單</h3><small>延誤優先，其次為今日排程與待確認</small></div><div class="control-card-body">${priority.length?priority.map((x,i)=>`<div class="priority-row"><div class="priority-rank">${i+1}</div><div><div class="priority-title">${esc(x.title)}</div><div class="priority-meta">${esc(x.meta)}</div></div><button class="mini-tag ${x.cls}" onclick="${x.action}">${x.tag}</button></div>`).join(''):'<div class="empty-mini">目前沒有急迫事項</div>'}</div></div>
+      <div class="control-card"><div class="control-card-head"><h3>現場風險雷達</h3><small>依卡點原因與等待狀態彙整</small></div><div class="control-card-body">${risks.length?risks.map(([k,v])=>`<div class="risk-row"><div class="risk-top"><span>${esc(k)}</span><span>${v} 件</span></div><div class="risk-bar"><span style="width:${Math.round(v/riskMax*100)}%"></span></div></div>`).join(''):'<div class="empty-mini">目前沒有卡點資料</div>'}</div></div>
+    </div>
+    <div class="dashboard-section-title"><h2>各案場控制概況</h2><small>點卡片進入棟別看板</small></div>
+    <div class="project-control-grid">${projectCards||'<div class="empty-state"><h3>尚未建立案場</h3></div>'}</div>
+    <div class="home-card"><h4>最近更新紀錄 <button class="btn btn-sm" onclick="setView('records')">查看全部</button></h4>${recentHtml}</div>`;
+}
 
-  const recRow = (r)=>{
-    const b = proj.buildings.find(x=>x.id===r.buildingId); const pr = proj.processes.find(x=>x.id===r.processId);
-    if(!b||!pr) return '';
-    const si = statusInfo(r.status);
-    return `<div class="task-row">
-      <div class="t-main">
-        <div class="t-title">${esc(b.name)}　・　${esc(pr.name)}</div>
-        <div class="t-sub"><span class="badge" style="background:${si.bg};color:${si.fg};padding:1px 7px;"><span class="dot" style="background:${si.dot};"></span>${si.label} ${r.progress}%</span>${r.blockReason?`　<span style="color:var(--red-dk,#a12a21);font-weight:700;">⚠ ${esc(r.blockReason)}</span>`:''}${r.note?'　'+esc(r.note):''}</div>
-      </div>
-      <button class="btn btn-sm" onclick="editRecordFromHome('${proj.id}','${r.id}')">更新</button>
+function renderTaskCenter(proj){
+  const today=projectTodayTasks(proj);
+  const overdue=projectDelayItems(proj);
+
+  const waitingGroups=groupTaskRecordsByFloor(
+    proj,
+    proj.records
+      .filter(r=>r.status!=='done'&&(FOLLOW_STATUSES.includes(r.status)||r.blockReason))
+      .sort((a,b)=>b.updatedAt-a.updatedAt)
+  );
+
+  const doneGroups=groupTaskRecordsByFloor(
+    proj,
+    proj.records
+      .filter(r=>r.status==='done')
+      .sort((a,b)=>b.updatedAt-a.updatedAt)
+  ).slice(0,12);
+
+  const schedCard=t=>`<div class="task-center-item" onclick="reportFromSchedule('${proj.id}','${t.scheduleId}')">
+    <b>${esc(t.b.name)}｜<span class="task-floor-range">${esc(t.floor)}</span>・${esc(t.pr.name)}</b>
+    <p>預定完成：${esc(t.endDate)}</p>
+    <div class="task-center-meta"><span>${esc(proj.name)}</span><span>回報進度</span></div>
+  </div>`;
+
+  const delayCard=d=>`<div class="task-center-item" onclick="${d.type==='record'?`editRecordFromHome('${proj.id}','${d.recordId}')`:`reportFromSchedule('${proj.id}','${d.scheduleId}')`}">
+    <b>${esc(d.b.name)}｜<span class="task-floor-range">${esc(d.floor)}</span> ${esc(d.note||d.pr.name)}</b>
+    <p>${d.type==='record'?esc(d.pr.name):esc(d.note||('已逾期：'+(d.endDate||'')))}</p>
+    <div class="task-center-meta"><span>延誤</span><span>${d.endDate||fmtTime(d.updatedAt)}</span></div>
+  </div>`;
+
+  const groupCard=g=>{
+    const si=statusInfo(g.status);
+    return `<div class="task-center-item" onclick="editRecordFromHome('${proj.id}','${g.recordId}')">
+      <b>${esc(g.b.name)}｜<span class="task-floor-range">${esc(g.floor)}</span> ${esc(g.issue||g.pr.name)}</b>
+      <p>${esc(g.pr.name)}${g.crew?'｜'+esc(g.crew):''}${g.records.length>1?`｜合併 ${g.records.length} 筆`:''}</p>
+      <div class="task-center-meta"><span>${esc(si.label)}</span><span>${fmtTime(g.latestUpdate)}</span></div>
     </div>`;
   };
-  const listOrEmpty = (arr, emptyText)=> arr.length ? arr.map(recRow).join('') : `<div class="empty-mini">${emptyText}</div>`;
-  const simpleList = (arr, emptyText)=> arr.length ? `<ul class="ho-list">${arr.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>` : `<div class="empty-mini">${emptyText}</div>`;
+
+  return `<div class="page-intro">
+    <div><h2>日期代辦與提醒</h2><p>相同事件若發生於連續樓層，會自動合併為一筆，例如「18–20樓 遮斷未施作」。</p></div>
+    <div class="page-intro-actions">
+      <button class="btn" onclick="setView('schedule')">開啟甘特圖</button>
+      <button class="btn btn-primary" onclick="openQuickAddModal()">新增現場回報</button>
+    </div>
+  </div>
+  <div class="task-center-board">
+    <div class="task-center-col"><h3>今日施工 <span class="mini-tag amber">${today.length}</span></h3>${today.map(schedCard).join('')||'<div class="empty-mini">今天沒有排程</div>'}</div>
+    <div class="task-center-col"><h3>已逾期／延誤 <span class="mini-tag red">${overdue.length}</span></h3>${overdue.map(delayCard).join('')||'<div class="empty-mini">目前沒有延誤</div>'}</div>
+    <div class="task-center-col"><h3>等待／待確認 <span class="mini-tag purple">${waitingGroups.length}</span></h3>${waitingGroups.slice(0,20).map(groupCard).join('')||'<div class="empty-mini">目前沒有等待項目</div>'}</div>
+    <div class="task-center-col"><h3>最近完成 <span class="mini-tag green">${doneGroups.length}</span></h3>${doneGroups.map(groupCard).join('')||'<div class="empty-mini">尚無完成紀錄</div>'}</div>
+  </div>`;
+}
+
+function renderPhotoCenter(proj){
+  const rows=proj.records.filter(r=>r.photo).sort((a,b)=>b.updatedAt-a.updatedAt);
+  const cards=rows.map(r=>{const b=proj.buildings.find(x=>x.id===r.buildingId),pr=proj.processes.find(x=>x.id===r.processId);if(!b||!pr)return'';const search=`${proj.name} ${b.name} ${r.floor} ${pr.name} ${r.note||''} ${r.crew||''}`.toLowerCase();return `<div class="photo-center-card" data-photo-search="${esc(search)}" onclick="editRecordFromHome('${proj.id}','${r.id}')"><div class="photo-center-img"><img src="${r.photo}" alt="施工照片"></div><div class="photo-center-info"><b>${esc(b.name)}｜${esc(r.floor)}・${esc(pr.name)}</b><span>${fmtTime(r.updatedAt)}${r.crew?'｜'+esc(r.crew):''}</span><span>${esc(r.note||statusInfo(r.status).label)}</span></div></div>`;}).join('');
+  return `<div class="page-intro"><div><h2>工程照片</h2><p>照片直接綁定棟別、樓層、工序與施工紀錄；點照片即可回到原紀錄編輯。</p></div><div class="page-intro-actions"><button class="btn btn-primary" onclick="openQuickAddModal()">${ICO.camera} 拍照／新增回報</button></div></div><div class="filter-bar"><div class="field kw"><label>搜尋照片標籤</label><input id="photo-center-search" placeholder="棟別、樓層、工序、工班、備註" oninput="filterPhotoCenter()"></div><div class="field" style="max-width:100px"><button class="btn btn-block" onclick="document.getElementById('photo-center-search').value='';filterPhotoCenter()">清除</button></div></div><div class="photo-center-grid" id="photo-center-grid">${cards||'<div class="empty-state"><h3>尚無施工照片</h3><p>使用快速新增進度時即可上傳照片。</p></div>'}</div>`;
+}
+function filterPhotoCenter(){const kw=(document.getElementById('photo-center-search')?.value||'').trim().toLowerCase();document.querySelectorAll('[data-photo-search]').forEach(el=>el.style.display=!kw||el.dataset.photoSearch.includes(kw)?'':'none');}
+
+/* =====================  7b. 交接總覽/* =====================  7b. 交接總覽  ===================== */
+function renderHandover(proj){
+  const followGroups = groupHandoverRecords(
+    proj,
+    proj.records.filter(r=>FOLLOW_STATUSES.includes(r.status)||(r.blockReason&&r.status!=='done'))
+  );
+
+  const blockedGroups = groupHandoverRecords(
+    proj,
+    proj.records.filter(r=>r.status!=='done'&&(r.blockReason||r.status==='pending_confirm'))
+  );
+
+  const groupRow = (g)=>{
+    const si=statusInfo(g.status);
+    return `<div class="task-row">
+      <div class="t-main">
+        <div class="t-title">${esc(g.b.name)}　${esc(g.pr.name)}　${esc(g.floor)}</div>
+        <div class="t-sub">
+          <span class="badge" style="background:${si.bg};color:${si.fg};padding:1px 7px;">
+            <span class="dot" style="background:${si.dot};"></span>${si.label} ${g.avgProgress}%
+          </span>
+          ${g.issue?`　<span style="color:var(--red-dk,#a12a21);font-weight:700;">⚠ ${esc(g.issue)}</span>`:''}
+          ${g.records.length>1?`　<span style="color:var(--ink-faint);">合併 ${g.records.length} 筆</span>`:''}
+        </div>
+      </div>
+      <button class="btn btn-sm" onclick="editRecordFromHome('${proj.id}','${g.recordId}')">更新</button>
+    </div>`;
+  };
+
+  const listOrEmpty=(arr,emptyText)=>arr.length?arr.map(groupRow).join(''):`<div class="empty-mini">${emptyText}</div>`;
+  const simpleList=(arr,emptyText)=>arr.length?`<ul class="ho-list">${arr.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:`<div class="empty-mini">${emptyText}</div>`;
 
   return `
     <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
       <button class="btn" onclick="openHandoverEditModal()">${ICO.edit} 編輯交接資料</button>
     </div>
+
     <div class="home-card" style="margin-bottom:14px;border-left:4px solid var(--orange);">
       <h4>① 現況摘要</h4>
-      ${proj.handoverSummary ? `<p class="ho-summary">${esc(proj.handoverSummary)}</p>` : '<div class="empty-mini">尚未填寫，可點右上「編輯交接資料」補充</div>'}
+      ${proj.handoverSummary?`<p class="ho-summary">${esc(proj.handoverSummary)}</p>`:'<div class="empty-mini">尚未填寫，可點右上「編輯交接資料」補充</div>'}
     </div>
+
     <div class="home-grid">
-      <div class="home-card"><h4>② 本週必追 <span class="cnt-pill ${followRecs.length?'warn':''}">${followRecs.length}</span></h4>${listOrEmpty(followRecs.slice(0,15),'目前沒有需追蹤項目')}</div>
-      <div class="home-card"><h4>③ 卡點／待確認 <span class="cnt-pill ${blockedRecs.length?'warn':''}">${blockedRecs.length}</span></h4>${listOrEmpty(blockedRecs.slice(0,15),'目前沒有卡點項目')}</div>
+      <div class="home-card">
+        <h4>② 本週必追 <span class="cnt-pill ${followGroups.length?'warn':''}">${followGroups.length}</span></h4>
+        ${listOrEmpty(followGroups.slice(0,15),'目前沒有需追蹤項目')}
+      </div>
+      <div class="home-card">
+        <h4>③ 卡點／待確認 <span class="cnt-pill ${blockedGroups.length?'warn':''}">${blockedGroups.length}</span></h4>
+        ${listOrEmpty(blockedGroups.slice(0,15),'目前沒有卡點項目')}
+      </div>
     </div>
-    <div class="home-card" style="margin-bottom:14px;">
-      <h4>④ 待請款 <span class="cnt-pill">${billingRecs.length + proj.billingItems.length}</span></h4>
-      ${proj.billingItems.length ? `<div class="ho-sub-label">請款事項／規則</div>${simpleList(proj.billingItems,'')}` : ''}
-      ${billingRecs.length ? `<div class="ho-sub-label" style="margin-top:8px;">待請款工項</div>${billingRecs.map(recRow).join('')}` : (proj.billingItems.length?'':'<div class="empty-mini">目前沒有待請款項目</div>')}
-    </div>
+
     <div class="home-grid">
-      <div class="home-card"><h4>⑤ 聯絡人</h4>${simpleList(proj.contacts,'尚未填寫聯絡人')}</div>
-      <div class="home-card"><h4>⑥ 工班與協力廠商</h4>${simpleList(proj.vendors,'尚未填寫工班／協力廠商')}</div>
+      <div class="home-card"><h4>④ 聯絡人</h4>${simpleList(proj.contacts,'尚未填寫聯絡人')}</div>
+      <div class="home-card"><h4>⑤ 工班與協力廠商</h4>${simpleList(proj.vendors,'尚未填寫工班／協力廠商')}</div>
     </div>
+
     <div class="home-card">
-      <h4>⑦ 置料區／進場須知</h4>
+      <h4>⑥ 置料區／進場須知</h4>
       <div class="ho-sub-label">置料區</div>
       <p class="ho-summary">${proj.storageArea?esc(proj.storageArea):'（未填寫）'}</p>
       <div class="ho-sub-label" style="margin-top:8px;">進場須知</div>
@@ -1673,8 +3139,7 @@ function openHandoverEditModal(){
             <div class="field"><label>置料區</label><input type="text" id="ho-storage" value="${esc(proj.storageArea)}" placeholder="例：B3F"></div>
           </div>
           <div class="field"><label>進場須知</label><textarea id="ho-entry" rows="2" placeholder="例：進料前與工務確認場地">${esc(proj.entryRules)}</textarea></div>
-          <div class="field"><label>請款事項／規則（一行一筆）</label><textarea id="ho-billing" rows="4">${esc(proj.billingItems.join('\n'))}</textarea></div>
-          <div class="hint">「本週必追」「卡點／待確認」「待請款工項」由各筆施作記錄的狀態與卡點原因自動彙整，請至矩陣或快速新增中維護。</div>
+          <div class="hint">「本週必追」與「卡點／待確認」由各筆施作記錄的狀態、備註與卡點原因自動彙整；相同敘述會自動合併樓層。</div>
         </div>
         <div class="modal-foot"><button type="button" class="btn" onclick="closeModal()">取消</button><button type="submit" class="btn btn-primary">儲存</button></div>
       </form>
@@ -1689,7 +3154,6 @@ function submitHandoverEdit(e){
   proj.vendors = lines('ho-vendors');
   proj.storageArea = document.getElementById('ho-storage').value.trim();
   proj.entryRules = document.getElementById('ho-entry').value.trim();
-  proj.billingItems = lines('ho-billing');
   scheduleSave(); closeModal(); render();
   showToast('已儲存交接資料');
   return false;
@@ -1730,6 +3194,53 @@ function renderBuildingBoard(proj){
     <div style="margin-top:16px;"><button class="btn" onclick="openAddBuildingModal()">${ICO.plus} 新增棟別</button></div>`;
 }
 
+
+
+/* =====================  範圍重置共用控制  ===================== */
+function isResetMode(kind){ return formState.resetMode===kind; }
+function clearAllResetSelections(){
+  document.querySelectorAll('.mx-reset-selected').forEach(el=>el.classList.remove('mx-reset-selected'));
+  document.querySelectorAll('.actual-reset-selected').forEach(el=>el.classList.remove('actual-reset-selected'));
+  document.querySelectorAll('.gantt-reset-selected').forEach(el=>el.classList.remove('gantt-reset-selected'));
+}
+function toggleModuleResetMode(kind){
+  formState.resetMode = formState.resetMode===kind ? '' : kind;
+  clearAllResetSelections();
+  render();
+}
+function resetScopeLabel(kind){
+  const allMode = kind==='matrix' ? state.matrixMode==='all' : (kind==='gantt' ? state.ganttMode==='all' : false);
+  if(kind==='actual') return currentBuilding()?.name || '目前棟別';
+  return allMode ? '目前案場全部棟別' : (currentBuilding()?.name || '目前棟別');
+}
+function renderModuleResetToolbar(kind){
+  const active=isResetMode(kind);
+  const titleMap={
+    matrix:'樓層／工序矩陣重置',
+    actual:'案件實際進度表重置',
+    gantt:'甘特排程重置'
+  };
+  const helpMap={
+    matrix:'啟用後以滑鼠拖曳圈選矩形格子；放開後清除所選樓層／工序的施作紀錄。',
+    actual:'啟用後在同一施工分段內拖曳圈選；放開後清除所選樓層／部位的進度。',
+    gantt:'啟用後拖曳圈選工序列與日期；只清除圈選日期內的排程，未圈選部分會保留。'
+  };
+  return `<div class="module-reset-toolbar">
+    <div class="mrt-copy">
+      <strong>${titleMap[kind]}</strong>
+      <span>${helpMap[kind]}　全部重置範圍：${esc(resetScopeLabel(kind))}。</span>
+    </div>
+    <div class="mrt-actions">
+      <button class="btn btn-reset-range ${active?'active':''}" onclick="toggleModuleResetMode('${kind}')">${active?'結束圈選重置':'圈選範圍重置'}</button>
+      <button class="btn btn-reset-all" onclick="resetAllModule('${kind}')">全部重置</button>
+    </div>
+  </div>${active?`<div class="reset-mode-banner">目前為圈選重置模式。拖曳反白範圍後放開滑鼠；單一格也可以直接點選後放開。</div>`:''}`;
+}
+function resetAllModule(kind){
+  if(kind==='matrix') return resetAllMatrix();
+  if(kind==='actual') return resetAllActualProgress();
+  if(kind==='gantt') return resetAllGantt();
+}
 
 /* =====================  8b. 實際進度表（位置 × 樓層 × 工項）  ===================== */
 const ACTUAL_DEFAULT_PART_GROUPS = [
@@ -1878,6 +3389,7 @@ function renderActualProgress(proj){
   }
   const rows = actualSections(proj).map(sec=>renderActualSection(proj,b,sec)).join('');
   return `
+    ${renderModuleResetToolbar('actual')}
     <div class="actual-toolbar">
       <div class="actual-title">${esc(proj.name)}｜${esc(b.name)}｜實際進度表</div>
       <button class="btn btn-sm" onclick="setView('matrix')">回樓層×工序矩陣</button>
@@ -1890,7 +3402,7 @@ function renderActualProgress(proj){
     <div class="actual-table-wrap"><table class="actual-grid" id="actual-grid">${renderActualHeader(proj)}<tbody>${rows}</tbody></table></div>`;
 }
 function actualCellInfo(td){ return {buildingId:td.dataset.b, sectionKey:td.dataset.sec, floor:td.dataset.fl, part:td.dataset.part, partIndex:Number(td.dataset.partIndex||0)}; }
-function clearActualSelection(){ document.querySelectorAll('.actual-cell.actual-selected').forEach(td=>td.classList.remove('actual-selected')); }
+function clearActualSelection(){ document.querySelectorAll('.actual-cell.actual-selected,.actual-cell.actual-reset-selected').forEach(td=>{td.classList.remove('actual-selected');td.classList.remove('actual-reset-selected');}); }
 function actualCellsBetween(start, end){
   if(!start || !end || start.buildingId!==end.buildingId || start.sectionKey!==end.sectionKey) return [];
   const proj=currentProject(); const b=currentBuilding(); if(!proj||!b) return [];
@@ -1913,9 +3425,11 @@ function actualCellsBetween(start, end){
 }
 function highlightActualCells(cells){
   clearActualSelection();
+  document.querySelectorAll('.actual-cell.actual-reset-selected').forEach(td=>td.classList.remove('actual-reset-selected'));
+  const cls=isResetMode('actual')?'actual-reset-selected':'actual-selected';
   cells.forEach(c=>{
     const sel = `.actual-cell[data-b="${cssEscape(c.buildingId)}"][data-sec="${cssEscape(c.sectionKey)}"][data-fl="${cssEscape(c.floor)}"][data-part-index="${c.partIndex}"]`;
-    const td = document.querySelector(sel); if(td) td.classList.add('actual-selected');
+    const td = document.querySelector(sel); if(td) td.classList.add(cls);
   });
 }
 function actualDragStart(ev, td){
@@ -1932,6 +3446,20 @@ function actualDragEnter(ev, td){
 function actualDragEnd(){
   if(!actualDrag) return;
   const d = actualDrag; actualDrag=null;
+
+  if(isResetMode('actual')){
+    const cells=d.cells?.length?d.cells:[d.start];
+    suppressActualClick=true;setTimeout(()=>suppressActualClick=false,160);
+    highlightActualCells(cells);
+    if(!confirm(`確定重置圈選的 ${cells.length} 格實際進度？\n將同時清除這些位置對應的施工進度紀錄。`)){
+      clearActualSelection();return;
+    }
+    resetActualCells(cells);
+    clearActualSelection();
+    scheduleSave();render();showToast(`已重置 ${cells.length} 格實際進度`);
+    return;
+  }
+
   if(!d.moved || d.cells.length<=1){ setTimeout(clearActualSelection,80); return; }
   suppressActualClick = true; setTimeout(()=>suppressActualClick=false,120);
   const proj=currentProject(); const src=actualCellData(proj,d.start.buildingId,d.start.sectionKey,d.start.floor,d.start.part);
@@ -1944,7 +3472,7 @@ function actualDragEnd(){
   scheduleSave(); render(); showToast(`已套用到 ${d.cells.length} 格`);
 }
 function actualCellClick(ev, td){
-  if(suppressActualClick){ ev.preventDefault(); return; }
+  if(suppressActualClick || isResetMode('actual')){ ev.preventDefault(); return; }
   openActualCellModal(actualCellInfo(td));
 }
 function setActualCellData(proj, buildingId, sectionKey, floor, part, data){
@@ -1963,6 +3491,61 @@ function setActualCellData(proj, buildingId, sectionKey, floor, part, data){
     else proj.records.push({id:uid('r'), buildingId, floor, processId:prId, partIds:partId?[partId]:[], progress, status:recStatus, note:data.note||'', crew:'', photo:null, blockReason:data.status==='delayed'?'其他':'', updatedAt:Date.now()});
   }
 }
+
+function removeActualRecordForCell(proj, cell){
+  const allowedNames=new Set(
+    actualAllowedStatusKeysForSection(proj,cell.sectionKey)
+      .map(k=>ACTUAL_PROCESS_BY_STATUS[k]).filter(Boolean)
+  );
+  const partId=actualPartId(proj,cell.part);
+  const processNameById=new Map(proj.processes.map(p=>[p.id,p.name]));
+
+  const next=[];
+  proj.records.forEach(r=>{
+    const sameBase=
+      r.buildingId===cell.buildingId &&
+      r.floor===cell.floor &&
+      allowedNames.has(processNameById.get(r.processId));
+    if(!sameBase){ next.push(r);return; }
+
+    const ids=[...(r.partIds||[])];
+    // 無指定部位代表整區，重置此格時移除該整區紀錄，避免狀態重新推算回來。
+    if(!ids.length){ return; }
+    if(!partId || !ids.includes(partId)){ next.push(r);return; }
+
+    const remain=ids.filter(id=>id!==partId);
+    if(remain.length){
+      r.partIds=remain;
+      r.updatedAt=Date.now();
+      next.push(r);
+    }
+  });
+  proj.records=next;
+}
+function resetActualCells(cells){
+  const proj=currentProject();
+  ensureActualProgressSetup(proj);
+  (cells||[]).forEach(c=>{
+    delete proj.actualTable.cells[actualKey(c.buildingId,c.sectionKey,c.floor,c.part)];
+    removeActualRecordForCell(proj,c);
+  });
+}
+function resetAllActualProgress(){
+  const proj=currentProject(),b=currentBuilding();
+  if(!proj||!b) return;
+  ensureActualProgressSetup(proj);
+  const sections=actualSections(proj);
+  const floors=b.floors||[];
+  const parts=actualParts(proj);
+  const cells=[];
+  sections.forEach(sec=>floors.forEach(floor=>parts.forEach((part,partIndex)=>{
+    cells.push({buildingId:b.id,sectionKey:sec.key,floor,part,partIndex});
+  })));
+  if(!confirm(`確定全部重置「${b.name}」的實際進度表？\n共 ${cells.length} 格，並會清除對應的實際進度紀錄。此動作無法復原，建議先匯出備份。`)) return;
+  resetActualCells(cells);
+  scheduleSave();render();showToast(`已全部重置 ${b.name} 實際進度表`);
+}
+
 function openActualCellModal(info){
   const proj=currentProject(); const b=proj.buildings.find(x=>x.id===info.buildingId); const data=actualCellData(proj,info.buildingId,info.sectionKey,info.floor,info.part); const cur=data.status||'blank';
   const buttons = ACTUAL_STATUS_ORDER.map(k=>{const st=ACTUAL_STATUS[k]; return `<button type="button" class="actual-status-btn ${cur===k?'selected':''}" onclick="document.querySelectorAll('.actual-status-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');document.getElementById('actual-status-input').value='${k}'"><span class="sw" style="background:${st.color}"></span>${esc(st.label)}</button>`;}).join('');
@@ -2030,9 +3613,15 @@ function printActualProgress(){
 }
 /* =====================  9. 樓層 × 工序矩陣  ===================== */
 function cellInnerHTML(proj, buildingId, floor, processId){
-  const recs = getRecords(proj.id, buildingId, floor, processId);
-  const s = cellBucket(recs);
-  const inner = s.count===0 ? `<span class="cell-empty">–</span>` : `<span class="pct">${s.avg}%</span>${s.count>1?`<span class="cnt">${s.count} 筆</span>`:''}`;
+  const s=matrixCellStats(proj,buildingId,floor,processId);
+  let inner;
+  if(s.count===0){
+    inner=`<span class="cell-empty">–</span>`;
+  }else if(s.usesParts){
+    inner=`<span class="pct">${s.avg}%</span><span class="cnt">${s.doneParts}/${s.totalParts} 部位</span>`;
+  }else{
+    inner=`<span class="pct">${s.avg}%</span>${s.count>1?`<span class="cnt">${s.count} 筆</span>`:''}`;
+  }
   return `<div class="cell-pill ${BUCKET_CLASS[s.bucket]}">${inner}</div>`;
 }
 function refreshCellDOM(buildingId, floor, processId){
@@ -2087,7 +3676,7 @@ function buildingSuggestions(proj, b){
   const inProg = avgs.filter(x=>x.avg>0 && x.avg<100);
   if(inProg.length){
     const front = inProg[inProg.length-1];
-    const remainFloors = b.floors.filter(fl=>cellBucket(getRecords(proj.id,b.id,fl,front.process.id)).avg<100);
+    const remainFloors = b.floors.filter(fl=>matrixCellStats(proj,b.id,fl,front.process.id).avg<100);
     out.push({type:'next', text:`${b.name} ${front.process.name} 進度最前（${front.avg}%），可接續往 ${shortFloorLabel(b,remainFloors)} 安排施作。`});
   } else {
     let lastDoneIdx=-1; avgs.forEach((x,i)=>{ if(x.avg>=100) lastDoneIdx=i; });
@@ -2220,12 +3809,12 @@ function renderMatrixAll(proj){
       <span><span class="legend-sw" style="background:${STATUS.in_progress.bg};"></span>進行中／待料／待確認</span>
       <span><span class="legend-sw" style="background:${STATUS.done.bg};"></span>完成</span>
       <span><span class="legend-sw" style="background:${STATUS.delayed.bg};"></span>延誤</span>
-      <span style="color:var(--ink-faint);">點擊格子可開啟施作記錄；從已有資料的格子拖曳可矩形套用到選取範圍，套用前會再次確認</span>
+      <span style="color:var(--ink-faint);">點進矩陣格後只需勾選已完成部位，系統會以已選部位數 ÷ 總部位數自動計算百分比；不需要拉進度滑軌</span>
     </div>`;
 }
 
 function renderMatrix(proj){
-  if(state.matrixMode==='all') return renderMatrixAll(proj);
+  if(state.matrixMode==='all') return renderModuleResetToolbar('matrix') + renderMatrixAll(proj);
   const b = currentBuilding();
   if(!b){
     return `<div class="empty-state"><h3>尚未建立棟別</h3><p>請先新增此案場的棟別以開始建立進度表。</p>
@@ -2242,6 +3831,7 @@ function renderMatrix(proj){
     return `<tr><td class="floor-cell">${esc(fl)}</td>${cells}</tr>`;
   }).join('');
   return `
+    ${renderModuleResetToolbar('matrix')}
     <div class="matrix-wrap">
       <table class="matrix"><thead><tr><th class="floor-head">樓層</th>${head}</tr></thead><tbody>${rows}</tbody></table>
     </div>
@@ -2250,14 +3840,14 @@ function renderMatrix(proj){
       <span><span class="legend-sw" style="background:${STATUS.in_progress.bg};"></span>進行中／待料／待確認</span>
       <span><span class="legend-sw" style="background:${STATUS.done.bg};"></span>完成</span>
       <span><span class="legend-sw" style="background:${STATUS.delayed.bg};"></span>延誤</span>
-      <span style="color:var(--ink-faint);">點擊格子可開啟施作記錄；從已有資料的格子拖曳可矩形套用到選取範圍，套用前會再次確認</span>
+      <span style="color:var(--ink-faint);">完成度自動依已完成部位 ÷ 已設定部位計算；拖曳仍只套用反白矩形範圍，套用前會再次確認</span>
     </div>`;
 }
 /* 矩陣互動：點一下＝開啟該樓層/工序的施作記錄編輯視窗；
    拖曳＝只套用反白矩形範圍。套用時會複製起始格的施作記錄並覆蓋選取格原紀錄，避免未選取格子被誤動。 */
 let matrixDragState = {active:false, start:null, current:null, moved:false, suppressClick:false};
 function matrixCellInfo(td){ return {td, buildingId:td.dataset.b, floor:td.dataset.fl, processId:td.dataset.pr, table:td.closest('table.matrix')}; }
-function clearMatrixSelection(){ document.querySelectorAll('td.mx-cell.mx-selected').forEach(td=>td.classList.remove('mx-selected')); }
+function clearMatrixSelection(){ document.querySelectorAll('td.mx-cell.mx-selected,td.mx-cell.mx-reset-selected').forEach(td=>{td.classList.remove('mx-selected');td.classList.remove('mx-reset-selected');}); }
 function matrixCellsBetween(startInfo, endInfo){
   if(!startInfo || !endInfo || startInfo.table!==endInfo.table || startInfo.buildingId!==endInfo.buildingId) return [];
   const r1 = startInfo.td.parentElement.rowIndex, r2 = endInfo.td.parentElement.rowIndex;
@@ -2274,7 +3864,7 @@ function matrixCellsBetween(startInfo, endInfo){
   }
   return cells;
 }
-function highlightMatrixCells(cells){ clearMatrixSelection(); cells.forEach(td=>td.classList.add('mx-selected')); }
+function highlightMatrixCells(cells){ clearMatrixSelection(); const cls=isResetMode('matrix')?'mx-reset-selected':'mx-selected'; cells.forEach(td=>td.classList.add(cls)); }
 function matrixDragStart(ev, td){
   if(ev.button!==0) return;
   matrixDragState = {active:true, start:matrixCellInfo(td), current:matrixCellInfo(td), moved:false, suppressClick:false};
@@ -2291,7 +3881,7 @@ function matrixDragEnter(ev, td){
   highlightMatrixCells(cells);
 }
 function matrixCellClick(ev, td){
-  if(matrixDragState.suppressClick){ ev.preventDefault(); ev.stopPropagation(); return; }
+  if(matrixDragState.suppressClick || isResetMode('matrix')){ ev.preventDefault(); ev.stopPropagation(); return; }
   const info = matrixCellInfo(td);
   openCellModal(info.buildingId, info.floor, info.processId);
 }
@@ -2301,34 +3891,64 @@ function applyMatrixDrag(){
   const dragged = matrixDragState.moved && cells.length>1;
   const startInfo = matrixDragState.start;
   matrixDragState.active=false;
-  if(!dragged){ setTimeout(clearMatrixSelection, 80); return; }
-  matrixDragState.suppressClick=true;
-  setTimeout(()=>{ matrixDragState.suppressClick=false; }, 220);
-  const proj=currentProject();
-  const sourceRecs = getRecords(proj.id, startInfo.buildingId, startInfo.floor, startInfo.processId);
-  if(!sourceRecs.length){ clearMatrixSelection(); showToast('起始格沒有施作記錄，請先點擊新增記錄再拖曳套用','error'); return; }
-  const b = proj.buildings.find(x=>x.id===startInfo.buildingId);
-  const pr = proj.processes.find(x=>x.id===startInfo.processId);
-  const sourceLabel = `${b?b.name:''} ${startInfo.floor} ${pr?pr.name:''}`;
-  if(!confirm(`是否將起始格「${sourceLabel}」的 ${sourceRecs.length} 筆記錄，覆蓋套用到選取的 ${cells.length} 格？`)){
-    clearMatrixSelection(); return;
+
+  if(isResetMode('matrix')){
+    const selected=cells.length?cells:[startInfo.td];
+    matrixDragState.suppressClick=true;
+    setTimeout(()=>{ matrixDragState.suppressClick=false; },220);
+    highlightMatrixCells(selected);
+    if(!confirm(`確定重置圈選的 ${selected.length} 格矩陣進度？\n會清除這些樓層／工序的所有施作紀錄。`)){
+      clearMatrixSelection();return;
+    }
+    const proj=currentProject();
+    const keys=new Set(selected.map(td=>`${td.dataset.b}|${td.dataset.fl}|${td.dataset.pr}`));
+    proj.records=proj.records.filter(r=>!keys.has(`${r.buildingId}|${r.floor}|${r.processId}`));
+    scheduleSave();clearMatrixSelection();render();showToast(`已重置 ${selected.length} 格矩陣進度`);
+    return;
   }
-  const selectedKeys = new Set(cells.map(td=>`${td.dataset.b}|${td.dataset.fl}|${td.dataset.pr}`));
-  proj.records = proj.records.filter(r=>!selectedKeys.has(`${r.buildingId}|${r.floor}|${r.processId}`));
-  const now = Date.now();
+
+  if(!dragged){ setTimeout(clearMatrixSelection,80); return; }
+  matrixDragState.suppressClick=true;
+  setTimeout(()=>{ matrixDragState.suppressClick=false; },220);
+  const proj=currentProject();
+  const sourceRecs=getRecords(proj.id,startInfo.buildingId,startInfo.floor,startInfo.processId);
+  if(!sourceRecs.length){ clearMatrixSelection();showToast('起始格沒有施作記錄，請先點擊新增記錄再拖曳套用','error');return; }
+  const b=proj.buildings.find(x=>x.id===startInfo.buildingId);
+  const pr=proj.processes.find(x=>x.id===startInfo.processId);
+  const sourceLabel=`${b?b.name:''} ${startInfo.floor} ${pr?pr.name:''}`;
+  if(!confirm(`是否將起始格「${sourceLabel}」的 ${sourceRecs.length} 筆記錄，覆蓋套用到選取的 ${cells.length} 格？`)){
+    clearMatrixSelection();return;
+  }
+  const selectedKeys=new Set(cells.map(td=>`${td.dataset.b}|${td.dataset.fl}|${td.dataset.pr}`));
+  proj.records=proj.records.filter(r=>!selectedKeys.has(`${r.buildingId}|${r.floor}|${r.processId}`));
+  const now=Date.now();
   cells.forEach(td=>{
-    const info = matrixCellInfo(td);
+    const info=matrixCellInfo(td);
     sourceRecs.forEach(src=>{
       proj.records.push({
-        ...src,
-        id:uid('r'), buildingId:info.buildingId, floor:info.floor, processId:info.processId,
-        partIds:[...(src.partIds||[])], updatedAt:now
+        ...src,id:uid('r'),buildingId:info.buildingId,floor:info.floor,processId:info.processId,
+        partIds:[...(src.partIds||[])],updatedAt:now
       });
     });
   });
-  scheduleSave(); clearMatrixSelection(); render(); showToast(`已套用 ${cells.length} 格矩陣進度`);
+  scheduleSave();clearMatrixSelection();render();showToast(`已套用 ${cells.length} 格矩陣進度`);
 }
 document.addEventListener('mouseup', applyMatrixDrag);
+
+function resetAllMatrix(){
+  const proj=currentProject();
+  const allMode=state.matrixMode==='all';
+  const buildingIds=new Set(
+    allMode ? proj.buildings.map(b=>b.id) : (currentBuilding()?[currentBuilding().id]:[])
+  );
+  if(!buildingIds.size) return;
+  const scope=allMode?`${proj.name} 全部棟別`:(currentBuilding()?.name||'目前棟別');
+  const count=proj.records.filter(r=>buildingIds.has(r.buildingId)).length;
+  if(!confirm(`確定全部重置「${scope}」的樓層／工序矩陣？\n將清除 ${count} 筆施作進度紀錄。此動作無法復原，建議先匯出備份。`)) return;
+  proj.records=proj.records.filter(r=>!buildingIds.has(r.buildingId));
+  scheduleSave();render();showToast(`已全部重置 ${scope} 矩陣進度`);
+}
+
 function cellMouseDown(){ /* 保留空函式以相容既有模板呼叫 */ }
 function cellMouseEnter(){ /* 保留空函式以相容既有模板呼叫 */ }
 function handleCellClick(buildingId, floor, processId){ openCellModal(buildingId, floor, processId); }
@@ -2402,7 +4022,7 @@ function clipToWindow(sd, ed, winStart, winEnd){
 }
 function dateRangeArray(start,end){ const arr=[]; let d=new Date(start); while(d<=end){ arr.push(new Date(d)); d=addDays(d,1); } return arr; }
 function pushGanttProcessRows(proj, rows, pr, indented, opts){
-  const subs = visibleGanttSubprocesses(proj);
+  const subs = visibleGanttSubprocesses(proj, pr.id);
   if(subs.length){
     const expandKey = (opts.keyPrefix||'')+'process:'+pr.id;
     const expanded = opts.expandAll || formState.ganttExpanded[expandKey] !== false; // 預設展開，方便看到子工序
@@ -2417,7 +4037,7 @@ function buildGanttDisplayRows(proj, opts){
   // opts.expandAll=true 時（PDF匯出）全部展開；否則依 formState.ganttExpanded 決定
   // opts.keyPrefix 用於全棟模式下區分不同棟別／分組／工序的展開狀態
   opts = opts || {};
-  ensureGanttSubprocesses(proj);
+  ensureGanttSubprocessStore(proj);
   if(!formState.ganttExpanded) formState.ganttExpanded = {};
   const rows = [];
   const grouped = new Set();
@@ -2438,16 +4058,17 @@ function toggleGanttGroup(expandKey){
   formState.ganttExpanded[expandKey] = !formState.ganttExpanded[expandKey];
   render();
 }
-// 大項目摘要：底下細項的總日期範圍與平均完成率
+// 大項目摘要：大項目日期＝底下各「母工序」日期總和；母工序日期再由其子工序／排程彙總。
 function groupSummaryInfo(proj, b, group){
-  const memberIds = new Set(proj.processes.filter(pr=>pr.groupId===group.id).map(pr=>pr.id));
-  const scheds = proj.schedules.filter(s=>s.buildingId===b.id && memberIds.has(s.processId));
+  const members = proj.processes.filter(pr=>pr.groupId===group.id);
+  const ranges = members.map(pr=>processSummaryInfo(proj,b,pr).range).filter(Boolean);
   let range = null;
-  if(scheds.length){
-    const minStart = scheds.reduce((m,s)=>{const d=fromDateStr(s.startDate);return d<m?d:m;}, fromDateStr(scheds[0].startDate));
-    const maxEnd = scheds.reduce((m,s)=>{const d=fromDateStr(s.actualCompleteDate||s.endDate);return d>m?d:m;}, fromDateStr(scheds[0].actualCompleteDate||scheds[0].endDate));
+  if(ranges.length){
+    const minStart = ranges.reduce((m,r)=>r.minStart<m?r.minStart:m, ranges[0].minStart);
+    const maxEnd = ranges.reduce((m,r)=>r.maxEnd>m?r.maxEnd:m, ranges[0].maxEnd);
     range = {minStart, maxEnd};
   }
+  const memberIds = new Set(members.map(pr=>pr.id));
   const memberAvgs = buildingProcessAverages(proj, b).filter(x=>memberIds.has(x.process.id));
   const avg = memberAvgs.length ? Math.round(memberAvgs.reduce((s,x)=>s+x.avg,0)/memberAvgs.length) : 0;
   return { range, avg };
@@ -2455,7 +4076,7 @@ function groupSummaryInfo(proj, b, group){
 function fmtShortDate(d){ return (d.getMonth()+1)+'/'+d.getDate(); }
 function scheduleLabel(proj, b, s){
   const pr = proj.processes.find(x=>x.id===s.processId);
-  const sub = ganttSubprocessName(proj, s.subProcessId);
+  const sub = ganttSubprocessName(proj, s.processId, s.subProcessId);
   const name = `${pr?pr.name:'(未知工序)'}${sub?'／'+sub:''}`;
   return `${name} ${compressFloorLabel(b, s.floors)}（${s.startDate}～${s.endDate}）`;
 }
@@ -2491,12 +4112,12 @@ function renderGanttProcessLikeRow(proj, b, row, days, start, end, todayS, gridR
   const dayCells = days.map((d,i)=>{
     const isWeekend = d.getDay()===0||d.getDay()===6;
     const subArg = sub ? `,'${sub.id}'` : '';
-    return `<div class="gt-day-cell ${isWeekend?'gt-weekend':''}" style="grid-column:${i+2};grid-row:${gridRow};" ondblclick="openScheduleCreateModal('${b.id}','${pr.id}','${toDateStr(d)}'${subArg})"></div>`;
+    return `<div class="gt-day-cell ${isWeekend?'gt-weekend':''}" data-greset="1" data-gb="${b.id}" data-gpr="${pr.id}" data-gsub="${sub?sub.id:''}" data-gdate="${toDateStr(d)}" data-grow="${gridRow}" data-gcol="${i+2}" style="grid-column:${i+2};grid-row:${gridRow};" onmousedown="ganttResetStart(event,this)" onmouseenter="ganttResetEnter(event,this)" ondblclick="if(!isResetMode('gantt'))openScheduleCreateModal('${b.id}','${pr.id}','${toDateStr(d)}'${subArg})"></div>`;
   }).join('');
   const bars = proj.schedules.filter(s=>{
     if(s.buildingId!==b.id || s.processId!==pr.id) return false;
     if(sub) return s.subProcessId===sub.id;
-    return !s.subProcessId || !visibleGanttSubprocesses(proj).length;
+    return !s.subProcessId || !visibleGanttSubprocesses(proj, pr.id).length;
   }).map(s=>{
     const sd=fromDateStr(s.startDate), ed=fromDateStr(s.endDate);
     const clip = clipToWindow(sd, ed, start, end);
@@ -2507,7 +4128,7 @@ function renderGanttProcessLikeRow(proj, b, row, days, start, end, todayS, gridR
     const cls = isDone ? 'gt-done' : (isLate ? 'gt-late' : '');
     const hasDep = (s.dependsOn||[]).length>0;
     const depNames = hasDep ? (s.dependsOn.map(depId=>{ const dep=proj.schedules.find(x=>x.id===depId); return dep?scheduleLabel(proj,b,dep):null; }).filter(Boolean).join('；')) : '';
-    const subName = ganttSubprocessName(proj, s.subProcessId);
+    const subName = ganttSubprocessName(proj, s.processId, s.subProcessId);
     const tip = `${esc(pr.name)}${subName?'／'+esc(subName):''}　${esc(floorLabel)}　${esc(s.startDate)}～${esc(s.endDate)}${s.actualCompleteDate?'　實際完成:'+esc(s.actualCompleteDate):''}${s.note?'　'+esc(s.note):''}${hasDep?'　前置任務:'+esc(depNames):''}`;
     return `<div class="gt-bar ${cls} ${hasDep?'gt-has-dep':''}" data-sid="${s.id}" style="grid-column:${clip.colStart} / span ${clip.span};grid-row:${gridRow};" title="${tip}">
       <div class="gt-bar-body" onclick="openScheduleEditModal('${s.id}')">${esc(floorLabel)}</div>
@@ -2596,7 +4217,7 @@ function renderScheduleAll(proj){
       <button class="btn" onclick="openGanttSubprocessSettingsModal()">${ICO.gear} 管理甘特子工序</button>
     </div>`;
 }
-function renderSchedulePage(proj){
+function renderClassicSchedulePage(proj){
   if(state.ganttMode==='all') return renderScheduleAll(proj);
   const b = currentBuilding();
   if(!b) return `<div class="empty-state"><h3>尚未建立棟別</h3><p>請先新增此案場的棟別，才能建立預定工程進度表。</p><button class="btn btn-primary" onclick="openAddBuildingModal()">${ICO.plus} 新增棟別</button></div>`;
@@ -2655,6 +4276,373 @@ function renderSchedulePage(proj){
       <button class="btn" onclick="openGanttSubprocessSettingsModal()">${ICO.gear} 管理甘特子工序</button>
     </div>`;
 }
+
+
+let ganttResetDrag=null;
+let suppressGanttResetClick=false;
+
+function ganttResetInfo(el){
+  return {
+    el,
+    grid:el.closest('.gantt-grid,.dual-gantt-grid'),
+    buildingId:el.dataset.gb||'',
+    processId:el.dataset.gpr||'',
+    subProcessId:el.dataset.gsub||'',
+    scheduleId:el.dataset.gsid||'',
+    date:el.dataset.gdate||'',
+    row:Number(el.dataset.grow||0),
+    col:Number(el.dataset.gcol||0)
+  };
+}
+function clearGanttResetSelection(){
+  document.querySelectorAll('.gantt-reset-selected').forEach(el=>el.classList.remove('gantt-reset-selected'));
+}
+function ganttResetCellsBetween(a,b){
+  if(!a||!b||a.grid!==b.grid) return [];
+  const r1=Math.min(a.row,b.row),r2=Math.max(a.row,b.row);
+  const c1=Math.min(a.col,b.col),c2=Math.max(a.col,b.col);
+  return [...a.grid.querySelectorAll('[data-greset="1"]')].filter(el=>{
+    const r=Number(el.dataset.grow||0),c=Number(el.dataset.gcol||0);
+    return r>=r1&&r<=r2&&c>=c1&&c<=c2;
+  });
+}
+function highlightGanttResetCells(cells){
+  clearGanttResetSelection();
+  cells.forEach(el=>el.classList.add('gantt-reset-selected'));
+}
+function ganttResetStart(ev,el){
+  if(!isResetMode('gantt')||ev.button!==0) return;
+  const info=ganttResetInfo(el);
+  ganttResetDrag={start:info,current:info,cells:[el]};
+  highlightGanttResetCells([el]);
+  ev.preventDefault();ev.stopPropagation();
+  document.addEventListener('mouseup',ganttResetEnd,{once:true});
+}
+function ganttResetEnter(ev,el){
+  if(!isResetMode('gantt')||!ganttResetDrag||!(ev.buttons&1)) return;
+  const info=ganttResetInfo(el);
+  if(info.grid!==ganttResetDrag.start.grid) return;
+  ganttResetDrag.current=info;
+  ganttResetDrag.cells=ganttResetCellsBetween(ganttResetDrag.start,info);
+  highlightGanttResetCells(ganttResetDrag.cells);
+}
+function scheduleMatchesResetTarget(proj,s,target){
+  if(target.scheduleId) return s.id===target.scheduleId;
+  if(s.buildingId!==target.buildingId||s.processId!==target.processId) return false;
+  if(target.subProcessId) return s.subProcessId===target.subProcessId;
+  return !s.subProcessId || !visibleGanttSubprocesses(proj,s.processId).length;
+}
+function subtractScheduleRange(s,resetStart,resetEnd){
+  const sd=fromDateStr(s.startDate),ed=fromDateStr(s.endDate);
+  if(ed<resetStart||sd>resetEnd) return [s];
+
+  // 整段皆在圈選範圍內：刪除。
+  if(resetStart<=sd&&resetEnd>=ed) return [];
+
+  // 圈選切掉前段。
+  if(resetStart<=sd&&resetEnd<ed){
+    return [{
+      ...s,
+      startDate:toDateStr(addDays(resetEnd,1)),
+      actualStartDate:null,
+      actualCompleteDate:null
+    }];
+  }
+
+  // 圈選切掉後段。
+  if(resetStart>sd&&resetEnd>=ed){
+    return [{
+      ...s,
+      endDate:toDateStr(addDays(resetStart,-1)),
+      actualStartDate:null,
+      actualCompleteDate:null
+    }];
+  }
+
+  // 圈選位於中間：保留左右兩段，拆成兩筆排程。
+  return [
+    {
+      ...s,
+      endDate:toDateStr(addDays(resetStart,-1)),
+      actualStartDate:null,
+      actualCompleteDate:null
+    },
+    {
+      ...s,
+      id:uid('sc'),
+      startDate:toDateStr(addDays(resetEnd,1)),
+      actualStartDate:null,
+      actualCompleteDate:null
+    }
+  ];
+}
+function ganttResetEnd(){
+  if(!ganttResetDrag) return;
+  const d=ganttResetDrag;ganttResetDrag=null;
+  const cells=d.cells?.length?d.cells:[d.start.el];
+  highlightGanttResetCells(cells);
+
+  const infos=cells.map(ganttResetInfo);
+  const dates=infos.map(x=>x.date).filter(Boolean).sort();
+  if(!dates.length){clearGanttResetSelection();return;}
+  const resetStart=fromDateStr(dates[0]),resetEnd=fromDateStr(dates[dates.length-1]);
+
+  const targetMap=new Map();
+  infos.forEach(x=>{
+    const key=x.scheduleId?`sid:${x.scheduleId}`:`row:${x.buildingId}|${x.processId}|${x.subProcessId}`;
+    targetMap.set(key,x);
+  });
+  const targets=[...targetMap.values()];
+  const proj=currentProject();
+
+  const affected=proj.schedules.filter(s=>targets.some(t=>scheduleMatchesResetTarget(proj,s,t))&&!(fromDateStr(s.endDate)<resetStart||fromDateStr(s.startDate)>resetEnd));
+  if(!affected.length){
+    clearGanttResetSelection();showToast('圈選範圍內沒有排程可重置');return;
+  }
+
+  const label=`${toDateStr(resetStart)}～${toDateStr(resetEnd)}`;
+  if(!confirm(`確定重置圈選的甘特範圍？\n日期：${label}\n影響 ${affected.length} 筆排程。\n跨出圈選範圍的排程會保留未被圈選的部分。`)){
+    clearGanttResetSelection();return;
+  }
+
+  const next=[];
+  proj.schedules.forEach(s=>{
+    const matched=targets.some(t=>scheduleMatchesResetTarget(proj,s,t));
+    if(!matched){next.push(s);return;}
+    subtractScheduleRange(s,resetStart,resetEnd).forEach(x=>next.push(x));
+  });
+  proj.schedules=next;
+  clearGanttResetSelection();
+  scheduleSave();render();showToast(`已重置甘特範圍 ${label}`);
+}
+function resetAllGantt(){
+  const proj=currentProject();
+  const allMode=state.ganttMode==='all';
+  const buildingIds=new Set(allMode?proj.buildings.map(b=>b.id):(currentBuilding()?[currentBuilding().id]:[]));
+  if(!buildingIds.size) return;
+  const scope=allMode?`${proj.name} 全部棟別`:(currentBuilding()?.name||'目前棟別');
+  const count=proj.schedules.filter(s=>buildingIds.has(s.buildingId)).length;
+  if(!confirm(`確定全部重置「${scope}」的甘特排程？\n將刪除 ${count} 筆預定排程；矩陣與實際進度資料不會刪除。此動作無法復原，建議先匯出備份。`)) return;
+  proj.schedules=proj.schedules.filter(s=>!buildingIds.has(s.buildingId));
+  clearGanttResetSelection();
+  scheduleSave();render();showToast(`已全部重置 ${scope} 甘特排程`);
+}
+
+function setGanttPresentation(mode){
+  formState.ganttPresentation = mode==='compare' ? 'compare' : 'classic';
+  render();
+}
+function renderGanttPresentationSwitch(){
+  const mode=formState.ganttPresentation||'classic';
+  return `<div class="gantt-presentation-switch">
+    <div class="gps-copy">
+      <strong>甘特圖呈現方式</strong>
+      <span>原甘特圖保留編輯與拖曳；雙軌圖專門比較預計工期與實際執行情況。</span>
+    </div>
+    <div class="gps-buttons">
+      <button class="${mode==='classic'?'active':''}" onclick="setGanttPresentation('classic')">原甘特圖</button>
+      <button class="${mode==='compare'?'active':''}" onclick="setGanttPresentation('compare')">預計 vs 實際</button>
+    </div>
+  </div>`;
+}
+
+function plannedProgressAtDate(s, dateObj){
+  const start=fromDateStr(s.startDate), end=fromDateStr(s.endDate);
+  if(dateObj<start) return 0;
+  if(dateObj>=end) return 100;
+  const total=Math.max(1,diffDays(start,end)+1);
+  const elapsed=Math.max(0,diffDays(start,dateObj)+1);
+  return clamp(Math.round(elapsed/total*100),0,100);
+}
+function scheduleActualProgress(proj,b,s){
+  if(s.actualCompleteDate) return 100;
+  const floors=(s.floors||[]).filter(fl=>b.floors.includes(fl));
+  if(!floors.length) return 0;
+  const vals=floors.map(fl=>matrixCellStats(proj,b.id,fl,s.processId).avg);
+  return vals.length?Math.round(vals.reduce((a,v)=>a+v,0)/vals.length):0;
+}
+function inferredScheduleActualStart(proj,s){
+  if(s.actualStartDate) return fromDateStr(s.actualStartDate);
+  const floorSet=new Set(s.floors||[]);
+  const matches=proj.records.filter(r=>
+    r.buildingId===s.buildingId &&
+    r.processId===s.processId &&
+    (!floorSet.size || floorSet.has(r.floor)) &&
+    (Number(r.progress||0)>0 || r.status==='done' || r.status==='in_progress')
+  );
+  if(matches.length){
+    const first=matches.reduce((m,r)=>Math.min(m,Number(r.updatedAt||Infinity)),Infinity);
+    if(isFinite(first)){
+      const d=new Date(first);d.setHours(0,0,0,0);return d;
+    }
+  }
+  return null;
+}
+function scheduleVariance(actualPct,planPct){
+  return actualPct-planPct;
+}
+function dualScheduleRows(proj, buildings){
+  const rows=[];
+  buildings.forEach(b=>{
+    if(buildings.length>1) rows.push({type:'building',b});
+    const schedules=[...proj.schedules]
+      .filter(s=>s.buildingId===b.id)
+      .sort((a,c)=>a.startDate.localeCompare(c.startDate)||a.endDate.localeCompare(c.endDate));
+    let lastGroup='',lastProcess='';
+    schedules.forEach(s=>{
+      const pr=proj.processes.find(x=>x.id===s.processId);
+      if(!pr) return;
+      const group=proj.processGroups.find(g=>g.id===pr.groupId);
+      const groupName=group?.name||'未分組';
+      if(groupName!==lastGroup){
+        rows.push({type:'group',b,name:groupName});
+        lastGroup=groupName;lastProcess='';
+      }
+      const sub=ganttSubprocessName(proj,s.processId,s.subProcessId);
+      const processKey=pr.id+'|'+(sub||'');
+      if(processKey!==lastProcess){
+        rows.push({type:'processHeader',b,pr,sub});
+        lastProcess=processKey;
+      }
+      rows.push({type:'schedule',b,pr,sub,s});
+    });
+  });
+  return rows;
+}
+function renderDualTrackGantt(proj){
+  const allMode=state.ganttMode==='all';
+  const buildings=allMode?proj.buildings:(currentBuilding()?[currentBuilding()]:[]);
+  if(!buildings.length){
+    return `<div class="empty-state"><h3>尚未建立棟別</h3><button class="btn btn-primary" onclick="openAddBuildingModal()">${ICO.plus} 新增棟別</button></div>`;
+  }
+  if(!proj.schedules.length){
+    return `<div class="empty-state"><h3>尚未建立排程</h3><p>請先切回原甘特圖，雙擊日期格建立排程。</p><button class="btn btn-primary" onclick="setGanttPresentation('classic')">回到原甘特圖</button></div>`;
+  }
+
+  const {start,end}=getScheduleWindow(proj);
+  const days=dateRangeArray(start,end);
+  const today=fromDateStr(todayStr());
+  const todayS=todayStr();
+  const rows=dualScheduleRows(proj,buildings);
+  const labelWidth=255;
+
+  const scheduleRows=rows.filter(r=>r.type==='schedule');
+  const stats=scheduleRows.map(r=>{
+    const actual=scheduleActualProgress(proj,r.b,r.s);
+    const plan=plannedProgressAtDate(r.s,today);
+    return {actual,plan,variance:actual-plan,late:!r.s.actualCompleteDate&&fromDateStr(r.s.endDate)<today&&actual<100};
+  });
+  const avgActual=stats.length?Math.round(stats.reduce((a,x)=>a+x.actual,0)/stats.length):0;
+  const avgPlan=stats.length?Math.round(stats.reduce((a,x)=>a+x.plan,0)/stats.length):0;
+  const avgVar=avgActual-avgPlan;
+  const lateCount=stats.filter(x=>x.late).length;
+
+  const head=days.map((d,i)=>{
+    const ds=toDateStr(d),wk=d.getDay()===0||d.getDay()===6;
+    return `<div class="dual-head ${wk?'weekend':''} ${ds===todayS?'today':''}" style="grid-column:${i+2};grid-row:1;">
+      <span style="font-size:10px;font-weight:800;">${d.getMonth()+1}/${d.getDate()}</span>
+      <span style="font-size:8px;opacity:.75;">${['日','一','二','三','四','五','六'][d.getDay()]}</span>
+    </div>`;
+  }).join('');
+
+  const body=rows.map((row,ri)=>{
+    const gr=ri+2;
+    if(row.type==='building'){
+      const cells=days.map((d,i)=>`<div class="dual-group-cell" style="grid-column:${i+2};grid-row:${gr};"></div>`).join('');
+      return `<div class="dual-group-label" style="grid-column:1;grid-row:${gr};background:var(--orange);">${esc(row.b.name)}</div>${cells}`;
+    }
+    if(row.type==='group'){
+      const cells=days.map((d,i)=>`<div class="dual-group-cell" style="grid-column:${i+2};grid-row:${gr};"></div>`).join('');
+      return `<div class="dual-group-label" style="grid-column:1;grid-row:${gr};">${esc(row.name)}</div>${cells}`;
+    }
+    if(row.type==='processHeader'){
+      const cells=days.map((d,i)=>`<div class="dual-group-cell" style="grid-column:${i+2};grid-row:${gr};background:#F8FAFC;"></div>`).join('');
+      return `<div class="dual-group-label" style="grid-column:1;grid-row:${gr};background:var(--navy-2);padding-left:22px;">${esc(row.pr.name)}${row.sub?'／'+esc(row.sub):''}</div>${cells}`;
+    }
+
+    const s=row.s,b=row.b,pr=row.pr;
+    const actualPct=scheduleActualProgress(proj,b,s);
+    const planPct=plannedProgressAtDate(s,today);
+    const variance=scheduleVariance(actualPct,planPct);
+    const actualStart=inferredScheduleActualStart(proj,s);
+    const actualEnd=s.actualCompleteDate?fromDateStr(s.actualCompleteDate):(actualStart?today:null);
+    const isLate=!s.actualCompleteDate&&fromDateStr(s.endDate)<today&&actualPct<100;
+    const isDone=!!s.actualCompleteDate||actualPct>=100;
+    const actualCls=isDone?'done':(isLate?'late':(variance>=10?'ahead':''));
+    const varianceCls=variance>3?'good':(variance<-3?'bad':'neutral');
+    const varianceText=variance>0?`實際超前 ${variance}%`:(variance<0?`實際落後 ${Math.abs(variance)}%`:'實際符合計畫');
+    const floorLabel=taskFloorLabel(b,s.floors)||compressFloorLabel(b,s.floors);
+    const label=`<div class="dual-label" style="grid-column:1;grid-row:${gr};" onclick="openScheduleEditModal('${s.id}')">
+      <div class="dl-name">${esc(floorLabel||'未指定樓層')}</div>
+      <div class="dl-meta">預計 ${esc(s.startDate)}～${esc(s.endDate)}${s.actualStartDate?'｜實際起 '+esc(s.actualStartDate):''}</div>
+      <div class="dl-variance ${varianceCls}">計畫 ${planPct}%｜實際 ${actualPct}%｜${varianceText}</div>
+    </div>`;
+    const cells=days.map((d,i)=>{
+      const wk=d.getDay()===0||d.getDay()===6;
+      return `<div class="dual-cell ${wk?'weekend':''}" data-greset="1" data-gsid="${s.id}" data-gb="${b.id}" data-gpr="${pr.id}" data-gsub="${s.subProcessId||''}" data-gdate="${toDateStr(d)}" data-grow="${gr}" data-gcol="${i+2}" style="grid-column:${i+2};grid-row:${gr};" onmousedown="ganttResetStart(event,this)" onmouseenter="ganttResetEnter(event,this)" ondblclick="if(!isResetMode('gantt'))openScheduleCreateModal('${b.id}','${pr.id}','${toDateStr(d)}'${s.subProcessId?`,'${s.subProcessId}'`:''})"></div>`;
+    }).join('');
+
+    const planClip=clipToWindow(fromDateStr(s.startDate),fromDateStr(s.endDate),start,end);
+    const planBar=planClip?`<div class="dual-plan-bar" style="grid-column:${planClip.colStart}/span ${planClip.span};grid-row:${gr};" title="預計：${esc(s.startDate)}～${esc(s.endDate)}"></div>`:'';
+
+    let actualBar='';
+    let actualText='';
+    if(actualStart&&actualEnd){
+      const ac=clipToWindow(actualStart,actualEnd,start,end);
+      if(ac){
+        actualBar=`<div class="dual-actual-bar ${actualCls}" style="grid-column:${ac.colStart}/span ${ac.span};grid-row:${gr};" onclick="openScheduleEditModal('${s.id}')" title="實際：${toDateStr(actualStart)}～${s.actualCompleteDate?esc(s.actualCompleteDate):'進行中'}｜完成 ${actualPct}%"></div>`;
+        const labelCol=Math.min(days.length+1,ac.colStart+ac.span);
+        actualText=`<div class="dual-actual-pct" style="grid-column:${labelCol};grid-row:${gr};">${actualPct}%</div>`;
+      }
+    }else{
+      actualText=`<div class="dual-no-actual" style="grid-column:2/span ${Math.min(4,days.length)};grid-row:${gr};">尚無實際開始紀錄</div>`;
+    }
+    return label+cells+planBar+actualBar+actualText;
+  }).join('');
+
+  const todayIdx=diffDays(start,today);
+  const todayLine=(todayIdx>=0&&todayIdx<days.length)
+    ?`<div class="dual-today-line" style="grid-column:${todayIdx+2};grid-row:1/span ${rows.length+1};"></div>`:'';
+
+  return `
+    ${renderGanttRangeBar(proj)}
+    <div class="dual-summary-row">
+      <div class="dual-summary-card"><div class="dsc-label">目前計畫進度</div><div class="dsc-value">${avgPlan}%</div><div class="dsc-sub">依今日日期與預定工期推算</div></div>
+      <div class="dual-summary-card ${avgVar>=0?'good':'bad'}"><div class="dsc-label">目前實際進度</div><div class="dsc-value">${avgActual}%</div><div class="dsc-sub">依矩陣各樓層工序完成度彙整</div></div>
+      <div class="dual-summary-card ${avgVar>=0?'good':'bad'}"><div class="dsc-label">進度差異</div><div class="dsc-value">${avgVar>0?'+':''}${avgVar}%</div><div class="dsc-sub">${avgVar>=0?'整體符合或超前':'整體落後計畫'}</div></div>
+      <div class="dual-summary-card ${lateCount?'bad':'good'}"><div class="dsc-label">逾期未完成</div><div class="dsc-value">${lateCount}</div><div class="dsc-sub">預定完成日已過且未達 100%</div></div>
+    </div>
+    <div class="dual-gantt-scroll">
+      <div class="dual-gantt-grid" style="grid-template-columns:${labelWidth}px repeat(${days.length},${GT_DAY_WIDTH}px);grid-template-rows:40px repeat(${rows.length},58px);">
+        <div class="dual-corner" style="grid-column:1;grid-row:1;">工序／樓層｜計畫與實際</div>
+        ${head}${body}${todayLine}
+      </div>
+    </div>
+    <div class="dual-track-legend">
+      <span><i class="plan"></i>上軌：預計工期</span>
+      <span><i style="background:var(--orange);"></i>下軌：實際進行中</span>
+      <span><i style="background:var(--green);"></i>實際完成</span>
+      <span><i style="background:var(--red);"></i>逾期未完成</span>
+      <span><i style="background:var(--blue);"></i>實際明顯超前計畫</span>
+      <span>實際百分比來自樓層／工序矩陣，不需在甘特圖另外拉百分比。</span>
+    </div>
+    <div style="margin-top:14px;">
+      <button class="btn" onclick="exportDualGanttPDF()">${ICO.printer} 匯出預計 vs 實際 PDF（A4橫向）</button>
+      <button class="btn" onclick="setGanttPresentation('classic')">返回原甘特圖編輯排程</button>
+      <button class="btn" onclick="openSettingsModal('groups')">${ICO.gear} 管理大項目分組</button>
+      <button class="btn" onclick="openGanttSubprocessSettingsModal()">${ICO.gear} 管理甘特子工序</button>
+    </div>`;
+}
+
+function renderSchedulePage(proj){
+  const switcher=renderGanttPresentationSwitch();
+  const resetToolbar=renderModuleResetToolbar('gantt');
+  if((formState.ganttPresentation||'classic')==='compare'){
+    return switcher+resetToolbar+renderDualTrackGantt(proj);
+  }
+  return switcher+resetToolbar+renderClassicSchedulePage(proj);
+}
+
 function refreshScheduleBarDOM(s){
   const proj = currentProject(); const {start} = getScheduleWindow(proj);
   const el = document.querySelector(`.gt-bar[data-sid="${cssEscape(s.id)}"]`); if(!el) return;
@@ -2759,7 +4747,7 @@ function buildGanttPrintHTML(proj, b){
           .filter(s=>{
             if(s.buildingId!==b.id || s.processId!==pr.id) return false;
             if(sub) return s.subProcessId===sub.id;
-            return !s.subProcessId || !visibleGanttSubprocesses(proj).length;
+            return !s.subProcessId || !visibleGanttSubprocesses(proj, pr.id).length;
           })
           .map(s=>{
             const sd = fromDateStr(s.startDate), ed = fromDateStr(s.endDate);
@@ -2811,6 +4799,216 @@ function buildGanttPrintHTML(proj, b){
   });
   return pagesHtml.join('');
 }
+
+/* ---------- 預計 vs 實際雙軌甘特圖 PDF ---------- */
+const DUAL_PRINT_DAYS_PER_PAGE = 28;
+const DUAL_PRINT_ITEMS_PER_PAGE = 14;
+
+function dualPrintSummary(proj,b,schedules){
+  const today=fromDateStr(todayStr());
+  const stats=schedules.map(s=>{
+    const actual=scheduleActualProgress(proj,b,s);
+    const plan=plannedProgressAtDate(s,today);
+    return {
+      actual,plan,
+      variance:actual-plan,
+      late:!s.actualCompleteDate&&fromDateStr(s.endDate)<today&&actual<100
+    };
+  });
+  const avgActual=stats.length?Math.round(stats.reduce((a,x)=>a+x.actual,0)/stats.length):0;
+  const avgPlan=stats.length?Math.round(stats.reduce((a,x)=>a+x.plan,0)/stats.length):0;
+  const variance=avgActual-avgPlan;
+  const lateCount=stats.filter(x=>x.late).length;
+  return {avgActual,avgPlan,variance,lateCount};
+}
+
+function dualPrintScheduleLabel(proj,b,s){
+  const pr=proj.processes.find(x=>x.id===s.processId);
+  const group=proj.processGroups.find(g=>g.id===pr?.groupId);
+  const sub=ganttSubprocessName(proj,s.processId,s.subProcessId);
+  const floorLabel=taskFloorLabel(b,s.floors)||compressFloorLabel(b,s.floors)||'未指定樓層';
+  const hierarchy=[
+    group?.name||'未分組',
+    pr?.name||'未命名工序',
+    sub||''
+  ].filter(Boolean).join('／');
+  return {hierarchy,floorLabel};
+}
+
+function dualPrintTrackCells(days,pageStart,pageEnd,startDate,endDate,barClass,emptyText){
+  if(!startDate || !endDate){
+    return `<td class="dgp-empty" colspan="${days.length}">${esc(emptyText||'尚無實際開始紀錄')}</td>`;
+  }
+
+  const sd=startDate instanceof Date?startDate:fromDateStr(startDate);
+  const ed=endDate instanceof Date?endDate:fromDateStr(endDate);
+  if(ed<pageStart || sd>pageEnd){
+    return `<td class="dgp-day" colspan="${days.length}"></td>`;
+  }
+
+  const clipStart=sd<pageStart?pageStart:sd;
+  const clipEnd=ed>pageEnd?pageEnd:ed;
+  const startIdx=diffDays(pageStart,clipStart);
+  const span=Math.max(1,diffDays(clipStart,clipEnd)+1);
+  let cells='';
+
+  if(startIdx>0){
+    cells+=`<td class="dgp-day" colspan="${startIdx}"></td>`;
+  }
+  cells+=`<td class="dgp-bar-cell" colspan="${span}"><div class="dgp-bar ${barClass}"></div></td>`;
+  const remain=days.length-startIdx-span;
+  if(remain>0){
+    cells+=`<td class="dgp-day" colspan="${remain}"></td>`;
+  }
+  return cells;
+}
+
+function buildDualGanttPrintHTML(proj,b){
+  const schedules=[...proj.schedules]
+    .filter(s=>s.buildingId===b.id)
+    .sort((a,c)=>a.startDate.localeCompare(c.startDate)||a.endDate.localeCompare(c.endDate));
+
+  if(!schedules.length) return '';
+
+  const {start,end}=getScheduleWindow(proj);
+  const allDays=dateRangeArray(start,end);
+  const dayPages=[];
+  for(let i=0;i<allDays.length;i+=DUAL_PRINT_DAYS_PER_PAGE){
+    dayPages.push(allDays.slice(i,i+DUAL_PRINT_DAYS_PER_PAGE));
+  }
+  if(!dayPages.length) dayPages.push([]);
+
+  const itemPages=[];
+  for(let i=0;i<schedules.length;i+=DUAL_PRINT_ITEMS_PER_PAGE){
+    itemPages.push(schedules.slice(i,i+DUAL_PRINT_ITEMS_PER_PAGE));
+  }
+  if(!itemPages.length) itemPages.push([]);
+
+  const summary=dualPrintSummary(proj,b,schedules);
+  const totalPages=dayPages.length*itemPages.length;
+  const labelMm=47;
+  const trackMm=8;
+  const maxDays=Math.max(1,...dayPages.map(x=>x.length));
+  const dayMm=Math.min(8.1,Math.floor(((279-labelMm-trackMm)/maxDays)*10)/10);
+  const todayS=todayStr();
+  const pages=[];
+
+  dayPages.forEach((days,dayPageIndex)=>{
+    const pageStart=days[0];
+    const pageEnd=days[days.length-1];
+    const colgroup=`<colgroup>
+      <col style="width:${labelMm}mm">
+      <col style="width:${trackMm}mm">
+      ${days.map(()=>`<col style="width:${dayMm}mm">`).join('')}
+    </colgroup>`;
+
+    const dateHead=`<tr style="height:8mm">
+      <th class="dgp-name-head">大項目／母工序／子工序・樓層</th>
+      <th class="dgp-track-head">軌道</th>
+      ${days.map(d=>{
+        const ds=toDateStr(d);
+        const weekend=d.getDay()===0||d.getDay()===6;
+        const wd=['日','一','二','三','四','五','六'][d.getDay()];
+        return `<th class="dgp-date-head ${weekend?'weekend':''} ${ds===todayS?'today':''}">${d.getMonth()+1}/${d.getDate()}<br>(${wd})</th>`;
+      }).join('')}
+    </tr>`;
+
+    itemPages.forEach((items,itemPageIndex)=>{
+      const body=items.map(s=>{
+        const label=dualPrintScheduleLabel(proj,b,s);
+        const actualPct=scheduleActualProgress(proj,b,s);
+        const planPct=plannedProgressAtDate(s,fromDateStr(todayS));
+        const variance=actualPct-planPct;
+        const varianceCls=variance>3?'good':(variance<-3?'bad':'neutral');
+        const varianceText=variance>0?`超前 ${variance}%`:(variance<0?`落後 ${Math.abs(variance)}%`:'符合計畫');
+        const actualStart=inferredScheduleActualStart(proj,s);
+        const actualEnd=s.actualCompleteDate?fromDateStr(s.actualCompleteDate):(actualStart?fromDateStr(todayS):null);
+        const isLate=!s.actualCompleteDate&&fromDateStr(s.endDate)<fromDateStr(todayS)&&actualPct<100;
+        const isDone=!!s.actualCompleteDate||actualPct>=100;
+        const actualCls=isDone?'dgp-actual done':(isLate?'dgp-actual late':(variance>=10?'dgp-actual ahead':'dgp-actual'));
+
+        const nameCell=`<td class="dgp-name" rowspan="2">
+          <div class="dgp-main-label">${esc(label.hierarchy)}</div>
+          <div class="sub">${esc(label.floorLabel)}｜預計 ${esc(s.startDate)} - ${esc(s.endDate)}</div>
+          <div class="variance ${varianceCls}">計畫 ${planPct}%｜實際 ${actualPct}%｜${varianceText}</div>
+        </td>`;
+
+        const planCells=dualPrintTrackCells(
+          days,pageStart,pageEnd,
+          fromDateStr(s.startDate),fromDateStr(s.endDate),
+          'dgp-plan',''
+        );
+        const actualCells=dualPrintTrackCells(
+          days,pageStart,pageEnd,
+          actualStart,actualEnd,
+          actualCls,'尚無實際開始紀錄'
+        );
+
+        return `<tr style="height:4.7mm">${nameCell}<td class="dgp-track">預計</td>${planCells}</tr>
+          <tr style="height:4.7mm"><td class="dgp-track">實際</td>${actualCells}</tr>`;
+      }).join('');
+
+      const pageNo=dayPageIndex*itemPages.length+itemPageIndex+1;
+      pages.push(`<div class="dual-print-page">
+        <div class="dgp-header">
+          <div>
+            <strong>${esc(proj.name)}｜${esc(b.name)}｜預計 vs 實際進度甘特圖</strong>
+            日期範圍：${days.length?toDateStr(pageStart)+' - '+toDateStr(pageEnd):'—'}　
+            列印時間：${esc(new Date().toLocaleString('zh-TW'))}
+          </div>
+          <div>第 ${pageNo} / ${totalPages} 頁${itemPages.length>1?`｜工項 ${itemPageIndex+1}/${itemPages.length}`:''}</div>
+        </div>
+        <div class="dgp-summary">
+          <div class="dgp-summary-item"><span>目前計畫進度</span><b>${summary.avgPlan}%</b></div>
+          <div class="dgp-summary-item ${summary.variance>=0?'good':'bad'}"><span>目前實際進度</span><b>${summary.avgActual}%</b></div>
+          <div class="dgp-summary-item ${summary.variance>=0?'good':'bad'}"><span>進度差異</span><b>${summary.variance>0?'+':''}${summary.variance}%</b></div>
+          <div class="dgp-summary-item ${summary.lateCount?'bad':'good'}"><span>逾期未完成</span><b>${summary.lateCount}</b></div>
+        </div>
+        <div class="dgp-table-wrap">
+          <table class="dgp-table">
+            ${colgroup}
+            <thead>${dateHead}</thead>
+            <tbody>${body}</tbody>
+          </table>
+        </div>
+        <div class="dgp-legend">
+          <span><i class="plan"></i>預計工期</span>
+          <span><i style="background:#E97B2F"></i>實際進行中</span>
+          <span><i style="background:#1E8E5A"></i>實際完成</span>
+          <span><i style="background:#C6453A"></i>逾期未完成</span>
+          <span><i style="background:#2E6EA6"></i>實際明顯超前</span>
+          <span>實際百分比由樓層／工序矩陣自動彙整</span>
+        </div>
+      </div>`);
+    });
+  });
+
+  return pages.join('');
+}
+
+function exportDualGanttPDF(){
+  const proj=currentProject();
+  const printRoot=document.getElementById('print-root');
+  const targets=state.ganttMode==='all'
+    ? proj.buildings
+    : (currentBuilding()?[currentBuilding()]:[]);
+
+  if(!targets.length){
+    showToast('請先建立並選擇棟別','error');
+    return;
+  }
+
+  const html=targets.map(b=>buildDualGanttPrintHTML(proj,b)).filter(Boolean).join('');
+  if(!html){
+    showToast('目前沒有可輸出的排程','error');
+    return;
+  }
+
+  printRoot.innerHTML=html;
+  setTimeout(()=>window.print(),80);
+}
+
+
 function exportGanttPDF(){
   const proj = currentProject();
   if(proj.processes.length===0){ showToast('尚未設定工序','error'); return; }
@@ -2843,12 +5041,12 @@ document.addEventListener('mousemove', function(e){
 document.addEventListener('mouseup', function(){ if(ganttResizeState.active){ scheduleSave(); ganttResizeState={active:false,scheduleId:null}; } });
 
 function openScheduleCreateModal(buildingId, processId, dateStr, subProcessId){
-  formState.schedForm = {mode:'create', buildingId, processId, subProcessId:subProcessId||'', startDate:dateStr, endDate:dateStr, actualCompleteDate:'', floors:[], note:'', dependsOn:[]};
+  formState.schedForm = {mode:'create', buildingId, processId, subProcessId:subProcessId||'', startDate:dateStr, endDate:dateStr, actualStartDate:'', actualCompleteDate:'', floors:[], note:'', dependsOn:[]};
   renderScheduleForm();
 }
 function openScheduleEditModal(scheduleId){
   const proj = currentProject(); const s = proj.schedules.find(x=>x.id===scheduleId); if(!s) return;
-  formState.schedForm = {mode:'edit', id:s.id, buildingId:s.buildingId, processId:s.processId, subProcessId:s.subProcessId||'', startDate:s.startDate, endDate:s.endDate, actualCompleteDate:s.actualCompleteDate||'', floors:[...s.floors], note:s.note||'', dependsOn:[...(s.dependsOn||[])]};
+  formState.schedForm = {mode:'edit', id:s.id, buildingId:s.buildingId, processId:s.processId, subProcessId:s.subProcessId||'', startDate:s.startDate, endDate:s.endDate, actualStartDate:s.actualStartDate||'', actualCompleteDate:s.actualCompleteDate||'', floors:[...s.floors], note:s.note||'', dependsOn:[...(s.dependsOn||[])]};
   renderScheduleForm();
 }
 // 檢查若把 candidateId 設為 forId 的前置任務，是否會造成循環相依
@@ -2870,7 +5068,7 @@ function renderScheduleForm(){
   const proj = currentProject(); const fs = formState.schedForm;
   const b = proj.buildings.find(x=>x.id===fs.buildingId); const pr = proj.processes.find(x=>x.id===fs.processId);
   const floorChips = b.floors.map(fl=>`<button type="button" class="chip chip-floor ${fs.floors.includes(fl)?'selected':''}" onclick="toggleSchedFloor('${esc(fl)}')">${esc(fl)}</button>`).join('');
-  const subOptions = ensureGanttSubprocesses(proj).filter(sp=>sp.visible!==false || sp.id===fs.subProcessId).map(sp=>`<option value="${sp.id}" ${fs.subProcessId===sp.id?'selected':''}>${esc(sp.name)}${sp.visible===false?'（已隱藏）':''}</option>`).join('');
+  const subOptions = ganttSubprocessesForProcess(proj, fs.processId, true).filter(sp=>sp.visible!==false || sp.id===fs.subProcessId).map(sp=>`<option value="${sp.id}" ${fs.subProcessId===sp.id?'selected':''}>${esc(sp.name)}${sp.visible===false?'（已隱藏）':''}</option>`).join('');
   // 前置任務候選：同一棟別、非自己、且選了不會造成循環相依的其他排程
   const candidates = proj.schedules.filter(s=>s.buildingId===fs.buildingId && (fs.mode!=='edit' || s.id!==fs.id));
   const depChips = candidates.map(s=>{
@@ -2889,7 +5087,7 @@ function renderScheduleForm(){
               <option value="" ${!fs.subProcessId?'selected':''}>不指定子工序（主工序）</option>
               ${subOptions}
             </select>
-            <div class="hint">預設子工序為：骨架施作、骨架收測、包版下料、包版安裝；可在甘特圖下方「管理甘特子工序」編輯或隱藏。</div>
+            <div class="hint">此子工序只屬於目前母工序；不是每個工序都會有子工序。可在「管理甘特子工序」針對各母工序新增、隱藏或套用預設。</div>
           </div>
           <div class="field">
             <label>適用樓層（可複選）</label>
@@ -2903,7 +5101,10 @@ function renderScheduleForm(){
             <div class="field"><label>預定開始日</label><input type="date" id="sched-start" value="${fs.startDate}" required></div>
             <div class="field"><label>預定完成日</label><input type="date" id="sched-end" value="${fs.endDate}" required></div>
           </div>
-          <div class="field"><label>實際完成日（選填，填寫後視為已完成）</label><input type="date" id="sched-actual" value="${fs.actualCompleteDate||''}"></div>
+          <div class="field-row">
+            <div class="field"><label>實際開始日（選填）</label><input type="date" id="sched-actual-start" value="${fs.actualStartDate||''}"><div class="hint">未填時，雙軌甘特圖會嘗試以第一筆進度回報日期推估。</div></div>
+            <div class="field"><label>實際完成日（選填，填寫後視為已完成）</label><input type="date" id="sched-actual" value="${fs.actualCompleteDate||''}"></div>
+          </div>
           <div class="field">
             <label>前置任務（需先完成才能施作此項目；沒有勾選代表可與其他項目並行作業）</label>
             <div class="chip-group">${depChips}</div>
@@ -2937,6 +5138,7 @@ function submitScheduleForm(e){
   if(fs.floors.length===0){ showToast('請至少選擇一個樓層','error'); return false; }
   let startDate = document.getElementById('sched-start').value;
   let endDate = document.getElementById('sched-end').value;
+  const actualStartDate = document.getElementById('sched-actual-start')?.value || null;
   const actualCompleteDate = document.getElementById('sched-actual').value || null;
   const subProcessId = document.getElementById('sched-subprocess')?.value || null;
   const note = document.getElementById('sched-note').value.trim();
@@ -2963,9 +5165,9 @@ function submitScheduleForm(e){
 
   if(fs.mode==='edit'){
     const s = proj.schedules.find(x=>x.id===fs.id);
-    s.floors=fs.floors; s.startDate=startDate; s.endDate=endDate; s.actualCompleteDate=actualCompleteDate; s.subProcessId=subProcessId; s.note=note; s.dependsOn=fs.dependsOn;
+    s.floors=fs.floors; s.startDate=startDate; s.endDate=endDate; s.actualStartDate=actualStartDate; s.actualCompleteDate=actualCompleteDate; s.subProcessId=subProcessId; s.note=note; s.dependsOn=fs.dependsOn;
   }else{
-    proj.schedules.push({id:uid('sc'), buildingId:fs.buildingId, processId:fs.processId, subProcessId, floors:fs.floors, startDate, endDate, actualCompleteDate, note, dependsOn:fs.dependsOn});
+    proj.schedules.push({id:uid('sc'), buildingId:fs.buildingId, processId:fs.processId, subProcessId, floors:fs.floors, startDate, endDate, actualStartDate, actualCompleteDate, note, dependsOn:fs.dependsOn});
   }
   scheduleSave(); closeModal(); render();
   showToast(adjusted ? '已儲存，並依前置任務自動順延開始日為 '+startDate : '已儲存預定排程');
@@ -2980,25 +5182,41 @@ function deleteSchedule(id){
   showToast('已刪除排程');
 }
 
-function openGanttSubprocessSettingsModal(){
-  const proj = currentProject(); ensureGanttSubprocesses(proj);
-  const rows = proj.ganttSubprocesses.map((sp,i)=>`
+function openGanttSubprocessSettingsModal(processId){
+  const proj = currentProject(); ensureGanttSubprocessStore(proj);
+  if(processId) formState.gspProcessId = processId;
+  if(!formState.gspProcessId || !proj.processes.some(pr=>pr.id===formState.gspProcessId)) formState.gspProcessId = proj.processes[0]?.id || '';
+  const selectedProcessId = formState.gspProcessId;
+  const selectedProcess = proj.processes.find(pr=>pr.id===selectedProcessId);
+  if(!selectedProcess){ showToast('請先建立工序','error'); return; }
+  const processOptions = proj.processes.map(pr=>`<option value="${pr.id}" ${pr.id===selectedProcessId?'selected':''}>${esc(pr.name)}</option>`).join('');
+  const list = ganttSubprocessesForProcess(proj, selectedProcessId, true);
+  const rows = list.map((sp,i)=>`
     <li>
       <span class="order-num">${i+1}</span>
       <input type="hidden" id="gsp-id-${i}" value="${sp.id}">
       <input type="text" id="gsp-name-${i}" value="${esc(sp.name)}" style="flex:1;padding:8px 10px;border:1.5px solid var(--line-strong);border-radius:8px;">
       <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-mute);white-space:nowrap;"><input type="checkbox" id="gsp-visible-${i}" ${sp.visible!==false?'checked':''}>顯示</label>
       <button class="icon-btn" onclick="removeGanttSubprocess('${sp.id}')">${ICO.trash}</button>
-    </li>`).join('');
+    </li>`).join('') || `<li><span class="hint">此母工序目前沒有子工序；可新增，或套用預設四項。</span></li>`;
   openModal(`
     <div class="modal modal-wide">
       <div class="modal-head"><h3>管理甘特圖子工序</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
       <div class="modal-body">
-        <div class="hint" style="margin-bottom:12px;">這些子工序會出現在每一個施工工序底下。可改名、取消顯示，或新增自己的子工序。</div>
+        <div class="field">
+          <label>選擇母工序</label>
+          <select id="gsp-process-select" onchange="switchGanttSubprocessSettings(this.value)">${processOptions}</select>
+          <div class="hint">目前管理：${esc(selectedProcess.name)}。子工序只會出現在這個母工序底下，不會套用到其他工序。</div>
+        </div>
+        <div class="hint" style="margin-bottom:12px;">母工序日期會由它底下的子工序排程自動彙總；大項目日期再由母工序彙總，兩層不可混在一起。</div>
         <ul class="list-manage" id="gsp-list">${rows}</ul>
         <div class="field-row" style="align-items:flex-end;margin-top:14px;">
           <div class="field" style="margin-bottom:0;"><label>新增子工序名稱</label><input type="text" id="gsp-new-name" placeholder="例：矽膠施打、清潔修補"></div>
           <div class="field" style="max-width:110px;margin-bottom:0;"><button type="button" class="btn btn-block" onclick="addGanttSubprocessFromModal()">新增</button></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+          <button type="button" class="btn" onclick="applyDefaultGanttSubprocessesFromModal()">套用預設：骨架施作／骨架收測／包版下料／包版安裝</button>
+          <button type="button" class="btn" onclick="clearCurrentGanttSubprocesses()">清空此工序子工序</button>
         </div>
       </div>
       <div class="modal-foot">
@@ -3007,9 +5225,10 @@ function openGanttSubprocessSettingsModal(){
       </div>
     </div>`);
 }
+function switchGanttSubprocessSettings(processId){ formState.gspProcessId = processId; openGanttSubprocessSettingsModal(processId); }
 function readGanttSubprocessInputs(){
-  const proj = currentProject(); const result=[];
-  (proj.ganttSubprocesses||[]).forEach((sp,i)=>{
+  const proj = currentProject(); const processId=formState.gspProcessId; const current=ganttSubprocessesForProcess(proj, processId, true); const result=[];
+  current.forEach((sp,i)=>{
     const id = document.getElementById('gsp-id-'+i)?.value || sp.id;
     const name = document.getElementById('gsp-name-'+i)?.value.trim() || sp.name;
     const visible = !!document.getElementById('gsp-visible-'+i)?.checked;
@@ -3018,30 +5237,42 @@ function readGanttSubprocessInputs(){
   return result;
 }
 function addGanttSubprocessFromModal(){
-  const proj=currentProject();
+  const proj=currentProject(); const processId=formState.gspProcessId;
   const current = readGanttSubprocessInputs();
   const name = document.getElementById('gsp-new-name')?.value.trim();
   if(!name){ showToast('請輸入子工序名稱','error'); return; }
   current.push({id:uid('gsp'), name, visible:true});
-  proj.ganttSubprocesses=current;
-  openGanttSubprocessSettingsModal();
+  ensureGanttSubprocessStore(proj)[processId]=current;
+  openGanttSubprocessSettingsModal(processId);
+}
+function applyDefaultGanttSubprocessesFromModal(){
+  const proj=currentProject(); const processId=formState.gspProcessId;
+  ensureGanttSubprocessStore(proj)[processId] = readGanttSubprocessInputs();
+  applyDefaultGanttSubprocesses(proj, processId);
+  openGanttSubprocessSettingsModal(processId);
+}
+function clearCurrentGanttSubprocesses(){
+  const proj=currentProject(); const processId=formState.gspProcessId;
+  const used = (proj.schedules||[]).some(s=>s.processId===processId && s.subProcessId);
+  if(used && !confirm('此母工序已有排程使用子工序。清空後，這些排程會改回母工序列。確定清空？')) return;
+  ensureGanttSubprocessStore(proj)[processId]=[];
+  proj.schedules.forEach(s=>{ if(s.processId===processId) s.subProcessId=null; });
+  openGanttSubprocessSettingsModal(processId);
 }
 function removeGanttSubprocess(id){
-  const proj=currentProject();
-  const used = (proj.schedules||[]).some(s=>s.subProcessId===id);
+  const proj=currentProject(); const processId=formState.gspProcessId;
+  const used = (proj.schedules||[]).some(s=>s.processId===processId && s.subProcessId===id);
   if(used && !confirm('此子工序已有排程使用，隱藏會比刪除安全。仍要刪除嗎？')) return;
-  proj.ganttSubprocesses = readGanttSubprocessInputs().filter(sp=>sp.id!==id);
-  proj.schedules.forEach(s=>{ if(s.subProcessId===id) s.subProcessId=null; });
-  openGanttSubprocessSettingsModal();
+  ensureGanttSubprocessStore(proj)[processId] = readGanttSubprocessInputs().filter(sp=>sp.id!==id);
+  proj.schedules.forEach(s=>{ if(s.processId===processId && s.subProcessId===id) s.subProcessId=null; });
+  openGanttSubprocessSettingsModal(processId);
 }
 function saveGanttSubprocessSettings(){
-  const proj=currentProject();
-  proj.ganttSubprocesses = readGanttSubprocessInputs();
-  if(proj.ganttSubprocesses.length===0){
-    DEFAULT_GANTT_SUBPROCESS_NAMES.forEach(name=>proj.ganttSubprocesses.push({id:uid('gsp'),name,visible:true}));
-  }
-  scheduleSave(); closeModal(); render(); showToast('已更新甘特圖子工序');
+  const proj=currentProject(); const processId=formState.gspProcessId;
+  ensureGanttSubprocessStore(proj)[processId] = readGanttSubprocessInputs();
+  scheduleSave(); closeModal(); render(); showToast('已更新此母工序的子工序');
 }
+
 
 /* =====================  11. 施作紀錄（搜尋／分棟／連續樓層合併）  ===================== */
 function recordMatchesFilter(proj, b, pr, r, tokens, dateStr){
@@ -3090,6 +5321,7 @@ function makeRecordRow(pr, run){
 }
 function renderRecordsPage(proj){
   return `
+    <div class="page-intro"><div><h2>施作日誌／紀錄</h2><p>每次現場回報都會成為可搜尋的施工日誌，照片也會同步出現在工程照片中心。</p></div><div class="page-intro-actions"><button class="btn" onclick="setView('photos')">${ICO.camera} 工程照片</button><button class="btn btn-primary" onclick="openQuickAddModal()">${ICO.plus} 新增回報</button></div></div>
     <div class="field-row" style="align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;">
       <div class="field" style="min-width:220px;flex:2;">
         <label>關鍵字（可輸入多個詞，如「AB棟 16F 矽膠」）</label>
@@ -3130,7 +5362,7 @@ function clearRecordsFilter(){
 
 /* =====================  12. Modal 系統  ===================== */
 function closeModal(){ document.getElementById('modal-root').innerHTML=''; formState = {sidebarOpen:formState.sidebarOpen}; }
-function openModal(html){ document.getElementById('modal-root').innerHTML = `<div class="modal-overlay" onclick="if(event.target===this) closeModal()">${html}</div>`; }
+function openModal(html){ document.getElementById('modal-root').innerHTML = `<div class="modal-overlay">${html}</div>`; }
 
 /* ---------- 專案 CRUD ---------- */
 function openAddProjectModal(){
@@ -3150,7 +5382,7 @@ function submitAddProject(e){
   e.preventDefault();
   const name = document.getElementById('np-name').value.trim(); if(!name) return false;
   const p = blankProject(name);
-  state.projects.push(p); state.activeProjectId=p.id; state.activeBuildingId=null; state.view='buildings';
+  state.projects.push(p); state.activeProjectId=p.id; state.activeBuildingId=null; state.view='home';
   scheduleSave(); closeModal(); render();
   showToast('已建立專案「'+name+'」');
   return false;
@@ -3259,21 +5491,35 @@ function deleteBuilding(id){
 }
 
 /* ---------- 工序／部位／大項目分組 設定 ---------- */
-function openSettingsModal(tab){ formState.settingsTab = tab||'processes'; renderSettingsModal(); }
+function openSettingsModal(tab, projectId){
+  formState.settingsProjectId = projectId || state.activeProjectId;
+  formState.settingsTab = tab || 'processes';
+  renderSettingsModal();
+}
+function settingsProject(){
+  return state.projects.find(p=>p.id===formState.settingsProjectId) || currentProject();
+}
 function renderSettingsModal(){
-  const proj = currentProject(); const tab = formState.settingsTab||'processes';
+  const proj = settingsProject(); const tab = formState.settingsTab||'processes';
   const groupOptions = proj.processGroups.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
-  const procList = proj.processes.map((pr,i)=>`
-    <li><span class="order-num">${i+1}</span><span class="lname">${esc(pr.name)}</span>
+  const procList = proj.processes.map((pr,i)=>{
+    const subCount=ganttSubprocessesForProcess(proj,pr.id,true).length;
+    return `<li><span class="order-num">${i+1}</span>
+      <span class="settings-item-name"><strong>${esc(pr.name)}</strong><small>${subCount?`${subCount} 個甘特子工序`:'未設定子工序'}</small></span>
       <select class="proc-group-select" onchange="setProcessGroup('${pr.id}', this.value)" title="所屬大項目">
         <option value="">未分組</option>${groupOptions.replace(`value="${pr.groupId}"`, `value="${pr.groupId}" selected`)}
       </select>
+      <button class="icon-btn" onclick="renameProcess('${pr.id}')" title="重新命名">${ICO.edit}</button>
       <button class="icon-btn" onclick="moveProcess('${pr.id}',-1)" ${i===0?'disabled':''}>${ICO.up}</button>
       <button class="icon-btn" onclick="moveProcess('${pr.id}',1)" ${i===proj.processes.length-1?'disabled':''}>${ICO.down}</button>
-      <button class="icon-btn" onclick="deleteProcess('${pr.id}')">${ICO.trash}</button>
-    </li>`).join('') || '<li style="color:var(--ink-faint);">尚無工序，請於下方新增</li>';
-  const partList = proj.parts.map(pt=>`<li><span class="lname">${esc(pt.name)}</span><button class="icon-btn" onclick="deletePart('${pt.id}')">${ICO.trash}</button></li>`).join('')
-    || '<li style="color:var(--ink-faint);">尚無部位分類，請於下方新增</li>';
+      <button class="icon-btn" onclick="deleteProcess('${pr.id}')" title="刪除工序">${ICO.trash}</button>
+    </li>`;
+  }).join('') || '<li style="color:var(--ink-faint);">尚無工序，請於下方新增</li>';
+  const partList = proj.parts.map(pt=>`<li>
+    <span class="settings-item-name"><strong>${esc(pt.name)}</strong><small>只屬於 ${esc(proj.name)}</small></span>
+    <button class="icon-btn" onclick="renamePart('${pt.id}')" title="重新命名">${ICO.edit}</button>
+    <button class="icon-btn" onclick="deletePart('${pt.id}')" title="刪除部位">${ICO.trash}</button>
+  </li>`).join('') || '<li style="color:var(--ink-faint);">尚無部位分類，請於下方新增</li>';
   const groupList = proj.processGroups.map(g=>{
     const memberCount = proj.processes.filter(pr=>pr.groupId===g.id).length;
     return `<li><span class="lname">${esc(g.name)}</span><span class="hint" style="margin:0 8px;">(${memberCount} 個工項)</span>
@@ -3282,8 +5528,12 @@ function renderSettingsModal(){
   }).join('') || '<li style="color:var(--ink-faint);">尚無大項目分組，請於下方新增</li>';
   openModal(`
     <div class="modal modal-wide">
-      <div class="modal-head"><h3>工序／部位設定</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
+      <div class="modal-head"><h3>編輯工序及部位｜${esc(proj.name)}</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
       <div class="modal-body">
+        <div class="project-setting-context">
+          <div><strong>目前只編輯：${esc(proj.name)}</strong><span>新增、重新命名、排序或刪除工序及部位，只會影響這個案場；其他案場的設定與資料不會跟著改變。</span></div>
+          <div class="project-setting-lock">案場獨立</div>
+        </div>
         <div class="tabs" style="margin-top:0;display:flex;">
           <button class="tab-btn ${tab==='processes'?'active':''}" onclick="formState.settingsTab='processes';renderSettingsModal()">施工工序</button>
           <button class="tab-btn ${tab==='groups'?'active':''}" onclick="formState.settingsTab='groups';renderSettingsModal()">大項目分組</button>
@@ -3312,20 +5562,76 @@ function renderSettingsModal(){
       <div class="modal-foot"><button class="btn" onclick="closeModal()">完成</button></div>
     </div>`);
 }
+
+function renameProcess(id){
+  const proj=settingsProject();
+  const pr=proj.processes.find(x=>x.id===id);
+  if(!pr) return;
+  const oldName=pr.name;
+  const value=prompt(`重新命名工序｜${proj.name}`,oldName);
+  if(value===null) return;
+  const name=value.trim();
+  if(!name || name===oldName) return;
+  if(proj.processes.some(x=>x.id!==id&&x.name===name)){
+    showToast('此案場已有相同工序名稱','error');
+    return;
+  }
+
+  pr.name=name;
+
+  // 實際進度表若剛好引用工序名稱，一併更新同案場設定。
+  if(proj.actualTable){
+    if(proj.actualTable.skeletonProcessName===oldName) proj.actualTable.skeletonProcessName=name;
+    if(proj.actualTable.panelProcessName===oldName) proj.actualTable.panelProcessName=name;
+  }
+
+  scheduleSave();
+  renderSettingsModal();
+  showToast(`已更新「${proj.name}」工序名稱`);
+}
+
+function renamePart(id){
+  const proj=settingsProject();
+  const pt=proj.parts.find(x=>x.id===id);
+  if(!pt) return;
+  const oldName=pt.name;
+  const value=prompt(`重新命名部位｜${proj.name}`,oldName);
+  if(value===null) return;
+  const name=value.trim();
+  if(!name || name===oldName) return;
+  if(proj.parts.some(x=>x.id!==id&&normalizePartName(x.name)===normalizePartName(name))){
+    showToast('此案場已有相同部位名稱','error');
+    return;
+  }
+
+  pt.name=name;
+
+  // 實際進度表的欄位以名稱保存，因此只更新目前案場中同名欄位。
+  if(proj.actualTable?.partGroups){
+    proj.actualTable.partGroups.forEach(g=>{
+      g.parts=(g.parts||[]).map(x=>normalizePartName(x)===normalizePartName(oldName)?name:x);
+    });
+  }
+
+  scheduleSave();
+  renderSettingsModal();
+  showToast(`已更新「${proj.name}」部位名稱`);
+}
+
 function setProcessGroup(processId, groupId){
-  const proj = currentProject(); const pr = proj.processes.find(x=>x.id===processId); if(!pr) return;
+  const proj = settingsProject(); const pr = proj.processes.find(x=>x.id===processId); if(!pr) return;
   pr.groupId = groupId || null;
   scheduleSave();
 }
 function addProcessGroup(e){
-  e.preventDefault(); const proj = currentProject(); const input = document.getElementById('new-group'); const name = input.value.trim();
+  e.preventDefault(); const proj = settingsProject(); const input = document.getElementById('new-group'); const name = input.value.trim();
   if(!name) return false;
   if(proj.processGroups.some(g=>g.name===name)){ showToast('此大項目已存在','error'); return false; }
   proj.processGroups.push({id:uid('grp'), name}); scheduleSave(); renderSettingsModal();
   return false;
 }
 function openRenameGroupModal(id){
-  const proj = currentProject(); const g = proj.processGroups.find(x=>x.id===id); if(!g) return;
+  const proj = settingsProject(); const g = proj.processGroups.find(x=>x.id===id); if(!g) return;
   const newName = prompt('大項目名稱', g.name);
   if(newName===null) return;
   const trimmed = newName.trim();
@@ -3333,7 +5639,7 @@ function openRenameGroupModal(id){
   g.name = trimmed; scheduleSave(); renderSettingsModal();
 }
 function deleteProcessGroup(id){
-  const proj = currentProject(); const g = proj.processGroups.find(x=>x.id===id); if(!g) return;
+  const proj = settingsProject(); const g = proj.processGroups.find(x=>x.id===id); if(!g) return;
   const memberCount = proj.processes.filter(pr=>pr.groupId===id).length;
   const msg = memberCount>0 ? `此大項目底下有 ${memberCount} 個工項，刪除分組後這些工項會變成未分組（工項本身不會被刪除）。確定刪除「${g.name}」？` : `確定刪除大項目「${g.name}」？`;
   if(!confirm(msg)) return;
@@ -3342,14 +5648,14 @@ function deleteProcessGroup(id){
   scheduleSave(); renderSettingsModal();
 }
 function addProcess(e){
-  e.preventDefault(); const proj = currentProject(); const input = document.getElementById('new-process'); const name = input.value.trim();
+  e.preventDefault(); const proj = settingsProject(); const input = document.getElementById('new-process'); const name = input.value.trim();
   if(!name) return false;
   if(proj.processes.some(p=>p.name===name)){ showToast('此工序已存在','error'); return false; }
   proj.processes.push({id:uid('pr'), name, groupId:null}); scheduleSave(); renderSettingsModal();
   return false;
 }
 function deleteProcess(id){
-  const proj = currentProject(); const pr = proj.processes.find(x=>x.id===id); if(!pr) return;
+  const proj = settingsProject(); const pr = proj.processes.find(x=>x.id===id); if(!pr) return;
   const affected = proj.records.filter(r=>r.processId===id).length;
   const affectedSched = proj.schedules.filter(s=>s.processId===id).length;
   const parts=[]; if(affected>0) parts.push(`${affected} 筆進度記錄`); if(affectedSched>0) parts.push(`${affectedSched} 筆預定排程`);
@@ -3363,20 +5669,20 @@ function deleteProcess(id){
   scheduleSave(); renderSettingsModal();
 }
 function moveProcess(id,dir){
-  const proj = currentProject(); const idx = proj.processes.findIndex(x=>x.id===id); const newIdx=idx+dir;
+  const proj = settingsProject(); const idx = proj.processes.findIndex(x=>x.id===id); const newIdx=idx+dir;
   if(newIdx<0||newIdx>=proj.processes.length) return;
   const [item] = proj.processes.splice(idx,1); proj.processes.splice(newIdx,0,item);
   scheduleSave(); renderSettingsModal();
 }
 function addPart(e){
-  e.preventDefault(); const proj = currentProject(); const input = document.getElementById('new-part'); const name = input.value.trim();
+  e.preventDefault(); const proj = settingsProject(); const input = document.getElementById('new-part'); const name = input.value.trim();
   if(!name) return false;
   if(proj.parts.some(p=>p.name===name)){ showToast('此部位分類已存在','error'); return false; }
   proj.parts.push({id:uid('pt'), name}); scheduleSave(); renderSettingsModal();
   return false;
 }
 function deletePart(id){
-  const proj = currentProject(); const pt = proj.parts.find(x=>x.id===id); if(!pt) return;
+  const proj = settingsProject(); const pt = proj.parts.find(x=>x.id===id); if(!pt) return;
   if(!confirm(`確定刪除部位分類「${pt.name}」？既有記錄中的此標籤也會一併移除。`)) return;
   proj.parts = proj.parts.filter(x=>x.id!==id);
   proj.records.forEach(r=>{ r.partIds=(r.partIds||[]).filter(pid=>pid!==id); });
@@ -3390,12 +5696,22 @@ function renderCellModal(){
   const b = proj.buildings.find(x=>x.id===buildingId); const pr = proj.processes.find(x=>x.id===processId);
   if(!b || !pr){ closeModal(); return; }
   const recs = getRecords(proj.id, buildingId, floor, processId);
+  const cellStats = matrixCellStats(proj, buildingId, floor, processId);
+  const cellSummary = `<div class="auto-progress-box">
+    <div class="auto-progress-top">
+      <strong>矩陣自動完成度</strong>
+      <span class="auto-progress-value">${cellStats.avg}%</span>
+    </div>
+    <div class="auto-progress-bar"><span style="width:${cellStats.avg}%"></span></div>
+    <div class="auto-progress-note">${cellStats.usesParts?`已完成 ${cellStats.doneParts}／${cellStats.totalParts} 個部位；百分比由系統自動計算。`:'尚未以部位方式建立進度，新增記錄後會自動計算。'}</div>
+  </div>`;
   const list = recs.map(r=>{
     const si = statusInfo(r.status);
+    const recordProgressText = r.autoByParts ? '依部位自動計算' : `${r.progress}%`;
     return `<div class="record-item">
       <div class="ri-top">
-        <span class="badge" style="background:${si.bg};color:${si.fg};"><span class="dot" style="background:${si.dot};"></span>${si.label}・${r.progress}%</span>
-        <span><button class="icon-btn" onclick="openRecordForm('${buildingId}','${esc(floor)}','${processId}','${r.id}')">${ICO.edit}</button>
+        <span class="badge" style="background:${si.bg};color:${si.fg};"><span class="dot" style="background:${si.dot};"></span>${si.label}・${recordProgressText}</span>
+        <span><button class="icon-btn" onclick="openRecordForm('${buildingId}','${esc(floor)}','${processId}','${r.id}','matrix')">${ICO.edit}</button>
         <button class="icon-btn" onclick="deleteRecordConfirm('${r.id}')">${ICO.trash}</button></span>
       </div>
       <div class="ri-parts">部位：${esc(partNames(proj, r.partIds))}${r.crew?'　・　工班：'+esc(r.crew):''}</div>
@@ -3409,8 +5725,9 @@ function renderCellModal(){
     <div class="modal">
       <div class="modal-head"><h3>${esc(b.name)}　${esc(floor)}　・　${esc(pr.name)}</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
       <div class="modal-body">
+        ${cellSummary}
         ${list}
-        <button class="btn btn-primary btn-block" style="margin-top:6px;" onclick="openRecordForm('${buildingId}','${esc(floor)}','${processId}',null)">${ICO.plus} 新增施作記錄</button>
+        <button class="btn btn-primary btn-block" style="margin-top:6px;" onclick="openRecordForm('${buildingId}','${esc(floor)}','${processId}',null,'matrix')">${ICO.plus} 設定已完成部位</button>
       </div>
     </div>`);
 }
@@ -3419,18 +5736,25 @@ function deleteRecordConfirm(recordId){
   proj.records = proj.records.filter(r=>r.id!==recordId);
   scheduleSave(); renderCellModal();
 }
-function openRecordForm(buildingId, floor, processId, recordId){
+function openRecordForm(buildingId, floor, processId, recordId, source){
   const proj = currentProject(); const existing = recordId ? proj.records.find(r=>r.id===recordId) : null;
+  const autoByParts = source==='matrix' || !!existing?.autoByParts;
   formState.recForm = { buildingId, floor, processId, recordId,
     partIds: existing?[...(existing.partIds||[])]:[], progress: existing?existing.progress:0,
     status: existing?existing.status:'in_progress', note: existing?(existing.note||''):'', crew: existing?(existing.crew||''):'',
-    photo: existing?(existing.photo||null):null, blockReason: existing?(existing.blockReason||''):'' };
+    photo: existing?(existing.photo||null):null, blockReason: existing?(existing.blockReason||''):'',
+    autoByParts };
   renderRecordForm();
 }
 function renderRecordForm(){
   const proj = currentProject(); const fs = formState.recForm;
   const b = proj.buildings.find(x=>x.id===fs.buildingId); const pr = proj.processes.find(x=>x.id===fs.processId);
-  const chips = proj.parts.map(pt=>`<button type="button" class="chip ${fs.partIds.includes(pt.id)?'selected':''}" onclick="toggleRecPart('${pt.id}')">${esc(pt.name)}</button>`).join('');
+  const autoMode = !!fs.autoByParts;
+  const autoStats = matrixAutoSelectionStats(proj, fs.partIds);
+  const displayParts = autoMode
+    ? autoStats.expectedIds.map(id=>proj.parts.find(pt=>pt.id===id)).filter(Boolean)
+    : proj.parts;
+  const chips = displayParts.map(pt=>`<button type="button" class="chip ${fs.partIds.includes(pt.id)?'selected':''}" onclick="toggleRecPart('${pt.id}')">${esc(pt.name)}</button>`).join('');
   const statusBtns = STATUS_ORDER.map(k=>{ const s=STATUS[k]; return `<button type="button" class="status-btn ${fs.status===k?'selected':''}" style="color:${s.fg};" onclick="setRecStatus('${k}')"><span class="dot" style="background:${s.dot};width:8px;height:8px;border-radius:50%;display:inline-block;"></span>${s.label}</button>`; }).join('');
   openModal(`
     <div class="modal">
@@ -3438,14 +5762,31 @@ function renderRecordForm(){
       <form onsubmit="return submitRecord(event)">
         <div class="modal-body">
           <div class="hint" style="margin-bottom:12px;">${esc(b.name)}　${esc(fs.floor)}　・　${esc(pr.name)}</div>
-          <div class="field"><label>適用部位（可複選，不選代表全區域）</label><div class="chip-group">${chips}</div></div>
-          <div class="field"><label>工程狀態</label><div class="status-btn-group">${statusBtns}</div></div>
-          <div class="field">
-            <label>施作進度</label>
-            <div class="range-wrap">
-              <input type="range" min="0" max="100" step="5" id="rec-progress" value="${fs.progress}" oninput="document.getElementById('rec-progress-val').textContent=this.value+'%'">
-              <span class="range-val" id="rec-progress-val">${fs.progress}%</span>
+          ${autoMode ? `
+            ${autoStats.total ? `
+              <div class="field"><label>已完成部位（點選完成的柱位／部位）</label><div class="chip-group">${chips}</div></div>
+              <div class="auto-progress-box">
+                <div class="auto-progress-top">
+                  <strong>系統自動計算</strong>
+                  <span class="auto-progress-value">${autoStats.percent}%</span>
+                </div>
+                <div class="auto-progress-bar"><span style="width:${autoStats.percent}%"></span></div>
+                <div class="auto-progress-note">已選 ${autoStats.done}／${autoStats.total} 個部位。例：10 柱選 5 柱，矩陣自動顯示 50%，不需要拉動百分比滑軌。</div>
+              </div>` : `
+              <div class="auto-part-empty">目前尚未建立可計算的柱位／部位。請先到「工序／部位設定」或「實際進度表欄列設定」建立部位，矩陣才能自動計算百分比。</div>`}
+            <input type="hidden" id="rec-progress" value="${autoStats.done?100:0}">
+          ` : `
+            <div class="field"><label>適用部位（可複選，不選代表全區域）</label><div class="chip-group">${chips}</div></div>
+            <div class="field">
+              <label>施作進度</label>
+              <div class="range-wrap">
+                <input type="range" min="0" max="100" step="5" id="rec-progress" value="${fs.progress}" oninput="document.getElementById('rec-progress-val').textContent=this.value+'%'">
+                <span class="range-val" id="rec-progress-val">${fs.progress}%</span>
+              </div>
             </div>
+          `}
+          <div class="field"><label>工程狀態</label><div class="status-btn-group">${statusBtns}</div>
+            ${autoMode?`<div class="hint">工程狀態用來標示待料、待確認或延誤；完成百分比只依你選取的部位數量計算。</div>`:''}
           </div>
           <div class="field-row">
             <div class="field"><label>負責工班（選填）</label><input type="text" id="rec-crew" value="${esc(fs.crew)}" placeholder="例：昌盛防水班" list="crew-suggest"></div>
@@ -3467,7 +5808,7 @@ function renderRecordForm(){
     </div>`);
 }
 function toggleRecPart(id){ const fs=formState.recForm; const i=fs.partIds.indexOf(id); if(i>=0) fs.partIds.splice(i,1); else fs.partIds.push(id); renderRecordForm(); }
-function setRecStatus(key){ formState.recForm.status = key; if(key==='done') formState.recForm.progress=100; renderRecordForm(); }
+function setRecStatus(key){ formState.recForm.status = key; if(!formState.recForm.autoByParts && key==='done') formState.recForm.progress=100; renderRecordForm(); }
 function fileToResizedDataURL(file, maxW, quality){
   return new Promise((resolve,reject)=>{
     const reader = new FileReader();
@@ -3494,20 +5835,52 @@ async function handleRecordPhoto(e){
 function submitRecord(e){
   e.preventDefault();
   const proj = currentProject(); const fs = formState.recForm;
-  const progress = Number(document.getElementById('rec-progress').value);
   const crew = document.getElementById('rec-crew').value.trim();
   const note = document.getElementById('rec-note').value.trim();
   const blockReason = document.getElementById('rec-block').value;
+
+  let progress = Number(document.getElementById('rec-progress').value||0);
+  let status = fs.status;
+  let partIds = [...fs.partIds];
+  let autoByParts = !!fs.autoByParts;
+  let autoOverallProgress = null;
+
+  if(autoByParts){
+    const stats = matrixAutoSelectionStats(proj, partIds);
+    partIds = stats.selected;
+    autoOverallProgress = stats.percent;
+
+    // 每個被選取的部位視為該部位已完成，因此記錄值為 100；
+    // 矩陣顯示則以「完成部位數 ÷ 總部位數」自動換算。
+    progress = stats.done ? 100 : 0;
+
+    const blockingStatuses = ['waiting_material','waiting_quote','waiting_contract','waiting_cutting','pending_confirm','blocked_predecessor','delayed'];
+    if(!blockingStatuses.includes(status)){
+      if(stats.total && stats.done>=stats.total) status='done';
+      else if(stats.done>0) status='in_progress';
+      else status='not_started';
+    }
+  }
+
+  const payload = {
+    partIds, progress, status, note, crew, photo:fs.photo, blockReason,
+    autoByParts, autoOverallProgress, updatedAt:Date.now()
+  };
+
   if(fs.recordId){
     const r = proj.records.find(x=>x.id===fs.recordId);
-    r.partIds=fs.partIds; r.progress=progress; r.status=fs.status; r.note=note; r.crew=crew; r.photo=fs.photo; r.blockReason=blockReason; r.updatedAt=Date.now();
+    Object.assign(r,payload);
   }else{
-    proj.records.push({id:uid('r'), buildingId:fs.buildingId, floor:fs.floor, processId:fs.processId, partIds:fs.partIds, progress, status:fs.status, note, crew, photo:fs.photo, blockReason, updatedAt:Date.now()});
+    proj.records.push({
+      id:uid('r'), buildingId:fs.buildingId, floor:fs.floor,
+      processId:fs.processId, ...payload
+    });
   }
+
   scheduleSave();
   formState.cell = {buildingId:fs.buildingId, floor:fs.floor, processId:fs.processId};
   renderCellModal(); render();
-  showToast('已儲存進度記錄');
+  showToast(autoByParts?`已儲存，矩陣自動完成度為 ${autoOverallProgress}%`:'已儲存進度記錄');
   return false;
 }
 
