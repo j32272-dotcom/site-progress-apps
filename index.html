@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>金屬工程專案管理｜各棟預定工序獨立呈現版</title>
+<title>金屬工程專案管理｜各棟預定工序獨立呈現・欄列修正版</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -3869,7 +3869,12 @@ function deleteActualCell(buildingId, sectionKey, floor, part){
   scheduleSave(); closeModal(); render(); showToast('已清除格子');
 }
 function openActualTableSettings(){
-  const proj=currentProject(); const b=currentBuilding(); ensureActualProgressSetup(proj,b?.id);
+  const proj=currentProject(); const b=currentBuilding();
+  if(!proj||!b){
+    showToast('請先建立並選擇棟別','error');
+    return;
+  }
+  ensureActualProgressSetup(proj,b.id);
   const table=actualTableFor(proj,b.id); const groupsText = table.partGroups.map(g=>`${g.name}:${(g.parts||[]).join(',')}`).join('\n');
   const floorsText = (b?.floors||[]).join('\n');
   const sectionsText = table.sections.map(s=>s.label).join('\n');
@@ -3884,6 +3889,11 @@ function openActualTableSettings(){
 }
 function saveActualTableSettings(){
   const proj=currentProject(); const b=currentBuilding(); ensureActualProgressSetup(proj,b?.id);
+  const table=actualTableFor(proj,b?.id);
+  if(!proj||!b||!table){
+    showToast('找不到目前棟別的實際進度表設定','error');
+    return;
+  }
   const groupsRaw=document.getElementById('actual-groups-input').value.split('\n');
   const groups=[];
   groupsRaw.forEach((line,i)=>{
