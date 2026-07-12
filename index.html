@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>金屬工程專案管理｜各棟預定工序獨立呈現・欄列修正版</title>
+<title>金屬工程專案管理｜手機棟別切換修正版</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -1331,6 +1331,54 @@ td.actual-cell.actual-reset-selected{
 }
 @media(max-width:620px){
   .gantt-building-configs{grid-template-columns:1fr;}
+}
+
+
+/* ---------- 手機棟別切換 ---------- */
+.mobile-building-switcher{display:none;}
+@media(max-width:760px){
+  .mobile-building-switcher{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    position:sticky;
+    top:62px;
+    z-index:18;
+    margin:0 0 10px;
+    padding:9px 10px;
+    background:rgba(255,255,255,.97);
+    border:1px solid var(--line);
+    border-radius:11px;
+    box-shadow:var(--shadow-sm);
+    backdrop-filter:blur(8px);
+  }
+  .mobile-building-switcher label{
+    flex-shrink:0;
+    color:var(--navy);
+    font-size:11px;
+    font-weight:900;
+  }
+  .mobile-building-switcher select{
+    flex:1;
+    min-width:0;
+    padding:8px 10px;
+    border:1.5px solid var(--line-strong);
+    border-radius:9px;
+    background:#fff;
+    color:var(--ink);
+    font:inherit;
+    font-size:13px;
+    font-weight:800;
+  }
+  .mobile-building-switcher .mbs-count{
+    flex-shrink:0;
+    padding:4px 7px;
+    border-radius:999px;
+    background:var(--blue-soft);
+    color:var(--blue);
+    font-size:9.5px;
+    font-weight:900;
+  }
 }
 
 </style>
@@ -2891,6 +2939,22 @@ function showToast(msg, type){
 }
 
 /* =====================  6. RENDER 主路由  ===================== */
+
+function renderMobileBuildingSwitcher(proj){
+  const buildingViews=['matrix','actual','schedule','records','tasks','photos','buildings'];
+  if(!proj||!buildingViews.includes(state.view)||!proj.buildings||proj.buildings.length<=1) return '';
+  if((state.view==='matrix'&&state.matrixMode==='all')||(state.view==='schedule'&&state.ganttMode==='all')) return '';
+
+  const b=currentBuilding();
+  return `<div class="mobile-building-switcher">
+    <label>目前棟別</label>
+    <select onchange="selectBuilding(this.value)">
+      ${proj.buildings.map(x=>`<option value="${x.id}" ${x.id===b?.id?'selected':''}>${esc(x.name)}</option>`).join('')}
+    </select>
+    <span class="mbs-count">${proj.buildings.length}棟</span>
+  </div>`;
+}
+
 function render(){
   const app = document.getElementById('app');
   const proj = currentProject();
@@ -2901,7 +2965,7 @@ function render(){
       ${renderSidebar()}
       <div class="main">
         ${renderTopbar(proj)}
-        <div class="content">${renderViewContent(proj)}</div>
+        <div class="content">${renderMobileBuildingSwitcher(proj)}${renderViewContent(proj)}</div>
       </div>
     </div>
     <button class="fab" onclick="openQuickAddModal()" title="快速新增進度">${ICO.bigplus}</button>
@@ -3077,6 +3141,7 @@ function selectBuilding(id){
   state.activeBuildingId=id;
   persistLocalUiState();
   render();
+  if(window.innerWidth<=760) window.scrollTo({top:0,behavior:'smooth'});
 }
 function switchProjectKeepView(id){
   state.activeProjectId=id;
