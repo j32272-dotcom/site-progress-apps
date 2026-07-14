@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>金屬工程專案管理｜控制台與日期事件提醒版</title>
+<title>金屬工程專案管理｜實際進度五階段工序狀態版</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -2002,6 +2002,44 @@ table.matrix th.matrix-process-head{
     grid-column:2;
     justify-self:start;
   }
+}
+
+
+/* ---------- 案件實際進度：五階段累進工序狀態 ---------- */
+.actual-grid .actual-cell.actual-linked-frame-work{
+  background:#5B9BD5;color:#fff;
+}
+.actual-grid .actual-cell.actual-linked-panel-work{
+  background:#F2A65A;color:#2F2516;
+}
+.actual-grid .actual-cell.actual-linked-panel-done{
+  background:#D97706;color:#fff;
+}
+.actual-grid .actual-cell.actual-linked-silicone-work{
+  background:#8B5CF6;color:#fff;
+}
+.actual-grid .actual-cell.actual-linked-final-done{
+  background:#2F855A;color:#fff;
+}
+.actual-status-btn .status-progress{
+  margin-left:2px;
+  padding:1px 5px;
+  border-radius:999px;
+  background:#EEF3F6;
+  color:#526A7B;
+  font-family:var(--font-mono);
+  font-size:9px;
+  font-weight:900;
+}
+.actual-stage-help{
+  margin-top:8px;
+  padding:8px 10px;
+  border:1px solid #C5D8E5;
+  border-radius:8px;
+  background:#F2F8FB;
+  color:#365F79;
+  font-size:10.5px;
+  line-height:1.65;
 }
 
 </style>
@@ -4657,12 +4695,17 @@ const ACTUAL_STATUS = {
   silicone: {label:'矽膠施打', cls:'actual-silicone', color:'#42B883', text:'矽膠'},
   repair: {label:'修復／更換', cls:'actual-repair', color:'#8B5CF6', text:'修復'},
   clean: {label:'清潔', cls:'actual-clean', color:'#2F855A', text:'清潔'},
-  linked_progress: {label:'施作中', cls:'actual-linked-progress', color:'#67A8DC', text:'施工'},
-  linked_done: {label:'完成', cls:'actual-linked-done', color:'#2F855A', text:'完成'},
-  linked_waiting: {label:'待處理', cls:'actual-linked-waiting', color:'#D9A441', text:'待處理'},
+  linked_frame_work: {label:'骨架作業中', cls:'actual-linked-frame-work', color:'#5B9BD5', text:'骨架', progress:20},
+  linked_panel_work: {label:'包版作業中', cls:'actual-linked-panel-work', color:'#F2A65A', text:'包版', progress:40},
+  linked_panel_done: {label:'包版完成', cls:'actual-linked-panel-done', color:'#D97706', text:'包完', progress:60},
+  linked_silicone_work: {label:'矽膠作業中', cls:'actual-linked-silicone-work', color:'#8B5CF6', text:'矽膠', progress:80},
+  linked_final_done: {label:'完成', cls:'actual-linked-final-done', color:'#2F855A', text:'完成', progress:100},
+  linked_progress: {label:'包版作業中', cls:'actual-linked-panel-work', color:'#F2A65A', text:'包版', progress:40},
+  linked_done: {label:'完成', cls:'actual-linked-final-done', color:'#2F855A', text:'完成', progress:100},
+  linked_waiting: {label:'待處理', cls:'actual-linked-waiting', color:'#D9A441', text:'待處理', progress:0},
   delayed: {label:'延誤', cls:'actual-delayed', color:'#C4392F', text:'延誤'},
 };
-const ACTUAL_STATUS_ORDER = ['blank','slash','layout_done','frame_material','frame_install','frame_done','frame_survey','panel_cutting','panel_install','panel_done','silicone','repair','clean','linked_progress','linked_done','linked_waiting','delayed'];
+const ACTUAL_STATUS_ORDER = ['blank','slash','layout_done','frame_material','frame_install','frame_done','frame_survey','panel_cutting','panel_install','panel_done','silicone','repair','clean','linked_frame_work','linked_panel_work','linked_panel_done','linked_silicone_work','linked_final_done','linked_waiting','delayed'];
 const ACTUAL_PROCESS_BY_STATUS = {
   layout_done:'吊線完成', frame_material:'骨架到料', frame_install:'骨架安裝', frame_done:'骨架完成', frame_survey:'骨架收測',
   panel_cutting:'包板下料', panel_install:'包板安裝中', panel_done:'包板施作完成', silicone:'矽膠施打', repair:'修復／更換', clean:'清潔', delayed:'延誤'
@@ -4859,11 +4902,20 @@ function actualStatusFromRecord(proj, buildingId, floor, partName, sectionKey){
     const waiting=recs.find(r=>['waiting_material','waiting_quote','waiting_contract','waiting_cutting','pending_confirm','blocked_predecessor'].includes(r.status));
     if(waiting) return {status:'linked_waiting',note:waiting.note||waiting.blockReason||'',recordId:waiting.id};
 
-    const done=recs.find(r=>r.status==='done'||Number(r.progress)>=100);
-    if(done) return {status:'linked_done',note:done.note||'',recordId:done.id};
-
-    const progress=recs.find(r=>r.status==='in_progress'||Number(r.progress)>0);
-    if(progress) return {status:'linked_progress',note:progress.note||'',recordId:progress.id};
+    const progressRec=recs.find(r=>r.status==='done'||r.status==='in_progress'||Number(r.progress)>0);
+    if(progressRec){
+      const validStages=['slash','linked_frame_work','linked_panel_work','linked_panel_done','linked_silicone_work','linked_final_done'];
+      if(validStages.includes(progressRec.actualStage)){
+        return {status:progressRec.actualStage,note:progressRec.note||'',recordId:progressRec.id};
+      }
+      const value=progressRec.status==='done'?100:Number(progressRec.progress||0);
+      const status=value>=100?'linked_final_done'
+        :value>=80?'linked_silicone_work'
+        :value>=60?'linked_panel_done'
+        :value>=40?'linked_panel_work'
+        :'linked_frame_work';
+      return {status,note:progressRec.note||'',recordId:progressRec.id};
+    }
 
     return {status:'blank',note:''};
   }
@@ -4883,12 +4935,23 @@ function actualStatusFromRecord(proj, buildingId, floor, partName, sectionKey){
 }
 function actualCellData(proj, buildingId, sectionKey, floor, partName){
   ensureActualProgressSetup(proj,buildingId);
-  const k = actualKey(buildingId, sectionKey, floor, partName);
-  return actualTableFor(proj,buildingId).cells[k] || actualStatusFromRecord(proj, buildingId, floor, partName, sectionKey);
+  const k=actualKey(buildingId,sectionKey,floor,partName);
+  const table=actualTableFor(proj,buildingId);
+  const saved=table.cells[k];
+  if(saved){
+    if(saved.status==='linked_progress') saved.status='linked_panel_work';
+    if(saved.status==='linked_done') saved.status='linked_final_done';
+    return saved;
+  }
+  return actualStatusFromRecord(proj,buildingId,floor,partName,sectionKey);
 }
 function actualCellPresentation(data){
-  const st = ACTUAL_STATUS[data?.status || 'blank'] || ACTUAL_STATUS.blank;
-  return {cls:st.cls, label:st.label, text:data?.status==='blank' || data?.status==='slash' ? '' : (data?.text || st.text)};
+  const raw=data?.status||'blank';
+  const normalized=raw==='linked_progress'?'linked_panel_work':(raw==='linked_done'?'linked_final_done':raw);
+  const st=ACTUAL_STATUS[normalized]||ACTUAL_STATUS.blank;
+  const progress=normalized==='slash'?100:(Number.isFinite(st.progress)?st.progress:null);
+  const label=progress!==null?`${st.label}（${progress}%）`:st.label;
+  return {cls:st.cls,label,text:normalized==='blank'||normalized==='slash'?'':(data?.text||st.text)};
 }
 function actualFloorsForSection(proj, b, key){
   // 以該棟 floors 為主，可由「表格設定」改列名；不再硬切樓層，避免實際表格與現場表不一致。
@@ -4934,12 +4997,12 @@ function renderActualSection(proj, b, section){
 function renderActualLegend(){
   const proj=currentProject(),b=currentBuilding();
   const linked=proj&&b&&actualStructureMode(proj,b.id)==='linked';
-  const keys=linked?['linked_progress','linked_done','linked_waiting','delayed']:
-    ACTUAL_STATUS_ORDER.filter(k=>!['blank','slash','linked_progress','linked_done','linked_waiting'].includes(k));
+  const keys=linked?['linked_frame_work','linked_panel_work','linked_panel_done','linked_silicone_work','linked_final_done','linked_waiting','delayed']:
+    ACTUAL_STATUS_ORDER.filter(k=>!['blank','slash','linked_frame_work','linked_panel_work','linked_panel_done','linked_silicone_work','linked_final_done','linked_progress','linked_done','linked_waiting'].includes(k));
   return keys.map(k=>{
     const st=ACTUAL_STATUS[k];
     return `<span><span class="sw" style="background:${st.color}"></span>${esc(st.label)}</span>`;
-  }).join('')+`<span><span class="sw" style="background:#fff"></span>空白</span><span><span class="sw" style="background:linear-gradient(to bottom right, transparent 45%, #111 47%, #111 53%, transparent 55%)"></span>斜線</span>`;
+  }).join('')+`<span><span class="sw" style="background:#fff"></span>空白</span><span><span class="sw" style="background:linear-gradient(to bottom right, transparent 45%, #111 47%, #111 53%, transparent 55%)"></span>斜線（等同完成100%）</span>`;
 }
 function renderActualProgress(proj){
   const b = currentBuilding();
@@ -4957,7 +5020,7 @@ function renderActualProgress(proj){
       <button class="btn btn-sm" onclick="openUnifiedStructureModal('${b.id}')">編輯樓層／工序／部位</button>
       <button class="btn btn-sm" onclick="printActualProgress()">A4 PDF</button>
       <button class="btn btn-sm btn-primary" onclick="openQuickAddModal('${b.id}')">${ICO.plus} 新增／更新進度</button>
-      <div class="actual-note">以「樓層 × 位置」呈現各柱位與面向進度。點擊格子可手動設定工序；從已設定的格子拖曳時可選取矩形範圍；只會套用到同一個左側分段內反白的矩形格子，不會跨到骨架安裝／包板安裝另一段。</div>
+      <div class="actual-note">以「樓層 × 位置」呈現各部位進度。工序狀態依20%、40%、60%、80%、100%逐步累進；斜線等同完成100%。從已設定的格子拖曳時，只會套用到同一個左側工序分段內反白的矩形格子。</div>
     </div>
     <div class="actual-legend">${renderActualLegend()}</div>
     <div class="actual-table-wrap"><table class="actual-grid" id="actual-grid">${renderActualHeader(proj,b.id)}<tbody>${rows}</tbody></table></div>`;
@@ -5051,21 +5114,27 @@ function setActualCellData(proj, buildingId, sectionKey, floor, part, data){
 
   if(linked){
     const matches=r=>r.buildingId===buildingId&&r.floor===floor&&r.processId===linked.processId&&partId&&(r.partIds||[]).includes(partId);
-    if(!data||['blank','slash'].includes(data.status)){
+    if(!data||data.status==='blank'){
       proj.records=proj.records.filter(r=>!matches(r));
       return;
     }
 
     const statusMap={
-      linked_done:{status:'done',progress:100,blockReason:''},
-      linked_progress:{status:'in_progress',progress:50,blockReason:''},
-      linked_waiting:{status:'pending_confirm',progress:0,blockReason:'待確認'},
-      delayed:{status:'delayed',progress:0,blockReason:'其他'}
+      slash:{status:'done',progress:100,blockReason:'',actualStage:'slash'},
+      linked_frame_work:{status:'in_progress',progress:20,blockReason:'',actualStage:'linked_frame_work'},
+      linked_panel_work:{status:'in_progress',progress:40,blockReason:'',actualStage:'linked_panel_work'},
+      linked_panel_done:{status:'in_progress',progress:60,blockReason:'',actualStage:'linked_panel_done'},
+      linked_silicone_work:{status:'in_progress',progress:80,blockReason:'',actualStage:'linked_silicone_work'},
+      linked_final_done:{status:'done',progress:100,blockReason:'',actualStage:'linked_final_done'},
+      linked_progress:{status:'in_progress',progress:40,blockReason:'',actualStage:'linked_panel_work'},
+      linked_done:{status:'done',progress:100,blockReason:'',actualStage:'linked_final_done'},
+      linked_waiting:{status:'pending_confirm',progress:0,blockReason:'待確認',actualStage:'linked_waiting'},
+      delayed:{status:'delayed',progress:0,blockReason:'其他',actualStage:'delayed'}
     };
-    const mapped=statusMap[data.status]||{status:'in_progress',progress:50,blockReason:''};
+    const mapped=statusMap[data.status]||{status:'in_progress',progress:20,blockReason:'',actualStage:'linked_frame_work'};
     const existing=proj.records.find(matches);
     const payload={
-      status:mapped.status,progress:mapped.progress,
+      status:mapped.status,progress:mapped.progress,actualStage:mapped.actualStage,
       note:data.note||'',blockReason:mapped.blockReason,
       updatedAt:Date.now(),autoByParts:true
     };
@@ -5153,14 +5222,20 @@ function resetAllActualProgress(){
 function openActualCellModal(info){
   const proj=currentProject(); const b=proj.buildings.find(x=>x.id===info.buildingId); const data=actualCellData(proj,info.buildingId,info.sectionKey,info.floor,info.part); const cur=data.status||'blank';
   const linked=linkedSection(proj,info.buildingId,info.sectionKey);
-  const palette=linked?['blank','slash','linked_progress','linked_done','linked_waiting','delayed']:ACTUAL_STATUS_ORDER.filter(k=>!['linked_progress','linked_done','linked_waiting'].includes(k));
-  const buttons = palette.map(k=>{const st=ACTUAL_STATUS[k]; return `<button type="button" class="actual-status-btn ${cur===k?'selected':''}" onclick="document.querySelectorAll('.actual-status-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');document.getElementById('actual-status-input').value='${k}'"><span class="sw" style="background:${st.color}"></span>${esc(st.label)}</button>`;}).join('');
+  const palette=linked?['blank','slash','linked_frame_work','linked_panel_work','linked_panel_done','linked_silicone_work','linked_final_done','linked_waiting','delayed']:ACTUAL_STATUS_ORDER.filter(k=>!['linked_frame_work','linked_panel_work','linked_panel_done','linked_silicone_work','linked_final_done','linked_progress','linked_done','linked_waiting'].includes(k));
+  const buttons=palette.map(k=>{
+    const st=ACTUAL_STATUS[k];
+    const pct=k==='slash'?100:(Number.isFinite(st.progress)?st.progress:null);
+    return `<button type="button" class="actual-status-btn ${cur===k?'selected':''}" onclick="document.querySelectorAll('.actual-status-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');document.getElementById('actual-status-input').value='${k}'"><span class="sw" style="background:${st.color}"></span>${esc(st.label)}${pct!==null?`<span class="status-progress">${pct}%</span>`:''}</button>`;
+  }).join('');
   document.getElementById('modal-root').innerHTML = `<div class="modal-overlay" onclick="closeModal(event)"><div class="modal" onclick="event.stopPropagation()">
     <div class="modal-head"><h3>設定實際進度</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
     <div class="modal-body">
       <div class="hint" style="margin-bottom:10px;">${esc(proj.name)}｜${esc(b?.name||'')}｜${esc((actualTableFor(proj,info.buildingId).sections||[]).find(s=>s.key===info.sectionKey)?.label||info.sectionKey)}｜${esc(info.floor||'空白列')}｜${esc(info.part||'空白欄')}</div>
       <input type="hidden" id="actual-status-input" value="${esc(cur)}">
-      <div class="field"><label>工序狀態</label><div class="actual-palette">${buttons}</div></div>
+      <div class="field"><label>工序狀態</label><div class="actual-palette">${buttons}</div>
+        ${linked?`<div class="actual-stage-help">累進比例：骨架作業中20% → 包版作業中40% → 包版完成60% → 矽膠作業中80% → 完成100%。斜線同樣以100%計算；待處理、延誤及空白均不列入完成進度。</div>`:''}
+      </div>
       <div class="field"><label>備註</label><textarea id="actual-note-input" rows="3" placeholder="可記錄卡點、收測尺寸、工班、待確認事項">${esc(data.note||'')}</textarea></div>
     </div>
     <div class="modal-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="deleteActualCell('${esc(info.buildingId)}','${esc(info.sectionKey)}','${esc(info.floor)}','${esc(info.part)}')">清除</button><button class="btn btn-primary" onclick="saveActualCell('${esc(info.buildingId)}','${esc(info.sectionKey)}','${esc(info.floor)}','${esc(info.part)}')">儲存</button></div>
@@ -5172,8 +5247,9 @@ function saveActualCell(buildingId, sectionKey, floor, part){
   scheduleSave(); closeModal(); render(); showToast('已更新實際進度表');
 }
 function deleteActualCell(buildingId, sectionKey, floor, part){
-  const proj=currentProject(); delete actualTableFor(proj,buildingId).cells[actualKey(buildingId,sectionKey,floor,part)];
-  scheduleSave(); closeModal(); render(); showToast('已清除格子');
+  const proj=currentProject();
+  setActualCellData(proj,buildingId,sectionKey,floor,part,{status:'blank',note:'',updatedAt:Date.now()});
+  scheduleSave();closeModal();render();showToast('已清除格子');
 }
 
 
