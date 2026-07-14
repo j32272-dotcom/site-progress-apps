@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>金屬工程專案管理｜矩陣工序平均連動實際甘特版</title>
+<title>金屬工程專案管理｜控制台與日期事件提醒版</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -1734,6 +1734,276 @@ table.matrix th.matrix-process-head{
   .dual-actual-bar .actual-drag-handle{display:none;}
 }
 
+
+/* ---------- 案件實際進度：部位上層標示編輯 ---------- */
+.unified-group-editor{
+  margin-top:14px;
+  padding:12px;
+  border:1px solid #C7D9E5;
+  border-radius:11px;
+  background:#F6FAFC;
+}
+.unified-group-editor-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.unified-group-editor-head strong{
+  display:block;
+  color:var(--navy);
+  font-size:13px;
+}
+.unified-group-editor-head span{
+  display:block;
+  margin-top:3px;
+  color:var(--ink-mute);
+  font-size:10.5px;
+  line-height:1.55;
+}
+.unified-part-group-list{
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+}
+.unified-part-group-row{
+  display:grid;
+  grid-template-columns:minmax(130px,.7fr) minmax(220px,1.7fr) auto auto;
+  align-items:end;
+  gap:8px;
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#fff;
+}
+.unified-part-group-row .field{
+  margin:0;
+}
+.unified-part-group-row input[type="text"]{
+  width:100%;
+}
+.unified-part-group-visible{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  height:38px;
+  padding:0 8px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  color:var(--ink-mute);
+  font-size:10.5px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.unified-group-preview{
+  margin-top:10px;
+  padding:9px 10px;
+  border-radius:8px;
+  background:#EDF4F8;
+  color:#31566E;
+  font-size:10.5px;
+  line-height:1.65;
+}
+.actual-group-head.actual-group-hidden{
+  color:transparent!important;
+  background:#F5F7F9!important;
+  border-color:#D8E0E6!important;
+}
+.actual-group-head.actual-group-hidden::after{
+  content:"";
+}
+@media(max-width:760px){
+  .unified-part-group-row{
+    grid-template-columns:1fr;
+    align-items:stretch;
+  }
+  .unified-part-group-visible{
+    justify-content:flex-start;
+  }
+}
+
+
+/* ---------- 自訂日期事件與提醒 ---------- */
+.date-event-section{
+  margin-bottom:14px;
+  padding:12px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+}
+.date-event-section-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.date-event-section-head h3{
+  margin:0;
+  color:var(--navy);
+  font-size:14px;
+}
+.date-event-section-head p{
+  margin:4px 0 0;
+  color:var(--ink-mute);
+  font-size:10.5px;
+  line-height:1.55;
+}
+.date-event-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:9px;
+}
+.date-event-card{
+  position:relative;
+  padding:11px 12px;
+  border:1px solid var(--line);
+  border-left:4px solid #6C90AA;
+  border-radius:10px;
+  background:#fff;
+  transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease;
+}
+.date-event-card:hover{
+  border-color:#9CB7C9;
+  box-shadow:0 4px 12px rgba(16,42,67,.08);
+  transform:translateY(-1px);
+}
+.date-event-card.today,
+.date-event-card.active{
+  border-left-color:var(--orange);
+  background:#FFFBF4;
+}
+.date-event-card.upcoming{
+  border-left-color:var(--blue);
+}
+.date-event-card.past{
+  border-left-color:#AAB4BC;
+  background:#F7F8F9;
+}
+.date-event-card .dec-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+}
+.date-event-card .dec-title{
+  color:var(--ink);
+  font-size:13px;
+  font-weight:900;
+  line-height:1.35;
+}
+.date-event-card .dec-date{
+  margin-top:5px;
+  color:#2B658A;
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  font-weight:800;
+}
+.date-event-card .dec-desc{
+  margin-top:7px;
+  color:var(--ink-mute);
+  font-size:11px;
+  line-height:1.55;
+  white-space:pre-wrap;
+}
+.date-event-card .dec-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-top:9px;
+}
+.date-event-card .dec-status{
+  display:inline-flex;
+  align-items:center;
+  padding:3px 7px;
+  border-radius:999px;
+  background:#EEF3F6;
+  color:#526A7B;
+  font-size:9.5px;
+  font-weight:900;
+}
+.date-event-card.today .dec-status,
+.date-event-card.active .dec-status{
+  background:#FFF0D8;
+  color:#9A5B08;
+}
+.date-event-card .dec-actions{
+  display:flex;
+  gap:5px;
+}
+.control-date-event-list{
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+}
+.control-date-event-row{
+  display:grid;
+  grid-template-columns:104px minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  padding:9px 0;
+  border-bottom:1px dashed var(--line);
+}
+.control-date-event-row:last-child{
+  border-bottom:0;
+}
+.control-date-event-row .cde-date{
+  color:#2C668A;
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  font-weight:900;
+}
+.control-date-event-row .cde-title{
+  color:var(--ink);
+  font-size:12px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.control-date-event-row .cde-project{
+  margin-top:2px;
+  color:var(--ink-faint);
+  font-size:9.5px;
+}
+.control-date-event-row .cde-tag{
+  padding:3px 7px;
+  border-radius:999px;
+  background:#EEF3F6;
+  color:#526A7B;
+  font-size:9px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.control-date-event-row .cde-tag.today,
+.control-date-event-row .cde-tag.active{
+  background:#FFF0D8;
+  color:#9A5B08;
+}
+.date-mode-switch{
+  display:flex;
+  gap:7px;
+  margin-bottom:12px;
+}
+.date-mode-switch button{
+  flex:1;
+}
+@media(max-width:760px){
+  .date-event-list{grid-template-columns:1fr;}
+  .control-date-event-row{
+    grid-template-columns:88px minmax(0,1fr);
+  }
+  .control-date-event-row .cde-tag{
+    grid-column:2;
+    justify-self:start;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2115,7 +2385,7 @@ function blankProject(name){
   return { id:uid('p'), name, createdAt:Date.now(),
     processes:makeProcesses(defaultProcessNames()), parts:makeParts(defaultPartNames()), processGroups:[],
     buildings:[], records:[], schedules:[],
-    contacts:[], vendors:[], storageArea:'', entryRules:'', handoverSummary:'', billingItems:[], billingRecords:[] };
+    contacts:[], vendors:[], storageArea:'', entryRules:'', handoverSummary:'', billingItems:[], billingRecords:[], dateReminders:[] };
 }
 
 function seedDemoProject(){
@@ -2185,7 +2455,7 @@ function seedDemoProject(){
       startDate:toDateStr(addDays(new Date(),0)), endDate:toDateStr(addDays(new Date(),4)), actualCompleteDate:null, note:'', dependsOn:[] },
   ];
 
-  return { id:uid('p'), name:'板橋亞東段', createdAt:now, processes, parts, processGroups, buildings:[bAB,bCD,bEF], records, schedules };
+  return { id:uid('p'), name:'板橋亞東段', createdAt:now, processes, parts, processGroups, buildings:[bAB,bCD,bEF], records, schedules, dateReminders:[] };
 }
 /* =====================  2b. 交接案件雛型（板橋順慶／變電站／康橋／廈門街）  ===================== */
 // 輔助：產生樓層字串陣列，如 floorsSpan(21,11) → ['21F',...,'11F']
@@ -2199,7 +2469,7 @@ function buildHandoverProject(cfg){
     records: [], schedules: [],
     contacts: cfg.contacts||[], vendors: cfg.vendors||[],
     storageArea: cfg.storageArea||'', entryRules: cfg.entryRules||'',
-    handoverSummary: cfg.handoverSummary||'', billingItems: cfg.billingItems||[], billingRecords: cfg.billingRecords||[] };
+    handoverSummary: cfg.handoverSummary||'', billingItems: cfg.billingItems||[], billingRecords: cfg.billingRecords||[], dateReminders: cfg.dateReminders||[] };
   const now = Date.now();
   (cfg.items||[]).forEach(it=>{
     const b = p.buildings.find(x=>x.name===it.b) || p.buildings[0];
@@ -2630,6 +2900,9 @@ function actualTableFor(proj, buildingId){
     };
   }
   if(!b.actualTable.cells || typeof b.actualTable.cells!=='object') b.actualTable.cells={};
+  if(Array.isArray(b.actualTable.partGroups)){
+    b.actualTable.partGroups.forEach(g=>{if(g.visible===undefined)g.visible=true;});
+  }
   return b.actualTable;
 }
 function syncActiveActualTableAlias(proj,b){
@@ -2812,6 +3085,7 @@ function normalizeStateShape(target){
     if(p.handoverSummary===undefined) p.handoverSummary='';
     if(!Array.isArray(p.billingItems)) p.billingItems=[];
     if(!Array.isArray(p.billingRecords)) p.billingRecords=[];
+    if(!Array.isArray(p.dateReminders)) p.dateReminders=[];
 
     (p.processes||[]).forEach(pr=>{ if(pr.groupId===undefined) pr.groupId=null; });
     ensureGanttSubprocessStore(p);
@@ -2822,6 +3096,16 @@ function normalizeStateShape(target){
       if(r.photo===undefined) r.photo=null;
       if(r.blockReason===undefined) r.blockReason='';
       if(r.blockReason==='待請款') r.blockReason='';
+    });
+    (p.dateReminders||[]).forEach(t=>{
+      if(!t.id) t.id=uid('dt');
+      if(!t.title) t.title='未命名事件';
+      if(t.description===undefined) t.description='';
+      if(!t.startDate) t.startDate=t.date||todayStr();
+      if(!t.endDate) t.endDate=t.startDate;
+      if(t.endDate<t.startDate){const x=t.startDate;t.startDate=t.endDate;t.endDate=x;}
+      if(!t.createdAt) t.createdAt=Date.now();
+      if(!t.updatedAt) t.updatedAt=t.createdAt;
     });
     (p.schedules||[]).forEach(s=>{
       if(s.actualStartDate===undefined) s.actualStartDate=null;
@@ -3591,7 +3875,7 @@ function renderSidebar(){
     </div>
     <div class="sidebar-nav-scroll">
       <div class="sidebar-nav-title">現場控制</div>
-      ${navBtn('home',ICO.home,'今日控制台')}
+      ${navBtn('home',ICO.home,'控制台')}
       ${navBtn('actual',ICO.grid,'案件實際進度')}
       ${navBtn('matrix',ICO.grid,'樓層／工序矩陣')}
       ${navBtn('records',ICO.list,'施作日誌／紀錄')}
@@ -3627,8 +3911,8 @@ function renderTopbar(proj){
     <button class="building-chip ${x.id===state.activeBuildingId?'active':''}" onclick="selectBuilding('${x.id}')">
       ${esc(x.name)}<span class="bc-edit" onclick="event.stopPropagation();openEditBuildingModal('${x.id}')" title="編輯棟別">${ICO.edit}</span>
     </button>`).join('');
-  const titleMap = {home:'今日控制台', handover:'專案內容／交接', buildings:'棟別進度看板', matrix:'樓層／工序矩陣', actual:'案件實際進度', schedule:'預計進度甘特圖', records:'施作日誌／紀錄', tasks:'日期代辦與提醒', photos:'工程照片'};
-  const subMap = {home:'跨案場風險、今日工作與進度差異', handover:'聯絡人、工班、置料與交接重點', buildings:'各棟總進度與目前施工階段', matrix:'快速查看各樓層工序完成度', actual:'樓層 × 位置 × 施工階段', schedule:'保留原甘特圖，並可切換預計 vs 實際雙軌比較', records:'依日期與關鍵字查詢施工回報', tasks:'由排程、卡點與截止日自動彙整', photos:'依案場位置與工序整理施工照片'};
+  const titleMap = {home:'控制台', handover:'專案內容／交接', buildings:'棟別進度看板', matrix:'樓層／工序矩陣', actual:'案件實際進度', schedule:'預計進度甘特圖', records:'施作日誌／紀錄', tasks:'日期代辦與提醒', photos:'工程照片'};
+  const subMap = {home:'跨案場風險、今日工作與進度差異', handover:'聯絡人、工班、置料與交接重點', buildings:'各棟總進度與目前施工階段', matrix:'快速查看各樓層工序完成度', actual:'樓層 × 位置 × 施工階段', schedule:'保留原甘特圖，並可切換預計 vs 實際雙軌比較', records:'依日期與關鍵字查詢施工回報', tasks:'自訂日期事件、排程、卡點與截止日集中管理', photos:'依案場位置與工序整理施工照片'};
   const modeKey = state.view==='matrix' ? 'matrixMode' : (state.view==='schedule' ? 'ganttMode' : null);
   const curMode = modeKey ? state[modeKey] : null;
   const modeToggle = modeKey ? `<div class="mode-toggle"><button class="${curMode==='single'?'active':''}" onclick="setScopeMode('${modeKey}','single')">單棟</button><button class="${curMode==='all'?'active':''}" onclick="setScopeMode('${modeKey}','all')">全棟</button></div>` : '';
@@ -3842,12 +4126,12 @@ function renderTemplateSetupHome(){
     </div>
     <div class="dashboard-section-title"><h2>模板內保留的功能模組</h2><small>現在先建立結構，之後資料可慢慢補齊</small></div>
     <div class="template-module-grid">
-      <div class="template-module"><b>今日控制台</b><span>日後自動彙整延誤、今日施工、待確認與最近更新。</span></div>
+      <div class="template-module"><b>控制台</b><span>日後自動彙整延誤、今日施工、待確認與最近更新。</span></div>
       <div class="template-module"><b>案件實際進度</b><span>多棟、多樓層、多分區、多柱位，支援同階段矩形拖曳與 PDF。</span></div>
       <div class="template-module"><b>樓層／工序矩陣</b><span>以樓層檢視各工序完成度，矩形拖曳後再確認套用。</span></div>
       <div class="template-module"><b>預計進度甘特圖</b><span>大項目、母工序與個別子工序，支援日期與排程管理。</span></div>
       <div class="template-module"><b>施作日誌與照片</b><span>每筆回報可帶日期、工班、備註、卡點、完成比例與照片。</span></div>
-      <div class="template-module"><b>日期代辦提醒</b><span>從甘特排程、延誤與待確認資料自動整理。</span></div>
+      <div class="template-module"><b>日期代辦提醒</b><span>可自行新增日期事件，也會從甘特排程、延誤與待確認資料自動整理。</span></div>
       <div class="template-module"><b>專案內容／交接</b><span>聯絡人、工班、協力廠商、置料區、進場規定與交接重點。</span></div>
       <div class="template-module"><b>同步與備份</b><span>保留 JSON 備份、Supabase 多裝置同步與 GitHub Pages 部署能力。</span></div>
     </div>`;
@@ -3867,6 +4151,7 @@ function renderHome(){
     followGroups.forEach(g=>allFollow.push({p,g}));
     p.records.forEach(r=>recent.push({p,r}));
   });
+  const allDateReminders=dashboardDateReminders(projects);
   allToday.sort((a,b)=>a.endDate.localeCompare(b.endDate));
   allDelays.sort((a,b)=>b.updatedAt-a.updatedAt);
   recent.sort((a,b)=>b.r.updatedAt-a.r.updatedAt);
@@ -3875,6 +4160,17 @@ function renderHome(){
   const priority=[];
   allDelays.slice(0,4).forEach(d=>priority.push({kind:'delay',title:`${d.proj.name}｜${d.b.name}｜${d.floor}・${d.pr.name}`,meta:d.type==='schedule'?`預定完成 ${d.endDate}，尚未完成`:(d.note||'已標記延誤'),tag:'延誤',cls:'red',action:d.type==='record'?`editRecordFromHome('${d.proj.id}','${d.recordId}')`:`reportFromSchedule('${d.proj.id}','${d.scheduleId}')`}));
   allToday.filter(t=>!priority.some(x=>x.title.includes(t.proj.name)&&x.title.includes(t.pr.name))).slice(0,4).forEach(t=>priority.push({kind:'today',title:`${t.proj.name}｜${t.b.name}｜${t.floor}・${t.pr.name}`,meta:`今日施工，預定完成 ${t.endDate}`,tag:'今日',cls:'amber',action:`reportFromSchedule('${t.proj.id}','${t.scheduleId}')`}));
+  allDateReminders.filter(x=>x.status==='today'||x.status==='active').slice(0,4).forEach(({proj,item,status})=>{
+    if(priority.length>=8)return;
+    priority.push({
+      kind:'date-event',
+      title:`${proj.name}｜${item.title}`,
+      meta:`${formatDateReminderRange(item)}${item.description?'｜'+item.description:''}`,
+      tag:dateReminderStatusLabel(status),
+      cls:'amber',
+      action:`openDateReminderModal('${item.id}','${proj.id}')`
+    });
+  });
   allFollow.slice(0,4).forEach(({p,g})=>{
     if(priority.length>=8)return;
     priority.push({
@@ -3899,7 +4195,7 @@ function renderHome(){
   }).join('');
   const recentHtml=recent.slice(0,8).map(({p,r})=>{const b=p.buildings.find(x=>x.id===r.buildingId),pr=p.processes.find(x=>x.id===r.processId),si=statusInfo(r.status);if(!b||!pr)return'';return `<div class="task-row safe-row"><div class="t-main"><div class="t-title">${esc(p.name)}｜${esc(b.name)}｜${esc(r.floor)}・${esc(pr.name)}</div><div class="t-sub">${fmtTime(r.updatedAt)}${r.crew?' ・ '+esc(r.crew):''}${r.note?' ・ '+esc(r.note):''}</div></div><span class="badge" style="background:${si.bg};color:${si.fg}">${r.progress}%</span><button class="btn btn-sm safe-inline-action" onclick="editRecordFromHome('${p.id}','${r.id}')">查看</button></div>`;}).join('')||'<div class="empty-mini">尚無施作紀錄</div>';
   return `
-    <div class="dashboard-head"><div><h1>今天先處理什麼</h1><p>把會影響工期、材料、工班與現場協調的事情集中在第一屏。</p></div><div class="dashboard-actions"><button class="btn ${formState.reportMode?'btn-navy-active':''}" onclick="toggleReportMode()">${ICO.list} 今日回報模式</button><button class="btn" onclick="setView('tasks')">${ICO.clipboard} 查看全部代辦</button></div></div>
+    <div class="dashboard-head"><div><h1>控制台</h1><p>集中查看跨案場進度、風險、日期事件與近期工作。</p></div><div class="dashboard-actions"><button class="btn ${formState.reportMode?'btn-navy-active':''}" onclick="toggleReportMode()">${ICO.list} 今日回報模式</button><button class="btn" onclick="setView('tasks')">${ICO.clipboard} 查看全部代辦</button></div></div>
     <div class="dashboard-kpis">
       <div class="dashboard-kpi"><div class="k-label">全部案場平均進度</div><div class="k-num">${overall}%</div><div class="k-sub">共 ${projects.length} 個案場</div></div>
       <div class="dashboard-kpi alert"><div class="k-label">卡點／延誤</div><div class="k-num">${allDelays.length}</div><div class="k-sub">需優先處理的工期風險</div></div>
@@ -3912,10 +4208,177 @@ function renderHome(){
       <div class="control-card"><div class="control-card-head"><h3>今日控制清單</h3><small>延誤優先，其次為今日排程與待確認</small></div><div class="control-card-body">${priority.length?priority.map((x,i)=>`<div class="priority-row"><div class="priority-rank">${i+1}</div><div><div class="priority-title">${esc(x.title)}</div><div class="priority-meta">${esc(x.meta)}</div></div><button class="mini-tag ${x.cls}" onclick="${x.action}">${x.tag}</button></div>`).join(''):'<div class="empty-mini">目前沒有急迫事項</div>'}</div></div>
       <div class="control-card"><div class="control-card-head"><h3>現場風險雷達</h3><small>依卡點原因與等待狀態彙整</small></div><div class="control-card-body">${risks.length?risks.map(([k,v])=>`<div class="risk-row"><div class="risk-top"><span>${esc(k)}</span><span>${v} 件</span></div><div class="risk-bar"><span style="width:${Math.round(v/riskMax*100)}%"></span></div></div>`).join(''):'<div class="empty-mini">目前沒有卡點資料</div>'}</div></div>
     </div>
+    <div class="home-card">
+      <h4>日期事件與提醒 <button class="btn btn-sm" onclick="setView('tasks')">查看全部</button></h4>
+      ${renderControlDateReminders(allDateReminders)}
+    </div>
     <div class="dashboard-section-title"><h2>各案場控制概況</h2><small>點卡片進入棟別看板</small></div>
     <div class="project-control-grid">${projectCards||'<div class="empty-state"><h3>尚未建立案場</h3></div>'}</div>
     <div class="home-card"><h4>最近更新紀錄 <button class="btn btn-sm" onclick="setView('records')">查看全部</button></h4>${recentHtml}</div>`;
 }
+
+
+function dateReminderStatus(item,baseDate=todayStr()){
+  const start=item.startDate||baseDate;
+  const end=item.endDate||start;
+  if(baseDate<start) return 'upcoming';
+  if(baseDate>end) return 'past';
+  if(start===end&&baseDate===start) return 'today';
+  return 'active';
+}
+function dateReminderStatusLabel(status){
+  return {
+    upcoming:'即將發生',
+    past:'已結束',
+    today:'今天',
+    active:'進行中'
+  }[status]||'事件';
+}
+function formatDateReminderRange(item){
+  const start=item.startDate||'';
+  const end=item.endDate||start;
+  if(!start) return '未設定日期';
+  const fmt=s=>{
+    const d=fromDateStr(s);
+    if(Number.isNaN(d.getTime())) return s;
+    return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+  };
+  return start===end?fmt(start):`${fmt(start)}－${fmt(end)}`;
+}
+function sortedDateReminders(proj){
+  return [...(proj.dateReminders||[])].sort((a,b)=>{
+    const sa=dateReminderStatus(a),sb=dateReminderStatus(b);
+    const priority={today:0,active:1,upcoming:2,past:3};
+    return (priority[sa]-priority[sb]) ||
+      String(a.startDate||'').localeCompare(String(b.startDate||'')) ||
+      Number(b.updatedAt||0)-Number(a.updatedAt||0);
+  });
+}
+function setDateReminderMode(mode){
+  formState.dateReminderMode=mode==='range'?'range':'single';
+  const rangeField=document.getElementById('date-reminder-end-field');
+  const singleBtn=document.getElementById('date-mode-single');
+  const rangeBtn=document.getElementById('date-mode-range');
+  if(rangeField) rangeField.style.display=formState.dateReminderMode==='range'?'block':'none';
+  if(singleBtn) singleBtn.classList.toggle('btn-primary',formState.dateReminderMode==='single');
+  if(rangeBtn) rangeBtn.classList.toggle('btn-primary',formState.dateReminderMode==='range');
+}
+function openDateReminderModal(reminderId,projectId){
+  const proj=state.projects.find(p=>p.id===projectId)||currentProject();
+  if(!proj) return;
+  const item=(proj.dateReminders||[]).find(x=>x.id===reminderId)||null;
+  const start=item?.startDate||todayStr();
+  const end=item?.endDate||start;
+  formState.dateReminderProjectId=proj.id;
+  formState.dateReminderId=item?.id||null;
+  formState.dateReminderMode=item&&end!==start?'range':'single';
+
+  openModal(`<div class="modal">
+    <div class="modal-head"><h3>${item?'編輯':'新增'}日期事件｜${esc(proj.name)}</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
+    <div class="modal-body">
+      <div class="date-mode-switch">
+        <button type="button" id="date-mode-single" class="btn ${formState.dateReminderMode==='single'?'btn-primary':''}" onclick="setDateReminderMode('single')">單一日期</button>
+        <button type="button" id="date-mode-range" class="btn ${formState.dateReminderMode==='range'?'btn-primary':''}" onclick="setDateReminderMode('range')">日期區間</button>
+      </div>
+      <div class="field"><label>事件／項目名稱</label><input id="date-reminder-title" value="${esc(item?.title||'')}" placeholder="例如：材料進場、現場會勘、工班施作"></div>
+      <div class="field"><label>敘述（選填）</label><textarea id="date-reminder-description" rows="4" placeholder="補充地點、聯絡人、注意事項或要完成的內容">${esc(item?.description||'')}</textarea></div>
+      <div class="field-row">
+        <div class="field"><label>${formState.dateReminderMode==='range'?'開始日期':'發生日期'}</label><input type="date" id="date-reminder-start" value="${esc(start)}"></div>
+        <div class="field" id="date-reminder-end-field" style="${formState.dateReminderMode==='range'?'':'display:none;'}"><label>結束日期</label><input type="date" id="date-reminder-end" value="${esc(end)}"></div>
+      </div>
+      <div class="hint">儲存後會同時顯示在「日期代辦與提醒」以及跨案場「控制台」。</div>
+    </div>
+    <div class="modal-foot">
+      ${item?`<button class="btn btn-danger" onclick="deleteDateReminder('${proj.id}','${item.id}')">刪除</button>`:''}
+      <span style="flex:1"></span>
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveDateReminder()">儲存事件</button>
+    </div>
+  </div>`);
+}
+function saveDateReminder(){
+  const proj=state.projects.find(p=>p.id===formState.dateReminderProjectId)||currentProject();
+  if(!proj) return;
+  const title=(document.getElementById('date-reminder-title')?.value||'').trim();
+  const description=(document.getElementById('date-reminder-description')?.value||'').trim();
+  const startDate=document.getElementById('date-reminder-start')?.value||'';
+  const rawEnd=document.getElementById('date-reminder-end')?.value||startDate;
+  const endDate=formState.dateReminderMode==='range'?rawEnd:startDate;
+
+  if(!title){showToast('請輸入事件或項目名稱','error');return;}
+  if(!startDate){showToast('請選擇日期','error');return;}
+  if(!endDate){showToast('請選擇結束日期','error');return;}
+  if(endDate<startDate){showToast('結束日期不能早於開始日期','error');return;}
+
+  let item=(proj.dateReminders||[]).find(x=>x.id===formState.dateReminderId);
+  if(item){
+    Object.assign(item,{title,description,startDate,endDate,updatedAt:Date.now()});
+  }else{
+    if(!Array.isArray(proj.dateReminders)) proj.dateReminders=[];
+    proj.dateReminders.push({
+      id:uid('dt'),title,description,startDate,endDate,
+      createdAt:Date.now(),updatedAt:Date.now()
+    });
+  }
+  scheduleSave();closeModal();render();showToast(item?'已更新日期事件':'已新增日期事件');
+}
+function deleteDateReminder(projectId,reminderId){
+  const proj=state.projects.find(p=>p.id===projectId);
+  const item=proj?.dateReminders?.find(x=>x.id===reminderId);
+  if(!proj||!item) return;
+  if(!confirm(`確定刪除日期事件「${item.title}」？`)) return;
+  proj.dateReminders=proj.dateReminders.filter(x=>x.id!==reminderId);
+  scheduleSave();closeModal();render();showToast('已刪除日期事件');
+}
+function renderDateReminderCard(proj,item){
+  const status=dateReminderStatus(item);
+  return `<div class="date-event-card ${status}">
+    <div class="dec-top">
+      <div>
+        <div class="dec-title">${esc(item.title)}</div>
+        <div class="dec-date">${esc(formatDateReminderRange(item))}</div>
+      </div>
+      <span class="dec-status">${dateReminderStatusLabel(status)}</span>
+    </div>
+    ${item.description?`<div class="dec-desc">${esc(item.description)}</div>`:''}
+    <div class="dec-meta">
+      <span>${item.startDate===item.endDate?'單日事件':'日期區間'}</span>
+      <div class="dec-actions">
+        <button class="btn btn-sm" onclick="openDateReminderModal('${item.id}','${proj.id}')">${ICO.edit} 編輯</button>
+        <button class="icon-btn" onclick="deleteDateReminder('${proj.id}','${item.id}')" title="刪除">${ICO.trash}</button>
+      </div>
+    </div>
+  </div>`;
+}
+function dashboardDateReminders(projects){
+  const today=todayStr();
+  const rows=[];
+  (projects||[]).forEach(proj=>{
+    (proj.dateReminders||[]).forEach(item=>{
+      const status=dateReminderStatus(item,today);
+      if(status!=='past') rows.push({proj,item,status});
+    });
+  });
+  const priority={today:0,active:1,upcoming:2};
+  return rows.sort((a,b)=>
+    (priority[a.status]-priority[b.status]) ||
+    String(a.item.startDate||'').localeCompare(String(b.item.startDate||'')) ||
+    Number(b.item.updatedAt||0)-Number(a.item.updatedAt||0)
+  );
+}
+function renderControlDateReminders(rows){
+  if(!rows.length) return '<div class="empty-mini">目前沒有即將發生的日期事件</div>';
+  return `<div class="control-date-event-list">${rows.slice(0,10).map(({proj,item,status})=>`
+    <div class="control-date-event-row">
+      <div class="cde-date">${esc(formatDateReminderRange(item))}</div>
+      <div>
+        <div class="cde-title">${esc(item.title)}</div>
+        <div class="cde-project">${esc(proj.name)}${item.description?'｜'+esc(item.description):''}</div>
+      </div>
+      <button class="cde-tag ${status}" onclick="openDateReminderModal('${item.id}','${proj.id}')">${dateReminderStatusLabel(status)}</button>
+    </div>`).join('')}</div>`;
+}
+
 
 function renderTaskCenter(proj){
   const today=projectTodayTasks(proj);
@@ -3956,12 +4419,21 @@ function renderTaskCenter(proj){
     </div>`;
   };
 
+  const reminderItems=sortedDateReminders(proj);
   return `<div class="page-intro">
-    <div><h2>日期代辦與提醒</h2><p>相同事件若發生於連續樓層，會自動合併為一筆，例如「18–20樓 遮斷未施作」。</p></div>
+    <div><h2>日期代辦與提醒</h2><p>可自行新增單一日期或日期區間事件；甘特排程、延誤與待確認資料仍會自動彙整。</p></div>
     <div class="page-intro-actions">
       <button class="btn" onclick="setView('schedule')">開啟甘特圖</button>
-      <button class="btn btn-primary" onclick="openQuickAddModal()">新增現場回報</button>
+      <button class="btn" onclick="openQuickAddModal()">新增現場回報</button>
+      <button class="btn btn-primary" onclick="openDateReminderModal(null,'${proj.id}')">${ICO.plus} 新增日期事件</button>
     </div>
+  </div>
+  <div class="date-event-section">
+    <div class="date-event-section-head">
+      <div><h3>自訂日期事件</h3><p>可編輯事件名稱、敘述、單一日期或日期區間；內容會同步顯示於控制台。</p></div>
+      <button class="btn btn-sm" onclick="openDateReminderModal(null,'${proj.id}')">${ICO.plus} 新增</button>
+    </div>
+    <div class="date-event-list">${reminderItems.length?reminderItems.map(item=>renderDateReminderCard(proj,item)).join(''):'<div class="empty-mini">尚未新增日期事件</div>'}</div>
   </div>
   <div class="task-center-board">
     <div class="task-center-col"><h3>今日施工 <span class="mini-tag amber">${today.length}</span></h3>${today.map(schedCard).join('')||'<div class="empty-mini">今天沒有排程</div>'}</div>
@@ -4239,16 +4711,20 @@ function syncActualTableWithBuilding(proj,buildingId,showMessage=false){
       if(!key||!partSet.has(key)||used.has(key)) return false;
       used.add(key);return true;
     });
-    if(kept.length) nextGroups.push({name:g.name||'部位',parts:kept});
+    if(kept.length) nextGroups.push({
+      name:g.name||'部位',
+      parts:kept,
+      visible:g.visible!==false
+    });
   });
 
   const missing=partNames.filter(name=>!used.has(normalizePartName(name)));
   if(missing.length){
     const target=nextGroups.find(g=>g.name==='本棟部位');
     if(target) target.parts.push(...missing);
-    else nextGroups.push({name:'本棟部位',parts:missing});
+    else nextGroups.push({name:'本棟部位',parts:missing,visible:true});
   }
-  table.partGroups=nextGroups.length?nextGroups:[{name:'本棟部位',parts:[]}];
+  table.partGroups=nextGroups.length?nextGroups:[{name:'本棟部位',parts:[],visible:true}];
   table.sections=linkedActualSections(proj,b);
   table.linkedAt=Date.now();
 
@@ -4423,9 +4899,20 @@ function actualHeaderGroups(proj,buildingId){const b=buildingById(proj,buildingI
 function actualSections(proj,buildingId){const b=buildingById(proj,buildingId)||currentBuilding();ensureActualProgressSetup(proj,b?.id);return actualTableFor(proj,b?.id)?.sections||[];}
 function actualParts(proj,buildingId){return actualHeaderGroups(proj,buildingId).flatMap(g=>g.parts||[]);}
 function renderActualHeader(proj,buildingId){
-  const groups = actualHeaderGroups(proj,buildingId);
+  const groups=actualHeaderGroups(proj,buildingId);
+  const showUpper=groups.some(g=>g.visible!==false&&String(g.name||'').trim());
+  const upperRow=showUpper
+    ? `<tr>
+        <th class="actual-stage-col"></th>
+        <th class="actual-floor-col"></th>
+        ${groups.map(g=>{
+          const visible=g.visible!==false&&String(g.name||'').trim();
+          return `<th class="actual-group-head ${visible?'':'actual-group-hidden'}" colspan="${(g.parts||[]).length||1}">${visible?esc(actualDisplayName(g.name)):''}</th>`;
+        }).join('')}
+      </tr>`
+    : '';
   return `<thead>
-    <tr><th class="actual-stage-col"></th><th class="actual-floor-col"></th>${groups.map(g=>`<th class="actual-group-head" colspan="${(g.parts||[]).length||1}">${esc(actualDisplayName(g.name))}</th>`).join('')}</tr>
+    ${upperRow}
     <tr><th class="actual-stage-col"></th><th class="actual-floor-col">樓層</th>${groups.flatMap(g=>g.parts||['']).map(p=>`<th class="actual-part-head ${p===''?'actual-empty-name':''}">${esc(actualDisplayName(p))}</th>`).join('')}</tr>
   </thead>`;
 }
@@ -4689,12 +5176,125 @@ function deleteActualCell(buildingId, sectionKey, floor, part){
   scheduleSave(); closeModal(); render(); showToast('已清除格子');
 }
 
+
+function unifiedPartGroupDraft(proj,b){
+  const table=actualTableFor(proj,b.id);
+  const groups=clonePlain(table.partGroups||[]);
+  const validNames=buildingParts(proj,b).map(x=>x.name);
+  const validSet=new Set(validNames.map(normalizePartName));
+  const used=new Set();
+  const cleaned=[];
+
+  groups.forEach(g=>{
+    const parts=(g.parts||[]).filter(name=>{
+      const key=normalizePartName(name);
+      if(!key||!validSet.has(key)||used.has(key)) return false;
+      used.add(key);return true;
+    });
+    if(parts.length){
+      cleaned.push({
+        name:g.name||'部位群組',
+        parts,
+        visible:g.visible!==false
+      });
+    }
+  });
+
+  const missing=validNames.filter(name=>!used.has(normalizePartName(name)));
+  if(missing.length){
+    cleaned.push({
+      name:cleaned.length?'其他部位':'本棟部位',
+      parts:missing,
+      visible:true
+    });
+  }
+  return cleaned.length?cleaned:[{name:'本棟部位',parts:validNames,visible:true}];
+}
+function unifiedGroupRowHTML(group,index){
+  return `<div class="unified-part-group-row" data-unified-group-row>
+    <div class="field">
+      <label>上層標示名稱</label>
+      <input type="text" data-group-name value="${esc(group?.name||'')}" placeholder="例如：中庭向">
+    </div>
+    <div class="field">
+      <label>此標示包含的部位</label>
+      <input type="text" data-group-parts value="${esc((group?.parts||[]).join('、'))}" placeholder="例如：F4角柱、F3柱、F2柱、F1柱">
+    </div>
+    <label class="unified-part-group-visible">
+      <input type="checkbox" data-group-visible ${group?.visible!==false?'checked':''}>
+      顯示標示
+    </label>
+    <button type="button" class="icon-btn" onclick="removeUnifiedPartGroupRow(this)" title="刪除此群組">${ICO.trash}</button>
+  </div>`;
+}
+function addUnifiedPartGroupRow(){
+  const list=document.getElementById('unified-part-group-list');
+  if(!list) return;
+  list.insertAdjacentHTML('beforeend',unifiedGroupRowHTML({name:'新標示',parts:[],visible:true},list.children.length));
+}
+function removeUnifiedPartGroupRow(button){
+  const row=button?.closest('[data-unified-group-row]');
+  if(row) row.remove();
+}
+function setAllUnifiedGroupVisibility(visible){
+  document.querySelectorAll('[data-group-visible]').forEach(x=>x.checked=!!visible);
+}
+function splitUnifiedGroupParts(value){
+  return [...new Set(String(value||'').split(/[、,，\n]+/).map(x=>x.trim()).filter(Boolean))];
+}
+function readUnifiedPartGroups(partNames){
+  const validMap=new Map(partNames.map(name=>[normalizePartName(name),name]));
+  const used=new Set();
+  const groups=[];
+
+  document.querySelectorAll('[data-unified-group-row]').forEach(row=>{
+    const rawName=row.querySelector('[data-group-name]')?.value?.trim()||'';
+    const visible=!!row.querySelector('[data-group-visible]')?.checked;
+    const names=splitUnifiedGroupParts(row.querySelector('[data-group-parts]')?.value||'');
+    const parts=[];
+
+    names.forEach(name=>{
+      const key=normalizePartName(name);
+      const canonical=validMap.get(key);
+      if(canonical&&!used.has(key)){
+        used.add(key);
+        parts.push(canonical);
+      }
+    });
+
+    if(parts.length){
+      groups.push({
+        name:rawName||'未命名標示',
+        parts,
+        visible
+      });
+    }
+  });
+
+  const missing=partNames.filter(name=>!used.has(normalizePartName(name)));
+  if(missing.length){
+    groups.push({
+      name:groups.length?'其他部位':'本棟部位',
+      parts:missing,
+      visible:true
+    });
+  }
+
+  return groups.length?groups:[{
+    name:'本棟部位',
+    parts:[...partNames],
+    visible:false
+  }];
+}
+
+
 function openUnifiedStructureModal(buildingId){
   const proj=currentProject(),b=buildingById(proj,buildingId)||currentBuilding();
   if(!proj||!b) return;
   const floors=(b.floors||[]).join('\n');
   const processes=buildingProcesses(proj,b).map(x=>x.name).join('\n');
   const parts=buildingParts(proj,b).map(x=>x.name).join('\n');
+  const groups=unifiedPartGroupDraft(proj,b);
 
   openModal(`<div class="modal modal-wide">
     <div class="modal-head"><h3>本棟單一結構設定｜${esc(b.name)}</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
@@ -4705,10 +5305,33 @@ function openUnifiedStructureModal(buildingId){
         <div class="field"><label>施工工序（一行一個）</label><textarea id="unified-processes">${esc(processes)}</textarea></div>
         <div class="field"><label>施工部位（一行一個）</label><textarea id="unified-parts">${esc(parts)}</textarea></div>
       </div>
+
+      <div class="unified-group-editor">
+        <div class="unified-group-editor-head">
+          <div>
+            <strong>案件實際進度｜部位上層標示</strong>
+            <span>可將部位分成「中庭向」「馬路側中庭向」等群組。每個標示可獨立改名或取消顯示；取消顯示只隱藏上層文字，不會刪除部位。</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm" onclick="addUnifiedPartGroupRow()">新增上層標示</button>
+            <button type="button" class="btn btn-sm" onclick="setAllUnifiedGroupVisibility(false)">全部不顯示</button>
+            <button type="button" class="btn btn-sm" onclick="setAllUnifiedGroupVisibility(true)">全部顯示</button>
+          </div>
+        </div>
+        <div id="unified-part-group-list" class="unified-part-group-list">
+          ${groups.map((g,i)=>unifiedGroupRowHTML(g,i)).join('')}
+        </div>
+        <div class="unified-group-preview">
+          <strong>板橋順慶範例：</strong><br>
+          中庭向：F4角柱、F3柱、F2柱、F1柱<br>
+          馬路側中庭向：F5角柱、F6柱、F7柱、F8柱、E8柱
+        </div>
+      </div>
+
       <div class="structure-preview">
         <strong>連動結果：</strong><br>
         矩陣＝樓層 × 工序；實際進度＝工序分段 × 樓層 × 部位。<br>
-        例如設定 18F、19F、20F／包板、欄杆／B1柱、B2柱後，兩個頁面會立即顯示相同結構。
+        上層標示只顯示於「案件實際進度」表頭，不影響矩陣、百分比、甘特圖或既有施工紀錄。
       </div>
     </div>
     <div class="modal-foot">
@@ -4726,6 +5349,7 @@ function saveUnifiedStructure(buildingId){
   const floors=cleanStructureLines('unified-floors');
   const processNames=cleanStructureLines('unified-processes');
   const partNames=cleanStructureLines('unified-parts');
+  const partGroups=readUnifiedPartGroups(partNames);
   if(!floors.length||!processNames.length||!partNames.length){
     showToast('樓層、工序與部位至少各保留一項','error');return;
   }
@@ -4792,9 +5416,11 @@ function saveUnifiedStructure(buildingId){
 
   const table=actualTableFor(proj,b.id);
   table.structureMode='linked';
+  table.partGroups=partGroups;
   syncActualTableWithBuilding(proj,b.id);
   scheduleSave();closeModal();render();
-  showToast(`已同步 ${b.name} 的矩陣與實際進度結構`);
+  const visibleGroups=partGroups.filter(g=>g.visible!==false).length;
+  showToast(`已同步 ${b.name}，並儲存 ${partGroups.length} 組部位上層標示（顯示 ${visibleGroups} 組）`);
 }
 
 
