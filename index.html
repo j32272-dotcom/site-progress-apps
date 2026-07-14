@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>金屬工程專案管理｜手機棟別切換修正版</title>
+<title>金屬工程專案管理｜矩陣工序平均連動實際甘特版</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -1381,6 +1381,359 @@ td.actual-cell.actual-reset-selected{
   }
 }
 
+
+/* ---------- 樓層／工序矩陣 × 實際進度：單一結構連動 ---------- */
+.structure-link-bar{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;padding:11px 13px;margin-bottom:12px;
+  background:linear-gradient(135deg,#EFF7FC,#F8FBFD);
+  border:1px solid #B9D4E7;border-left:4px solid var(--blue);
+  border-radius:var(--radius);box-shadow:var(--shadow-sm);
+}
+.structure-link-main strong{display:block;font-size:13px;color:var(--navy);}
+.structure-link-main p{margin:4px 0 0;font-size:11px;line-height:1.65;color:var(--ink-mute);}
+.structure-link-stats{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;}
+.structure-link-stats span{
+  display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;
+  background:#fff;border:1px solid var(--line);font-size:10px;font-weight:800;color:var(--ink);
+}
+.structure-link-actions{display:flex;gap:7px;flex-wrap:wrap;}
+.structure-linked-chip{
+  display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;
+  background:#DDF4E8;color:#176A45;font-size:10px;font-weight:900;white-space:nowrap;
+}
+.structure-linked-chip::before{content:"✓";font-weight:900;}
+.structure-custom-chip{
+  display:inline-flex;padding:5px 9px;border-radius:999px;
+  background:#FFF1D6;color:#875508;font-size:10px;font-weight:900;white-space:nowrap;
+}
+.structure-editor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.structure-editor-grid textarea{min-height:240px;}
+.structure-preview{
+  margin-top:12px;padding:10px 12px;border-radius:10px;
+  background:#F6F8FA;border:1px solid var(--line);font-size:11px;line-height:1.7;color:var(--ink-mute);
+}
+.structure-preview strong{color:var(--navy);}
+.actual-grid .actual-cell.actual-linked-progress{background:#67A8DC;color:#fff;}
+.actual-grid .actual-cell.actual-linked-done{background:#2F855A;color:#fff;}
+.actual-grid .actual-cell.actual-linked-waiting{background:#D9A441;color:#fff;}
+@media(max-width:760px){
+  .structure-link-bar{align-items:stretch;flex-direction:column;}
+  .structure-link-actions{display:grid;grid-template-columns:1fr 1fr;}
+  .structure-link-actions .btn{width:100%;}
+  .structure-editor-grid{grid-template-columns:1fr;}
+  .structure-editor-grid textarea{min-height:150px;}
+}
+
+
+/* ---------- 矩陣：樓層加權總進度／工序跨樓層平均 ---------- */
+table.matrix th.matrix-process-head{
+  min-width:108px;
+}
+.matrix-process-head .mph-name{
+  display:block;
+}
+.matrix-process-head .mph-weight{
+  display:block;
+  margin-top:3px;
+  color:#D9E8F4;
+  font-size:9px;
+  font-family:var(--font-mono);
+  font-weight:700;
+}
+.matrix-total-head{
+  position:sticky!important;
+  right:0;
+  z-index:7!important;
+  min-width:118px!important;
+  background:#163A57!important;
+  color:#fff!important;
+  border-left:2px solid #8FB1C9!important;
+}
+.matrix-total-head button{
+  display:block;
+  width:100%;
+  margin-top:5px;
+  padding:3px 5px;
+  border:1px solid rgba(255,255,255,.38);
+  border-radius:6px;
+  background:rgba(255,255,255,.10);
+  color:#fff;
+  font-size:9px;
+  cursor:pointer;
+}
+.matrix-floor-total{
+  position:sticky;
+  right:0;
+  z-index:4;
+  min-width:118px;
+  background:#F4F8FB;
+  border-left:2px solid #A9C2D4!important;
+  text-align:center;
+  vertical-align:middle;
+}
+.matrix-total-pill{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  min-height:42px;
+  border-radius:8px;
+  background:#EAF1F6;
+  color:#294A63;
+  font-weight:900;
+}
+.matrix-total-pill .mtp-value{
+  font-family:var(--font-mono);
+  font-size:15px;
+}
+.matrix-total-pill .mtp-label{
+  font-size:9px;
+  font-weight:700;
+  opacity:.78;
+}
+.matrix-total-pill.total-progress{background:#E9F3FB;color:#245C86;}
+.matrix-total-pill.total-done{background:#DDF3E7;color:#1A6B45;}
+.matrix-total-pill.total-none{background:#F2F4F6;color:#74818D;}
+.matrix-summary-row th,
+.matrix-summary-row td{
+  position:sticky;
+  bottom:0;
+  z-index:5;
+  border-top:2px solid #8DA9BC!important;
+  background:#EDF3F7!important;
+  text-align:center;
+  font-weight:900;
+}
+.matrix-summary-label{
+  left:0;
+  z-index:8!important;
+  min-width:86px;
+  color:var(--navy);
+}
+.matrix-process-total{
+  min-width:96px;
+  color:#234D6B;
+}
+.matrix-process-total .mpt-value{
+  display:block;
+  font-family:var(--font-mono);
+  font-size:14px;
+}
+.matrix-process-total .mpt-label{
+  display:block;
+  margin-top:2px;
+  font-size:8.5px;
+  color:var(--ink-mute);
+}
+.matrix-grand-total{
+  right:0;
+  z-index:9!important;
+  min-width:118px;
+  border-left:2px solid #8DA9BC!important;
+  color:#173E5B;
+}
+.matrix-grand-total strong{
+  display:block;
+  font-family:var(--font-mono);
+  font-size:15px;
+}
+.matrix-grand-total span{
+  display:block;
+  margin-top:2px;
+  font-size:8.5px;
+  color:var(--ink-mute);
+}
+.matrix-weight-summary{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+  margin:0 0 10px;
+  padding:8px 10px;
+  border:1px solid #C7D9E5;
+  border-radius:9px;
+  background:#F5F9FC;
+  font-size:10.5px;
+  color:var(--ink-mute);
+}
+.matrix-weight-summary strong{color:var(--navy);}
+.matrix-weight-summary .mws-chip{
+  padding:3px 7px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid var(--line);
+  color:var(--ink);
+  font-family:var(--font-mono);
+  font-weight:800;
+}
+.matrix-weight-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.matrix-weight-row{
+  display:grid;
+  grid-template-columns:minmax(130px,1fr) 130px;
+  align-items:center;
+  gap:12px;
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#FAFBFC;
+}
+.matrix-weight-row label{
+  color:var(--ink);
+  font-weight:800;
+}
+.matrix-weight-input-wrap{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.matrix-weight-input-wrap input{
+  width:90px;
+  padding:8px 9px;
+  border:1.5px solid var(--line-strong);
+  border-radius:8px;
+  font-family:var(--font-mono);
+  text-align:right;
+}
+.matrix-weight-total-box{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:12px;
+  padding:10px 12px;
+  border-radius:9px;
+  background:#EEF5F9;
+  border:1px solid #BFD4E2;
+}
+.matrix-weight-total-box.invalid{
+  background:#FFF0EE;
+  border-color:#DB8C84;
+}
+.matrix-weight-total-box strong{
+  font-family:var(--font-mono);
+  font-size:16px;
+}
+@media(max-width:760px){
+  .matrix-weight-row{grid-template-columns:1fr 120px;}
+  .matrix-total-head,.matrix-floor-total,.matrix-grand-total{min-width:104px!important;}
+}
+
+
+/* ---------- 矩陣工序平均 × 實際進度甘特 ---------- */
+.matrix-summary-label button{
+  display:block;
+  width:100%;
+  margin-top:4px;
+  padding:3px 5px;
+  border:1px solid #A9C1D1;
+  border-radius:6px;
+  background:#fff;
+  color:#245777;
+  font-size:8.5px;
+  font-weight:900;
+  cursor:pointer;
+}
+.matrix-process-total{
+  cursor:pointer;
+  transition:background .15s ease, box-shadow .15s ease;
+}
+.matrix-process-total:hover{
+  background:#DDEAF2!important;
+  box-shadow:inset 0 0 0 2px #7FA8C3;
+}
+.matrix-process-total .mpt-source{
+  display:block;
+  margin-top:2px;
+  font-size:8px;
+  color:#2B688F;
+  font-weight:800;
+}
+.dual-actual-bar.actual-editable{
+  cursor:grab;
+  user-select:none;
+}
+.dual-actual-bar.actual-editable:active{
+  cursor:grabbing;
+}
+.dual-actual-bar.actual-manual{
+  outline:2px solid rgba(124,78,170,.35);
+}
+.dual-actual-bar .actual-drag-handle{
+  position:absolute;
+  top:-3px;
+  bottom:-3px;
+  width:7px;
+  border-radius:4px;
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(20,48,70,.42);
+  cursor:ew-resize;
+  z-index:3;
+}
+.dual-actual-bar .actual-drag-handle.left{left:-3px;}
+.dual-actual-bar .actual-drag-handle.right{right:-3px;}
+.dual-actual-bar.actual-dragging{
+  opacity:.82;
+  box-shadow:0 2px 8px rgba(0,0,0,.32);
+}
+.dual-label .dl-source{
+  display:inline-flex;
+  align-items:center;
+  margin-left:4px;
+  padding:1px 5px;
+  border-radius:999px;
+  background:#E8F4EC;
+  color:#1C704A;
+  font-size:8.5px;
+  font-weight:900;
+}
+.dual-label .dl-source.manual{
+  background:#F0E8F7;
+  color:#70439B;
+}
+.actual-timeline-info{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:12px;
+}
+.actual-timeline-info > div{
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#F7F9FB;
+}
+.actual-timeline-info span{
+  display:block;
+  color:var(--ink-mute);
+  font-size:10px;
+}
+.actual-timeline-info strong{
+  display:block;
+  margin-top:3px;
+  color:var(--navy);
+  font-family:var(--font-mono);
+  font-size:14px;
+}
+.actual-timeline-help{
+  padding:9px 11px;
+  border:1px solid #BFD6E5;
+  border-radius:9px;
+  background:#F0F7FB;
+  color:#365F79;
+  font-size:11px;
+  line-height:1.65;
+}
+@media(max-width:760px){
+  .actual-timeline-info{grid-template-columns:1fr;}
+  .dual-actual-bar .actual-drag-handle{display:none;}
+}
+
 </style>
 </head>
 <body>
@@ -2315,6 +2668,16 @@ function cloneConfigToBuilding(proj,b,sourceB){
   b.processIds=newProcesses.map(x=>x.id);
   b.partIds=newParts.map(x=>x.id);
 
+  b.actualGanttOverrides={};
+  if(sourceB){
+    const sourceWeights=ensureMatrixProcessWeights(proj,sourceB);
+    b.matrixProcessWeights={};
+    processMap.forEach((newId,oldId)=>{b.matrixProcessWeights[newId]=Number(sourceWeights[oldId]||0);});
+    b.matrixProcessWeights=normalizedMatrixWeights(newProcesses,b.matrixProcessWeights);
+  }else{
+    b.matrixProcessWeights=equalMatrixWeights(newProcesses);
+  }
+
   ensureGanttSubprocessStore(proj);
   if(sourceB){
     buildingProcesses(proj,sourceB).forEach(oldPr=>{
@@ -2758,6 +3121,207 @@ function cellBucket(records){
 
 // 找出矩陣此工序應納入計算的施工部位。
 // 若實際進度表已有柱位設定，優先採用實際進度表中的柱位；否則使用專案施工部位。
+
+function roundMatrixNumber(value,decimals=2){
+  const p=Math.pow(10,decimals);
+  return Math.round((Number(value)||0)*p)/p;
+}
+function equalMatrixWeights(processes){
+  const list=processes||[];
+  if(!list.length) return {};
+  const base=Math.floor((100/list.length)*100)/100;
+  let used=0;
+  const out={};
+  list.forEach((pr,i)=>{
+    const value=i===list.length-1?roundMatrixNumber(100-used,2):base;
+    out[pr.id]=value;
+    used=roundMatrixNumber(used+value,2);
+  });
+  return out;
+}
+function normalizedMatrixWeights(processes,raw){
+  const list=processes||[];
+  if(!list.length) return {};
+  const values=list.map(pr=>Math.max(0,Number(raw?.[pr.id]||0)));
+  const sum=values.reduce((a,c)=>a+c,0);
+  if(sum<=0) return equalMatrixWeights(list);
+  const out={};
+  let used=0;
+  list.forEach((pr,i)=>{
+    const value=i===list.length-1
+      ? roundMatrixNumber(100-used,2)
+      : roundMatrixNumber(values[i]/sum*100,2);
+    out[pr.id]=value;
+    used=roundMatrixNumber(used+value,2);
+  });
+  return out;
+}
+function ensureMatrixProcessWeights(proj,b){
+  if(!b) return {};
+  const processes=buildingProcesses(proj,b);
+  if(!processes.length){b.matrixProcessWeights={};return b.matrixProcessWeights;}
+  const raw=(b.matrixProcessWeights&&typeof b.matrixProcessWeights==='object')?b.matrixProcessWeights:{};
+  const ids=processes.map(pr=>pr.id);
+  const rawIds=Object.keys(raw).filter(id=>ids.includes(id));
+  const hasAll=ids.every(id=>Object.prototype.hasOwnProperty.call(raw,id));
+  const sum=ids.reduce((s,id)=>s+Math.max(0,Number(raw[id]||0)),0);
+
+  if(!hasAll){
+    b.matrixProcessWeights=equalMatrixWeights(processes);
+  }else if(rawIds.length!==ids.length || Math.abs(sum-100)>0.01){
+    b.matrixProcessWeights=normalizedMatrixWeights(processes,raw);
+  }else{
+    b.matrixProcessWeights={};
+    ids.forEach(id=>b.matrixProcessWeights[id]=roundMatrixNumber(Math.max(0,Number(raw[id]||0)),2));
+  }
+  return b.matrixProcessWeights;
+}
+function matrixProcessWeight(proj,b,processId){
+  const weights=ensureMatrixProcessWeights(proj,b);
+  return Number(weights[processId]||0);
+}
+function matrixPercentText(value){
+  const n=roundMatrixNumber(value,1);
+  return Number.isInteger(n)?`${n}%`:`${n.toFixed(1)}%`;
+}
+function matrixFloorWeightedTotal(proj,b,floor){
+  const processes=buildingProcesses(proj,b);
+  if(!processes.length) return 0;
+  const weights=ensureMatrixProcessWeights(proj,b);
+  return roundMatrixNumber(processes.reduce((sum,pr)=>{
+    return sum+matrixCellStats(proj,b.id,floor,pr.id).avg*Number(weights[pr.id]||0)/100;
+  },0),1);
+}
+function matrixProcessFloorAverage(proj,b,processId,floors){
+  const targetFloors=(floors&&floors.length)?floors:(b.floors||[]);
+  if(!targetFloors.length) return 0;
+  const total=targetFloors.reduce((sum,floor)=>sum+matrixCellStats(proj,b.id,floor,processId).avg,0);
+  return roundMatrixNumber(total/targetFloors.length,1);
+}
+function matrixBuildingWeightedTotal(proj,b,floors){
+  const targetFloors=(floors&&floors.length)?floors:(b.floors||[]);
+  if(!targetFloors.length) return 0;
+  const total=targetFloors.reduce((sum,floor)=>sum+matrixFloorWeightedTotal(proj,b,floor),0);
+  return roundMatrixNumber(total/targetFloors.length,1);
+}
+function matrixTotalBucket(value){
+  if(Number(value)>=100) return 'total-done';
+  if(Number(value)>0) return 'total-progress';
+  return 'total-none';
+}
+function renderMatrixProcessHead(proj,b,pr){
+  const weight=matrixProcessWeight(proj,b,pr.id);
+  return `<th class="matrix-process-head"><span class="mph-name">${esc(pr.name)}</span><span class="mph-weight">權重 ${matrixPercentText(weight)}</span></th>`;
+}
+function renderMatrixFloorTotalCell(proj,b,floor){
+  const total=matrixFloorWeightedTotal(proj,b,floor);
+  return `<td class="matrix-floor-total"><div class="matrix-total-pill ${matrixTotalBucket(total)}"><span class="mtp-value">${matrixPercentText(total)}</span><span class="mtp-label">本樓層加權總進度</span></div></td>`;
+}
+function renderMatrixSummaryRow(proj,b,processes,floors){
+  const targetFloors=(floors&&floors.length)?floors:(b.floors||[]);
+  const cells=(processes||[]).map(pr=>{
+    const avg=matrixProcessFloorAverage(proj,b,pr.id,targetFloors);
+    return `<td class="matrix-process-total" onclick="openActualProcessTimelineModal('${b.id}','${pr.id}')" title="此百分比即為實際進度甘特的工序完成度；點擊可編輯實際時間">
+      <span class="mpt-value">${matrixPercentText(avg)}</span>
+      <span class="mpt-label">${targetFloors.length} 層平均</span>
+      <span class="mpt-source">實際甘特進度</span>
+    </td>`;
+  }).join('');
+  const grand=matrixBuildingWeightedTotal(proj,b,targetFloors);
+  return `<tfoot><tr class="matrix-summary-row">
+    <th class="matrix-summary-label">工序平均
+      <button onclick="event.stopPropagation();openActualGanttFromMatrix('${b.id}')">查看實際甘特</button>
+    </th>
+    ${cells}
+    <td class="matrix-grand-total"><strong>${matrixPercentText(grand)}</strong><span>樓層加權總平均</span></td>
+  </tr></tfoot>`;
+}
+function renderMatrixWeightSummary(proj,b){
+  const weights=ensureMatrixProcessWeights(proj,b);
+  return `<div class="matrix-weight-summary">
+    <strong>${esc(b.name)} 樓層加權：</strong>
+    ${buildingProcesses(proj,b).map(pr=>`<span class="mws-chip">${esc(pr.name)} ${matrixPercentText(weights[pr.id]||0)}</span>`).join('')}
+    <button class="btn btn-sm" onclick="openMatrixWeightModal('${b.id}')">調整權重</button>
+  </div>`;
+}
+function openMatrixWeightModal(buildingId){
+  const proj=currentProject(),b=buildingById(proj,buildingId)||currentBuilding();
+  if(!proj||!b) return;
+  const processes=buildingProcesses(proj,b);
+  if(!processes.length){showToast('請先建立本棟工序','error');return;}
+  const weights=ensureMatrixProcessWeights(proj,b);
+  const rows=processes.map(pr=>`<div class="matrix-weight-row">
+    <label for="matrix-weight-${pr.id}">${esc(pr.name)}</label>
+    <div class="matrix-weight-input-wrap">
+      <input id="matrix-weight-${pr.id}" data-process-id="${pr.id}" type="number" min="0" max="100" step="0.1" value="${weights[pr.id]}" oninput="updateMatrixWeightTotal()">
+      <span>%</span>
+    </div>
+  </div>`).join('');
+  openModal(`<div class="modal">
+    <div class="modal-head"><h3>設定樓層工序加權｜${esc(b.name)}</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
+    <div class="modal-body">
+      <div class="independent-config-note">權重只影響 ${esc(b.name)} 每一樓層最右側的「樓層總進度」。各工序最下方的跨樓層平均不使用權重。</div>
+      <div class="matrix-weight-list">${rows}</div>
+      <div id="matrix-weight-total-box" class="matrix-weight-total-box">
+        <span>目前權重合計</span><strong id="matrix-weight-total">100%</strong>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn" onclick="setEqualMatrixWeightInputs()">平均分配</button>
+        <button class="btn" onclick="normalizeMatrixWeightInputs()">依目前比例調整為100%</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveMatrixProcessWeights('${b.id}')">儲存權重</button>
+    </div>
+  </div>`);
+  setTimeout(updateMatrixWeightTotal,0);
+}
+function matrixWeightInputs(){
+  return [...document.querySelectorAll('[data-process-id][id^="matrix-weight-"]')];
+}
+function updateMatrixWeightTotal(){
+  const total=roundMatrixNumber(matrixWeightInputs().reduce((s,input)=>s+Math.max(0,Number(input.value||0)),0),2);
+  const label=document.getElementById('matrix-weight-total');
+  const box=document.getElementById('matrix-weight-total-box');
+  if(label) label.textContent=matrixPercentText(total);
+  if(box) box.classList.toggle('invalid',Math.abs(total-100)>0.01);
+}
+function setEqualMatrixWeightInputs(){
+  const inputs=matrixWeightInputs();
+  const fake=inputs.map(input=>({id:input.dataset.processId}));
+  const weights=equalMatrixWeights(fake);
+  inputs.forEach(input=>input.value=weights[input.dataset.processId]);
+  updateMatrixWeightTotal();
+}
+function normalizeMatrixWeightInputs(){
+  const inputs=matrixWeightInputs();
+  const fake=inputs.map(input=>({id:input.dataset.processId}));
+  const raw={};
+  inputs.forEach(input=>raw[input.dataset.processId]=Math.max(0,Number(input.value||0)));
+  const weights=normalizedMatrixWeights(fake,raw);
+  inputs.forEach(input=>input.value=weights[input.dataset.processId]);
+  updateMatrixWeightTotal();
+}
+function saveMatrixProcessWeights(buildingId){
+  const proj=currentProject(),b=buildingById(proj,buildingId);
+  if(!proj||!b) return;
+  const inputs=matrixWeightInputs();
+  const raw={};
+  inputs.forEach(input=>raw[input.dataset.processId]=Math.max(0,Number(input.value||0)));
+  const total=roundMatrixNumber(Object.values(raw).reduce((a,c)=>a+c,0),2);
+  if(Math.abs(total-100)>0.01){
+    showToast(`權重合計目前為 ${matrixPercentText(total)}，請調整為100%`,'error');
+    updateMatrixWeightTotal();
+    return;
+  }
+  b.matrixProcessWeights={};
+  buildingProcesses(proj,b).forEach(pr=>b.matrixProcessWeights[pr.id]=roundMatrixNumber(raw[pr.id]||0,2));
+  scheduleSave();closeModal();render();
+  showToast(`已更新 ${b.name} 樓層工序權重`);
+}
+
+
 function matrixConfiguredPartIds(proj,buildingId){
   const actualNames=new Set(
     (actualTableFor(proj,buildingId)?.partGroups||[])
@@ -2856,8 +3420,7 @@ function buildingProcessAverages(proj, b){
   });
 }
 function buildingOverallAvg(proj,b){
-  const avgs = buildingProcessAverages(proj,b);
-  return avgs.length ? Math.round(avgs.reduce((s,x)=>s+x.avg,0)/avgs.length) : 0;
+  return Math.round(matrixBuildingWeightedTotal(proj,b,b.floors||[]));
 }
 function projectOverallAvg(proj){
   if(proj.buildings.length===0) return 0;
@@ -3622,9 +4185,12 @@ const ACTUAL_STATUS = {
   silicone: {label:'矽膠施打', cls:'actual-silicone', color:'#42B883', text:'矽膠'},
   repair: {label:'修復／更換', cls:'actual-repair', color:'#8B5CF6', text:'修復'},
   clean: {label:'清潔', cls:'actual-clean', color:'#2F855A', text:'清潔'},
+  linked_progress: {label:'施作中', cls:'actual-linked-progress', color:'#67A8DC', text:'施工'},
+  linked_done: {label:'完成', cls:'actual-linked-done', color:'#2F855A', text:'完成'},
+  linked_waiting: {label:'待處理', cls:'actual-linked-waiting', color:'#D9A441', text:'待處理'},
   delayed: {label:'延誤', cls:'actual-delayed', color:'#C4392F', text:'延誤'},
 };
-const ACTUAL_STATUS_ORDER = ['blank','slash','layout_done','frame_material','frame_install','frame_done','frame_survey','panel_cutting','panel_install','panel_done','silicone','repair','clean','delayed'];
+const ACTUAL_STATUS_ORDER = ['blank','slash','layout_done','frame_material','frame_install','frame_done','frame_survey','panel_cutting','panel_install','panel_done','silicone','repair','clean','linked_progress','linked_done','linked_waiting','delayed'];
 const ACTUAL_PROCESS_BY_STATUS = {
   layout_done:'吊線完成', frame_material:'骨架到料', frame_install:'骨架安裝', frame_done:'骨架完成', frame_survey:'骨架收測',
   panel_cutting:'包板下料', panel_install:'包板安裝中', panel_done:'包板施作完成', silicone:'矽膠施打', repair:'修復／更換', clean:'清潔', delayed:'延誤'
@@ -3635,28 +4201,144 @@ let suppressActualClick = false;
 function normalizePartName(name){ return String(name||'').replace(/\s+/g,'').replace(/[()（）]/g,''); }
 function cloneActualGroups(){ return ACTUAL_DEFAULT_PART_GROUPS.map(g=>({name:g.name, parts:[...g.parts]})); }
 function cloneActualSections(){ return ACTUAL_DEFAULT_SECTIONS.map(s=>({...s})); }
+
+function actualStructureMode(proj,buildingId){
+  const table=actualTableFor(proj,buildingId);
+  if(!table.structureMode) table.structureMode='linked';
+  return table.structureMode;
+}
+function linkedActualSections(proj,b){
+  return buildingProcesses(proj,b).map(pr=>({
+    key:`proc:${pr.id}`,label:pr.name,processId:pr.id,linked:true
+  }));
+}
+function preserveCustomActualSchema(table){
+  if(table.savedCustomSchema) return;
+  table.savedCustomSchema={
+    partGroups:clonePlain(table.partGroups||cloneActualGroups()),
+    sections:clonePlain(table.sections||cloneActualSections())
+  };
+}
+function syncActualTableWithBuilding(proj,buildingId,showMessage=false){
+  const b=buildingById(proj,buildingId)||currentBuilding();
+  if(!b) return false;
+  const table=actualTableFor(proj,b.id);
+  if(actualStructureMode(proj,b.id)!=='linked') return false;
+
+  preserveCustomActualSchema(table);
+
+  const partNames=buildingParts(proj,b).map(x=>x.name);
+  const partSet=new Set(partNames.map(normalizePartName));
+  const oldGroups=Array.isArray(table.partGroups)?table.partGroups:[];
+  const nextGroups=[];
+  const used=new Set();
+
+  oldGroups.forEach(g=>{
+    const kept=(g.parts||[]).filter(name=>{
+      const key=normalizePartName(name);
+      if(!key||!partSet.has(key)||used.has(key)) return false;
+      used.add(key);return true;
+    });
+    if(kept.length) nextGroups.push({name:g.name||'部位',parts:kept});
+  });
+
+  const missing=partNames.filter(name=>!used.has(normalizePartName(name)));
+  if(missing.length){
+    const target=nextGroups.find(g=>g.name==='本棟部位');
+    if(target) target.parts.push(...missing);
+    else nextGroups.push({name:'本棟部位',parts:missing});
+  }
+  table.partGroups=nextGroups.length?nextGroups:[{name:'本棟部位',parts:[]}];
+  table.sections=linkedActualSections(proj,b);
+  table.linkedAt=Date.now();
+
+  if(showMessage) showToast(`已同步 ${b.name}：${b.floors.length} 樓層、${table.sections.length} 工序、${partNames.length} 部位`);
+  return true;
+}
+function linkedSection(proj,buildingId,sectionKey){
+  const table=actualTableFor(proj,buildingId);
+  return (table.sections||[]).find(s=>s.key===sectionKey&&s.linked&&s.processId)||null;
+}
+function setActualStructureMode(mode){
+  const proj=currentProject(),b=currentBuilding();
+  if(!proj||!b) return;
+  const table=actualTableFor(proj,b.id);
+  if(mode==='custom'){
+    preserveCustomActualSchema(table);
+    table.structureMode='custom';
+    if(table.savedCustomSchema){
+      table.partGroups=clonePlain(table.savedCustomSchema.partGroups||cloneActualGroups());
+      table.sections=clonePlain(table.savedCustomSchema.sections||cloneActualSections());
+    }
+  }else{
+    if(table.structureMode==='custom'){
+      table.savedCustomSchema={
+        partGroups:clonePlain(table.partGroups||[]),
+        sections:clonePlain(table.sections||[])
+      };
+    }
+    table.structureMode='linked';
+    syncActualTableWithBuilding(proj,b.id);
+  }
+  scheduleSave();render();
+  showToast(mode==='custom'?'已切換為自訂實際進度表':'已啟用單一結構連動');
+}
+function renderStructureLinkBar(proj,b,source){
+  const linked=actualStructureMode(proj,b.id)==='linked';
+  const processes=buildingProcesses(proj,b);
+  const parts=buildingParts(proj,b);
+  const sourceName=source==='matrix'?'樓層／工序矩陣':'案件實際進度';
+  return `<div class="structure-link-bar">
+    <div class="structure-link-main">
+      <strong>${esc(b.name)}｜${esc(sourceName)}結構來源
+        ${linked?'<span class="structure-linked-chip">已連動</span>':'<span class="structure-custom-chip">自訂表格</span>'}
+      </strong>
+      <p>${linked?'樓層、工序與部位由同一份本棟結構產生；在任一頁更新進度，另一頁會讀取相同施工紀錄。':'目前實際進度表使用獨立欄列；矩陣仍使用本棟結構。'}</p>
+      <div class="structure-link-stats">
+        <span>${b.floors.length} 個樓層</span><span>${processes.length} 個工序</span><span>${parts.length} 個部位</span>
+      </div>
+    </div>
+    <div class="structure-link-actions">
+      <button class="btn btn-primary" onclick="openUnifiedStructureModal('${b.id}')">${ICO.gear} 編輯本棟結構</button>
+      ${linked
+        ? `<button class="btn" onclick="syncActualTableWithBuilding(currentProject(),'${b.id}',true);scheduleSave();render()">立即同步</button>
+           <button class="btn" onclick="setActualStructureMode('custom')">改用自訂表格</button>`
+        : `<button class="btn" onclick="setActualStructureMode('linked')">啟用連動模式</button>
+           <button class="btn" onclick="openActualTableSettings(true)">編輯自訂欄列</button>`}
+    </div>
+  </div>`;
+}
+
 function ensureActualProgressSetup(proj,buildingId){
   const b=buildingById(proj,buildingId)||currentBuilding();
   if(!b)return;
   const table=actualTableFor(proj,b.id);
   proj.actualTable=table;
   let changed=false;
-  if(!Array.isArray(table.partGroups)||!table.partGroups.length){table.partGroups=cloneActualGroups();changed=true;}
-  if(!Array.isArray(table.sections)||!table.sections.length){table.sections=cloneActualSections();changed=true;}
+  if(!table.structureMode) table.structureMode='linked';
+  if(!Array.isArray(table.partGroups)){table.partGroups=[];changed=true;}
+  if(!Array.isArray(table.sections)){table.sections=[];changed=true;}
   if(!table.cells||typeof table.cells!=='object'){table.cells={};changed=true;}
-  const localParts=buildingParts(proj,b);
-  table.partGroups.flatMap(g=>g.parts||[]).forEach(name=>{
-    if(name&&!localParts.some(p=>normalizePartName(p.name)===normalizePartName(name))){
-      const pt={id:uid('pt'),name};proj.parts.push(pt);b.partIds.push(pt.id);localParts.push(pt);changed=true;
-    }
-  });
-  const localProcesses=buildingProcesses(proj,b);
-  Object.values(ACTUAL_PROCESS_BY_STATUS).forEach(name=>{
-    if(name&&!localProcesses.some(p=>p.name===name)){
-      const pr={id:uid('pr'),name,groupId:null};proj.processes.push(pr);b.processIds.push(pr.id);localProcesses.push(pr);
-      ensureGanttSubprocessStore(proj)[pr.id]=[];changed=true;
-    }
-  });
+
+  if(table.structureMode==='linked'){
+    syncActualTableWithBuilding(proj,b.id);
+  }else{
+    if(!table.partGroups.length){table.partGroups=cloneActualGroups();changed=true;}
+    if(!table.sections.length){table.sections=cloneActualSections();changed=true;}
+    const localParts=buildingParts(proj,b);
+    table.partGroups.flatMap(g=>g.parts||[]).forEach(name=>{
+      if(name&&!localParts.some(p=>normalizePartName(p.name)===normalizePartName(name))){
+        const pt={id:uid('pt'),name};proj.parts.push(pt);b.partIds.push(pt.id);localParts.push(pt);changed=true;
+      }
+    });
+    const localProcesses=buildingProcesses(proj,b);
+    Object.values(ACTUAL_PROCESS_BY_STATUS).forEach(name=>{
+      if(name&&!localProcesses.some(p=>p.name===name)){
+        const pr={id:uid('pr'),name,groupId:null};proj.processes.push(pr);b.processIds.push(pr.id);localProcesses.push(pr);
+        ensureGanttSubprocessStore(proj)[pr.id]=[];changed=true;
+      }
+    });
+  }
   if(changed) scheduleSave();
 }
 function actualPartId(proj,partName,buildingId){
@@ -3685,19 +4367,43 @@ function actualAllowedStatusKeysForSection(proj, sectionKey, buildingId){
   return ACTUAL_STATUS_ORDER.filter(k=>!['blank','slash','delayed'].includes(k));
 }
 function actualStatusFromRecord(proj, buildingId, floor, partName, sectionKey){
-  const pid = actualPartId(proj, partName, buildingId);
-  const processNameById = new Map(buildingProcesses(proj,buildingId).map(p=>[p.id,p.name]));
-  const allowedStatusKeys = actualAllowedStatusKeysForSection(proj, sectionKey, buildingId);
-  const targetNames = allowedStatusKeys.map(st=>ACTUAL_PROCESS_BY_STATUS[st]).filter(Boolean);
-  const recs = proj.records.filter(r=> r.buildingId===buildingId && r.floor===floor && targetNames.includes(processNameById.get(r.processId)) && (!r.partIds || r.partIds.length===0 || (pid && r.partIds.includes(pid))) );
-  // 依工序前後優先顯示後段成果；只在同一左側分段內推算，不跨骨架／包板分段。
-  const priority = ['clean','repair','silicone','panel_done','panel_install','panel_cutting','frame_survey','frame_done','frame_install','frame_material','layout_done'].filter(st=>allowedStatusKeys.includes(st));
-  for(const st of priority){
-    const name = ACTUAL_PROCESS_BY_STATUS[st];
-    const hit = recs.find(r=>processNameById.get(r.processId)===name && (r.status==='done' || r.status==='in_progress' || Number(r.progress)>0));
-    if(hit) return {status:st, note:hit.note||'', recordId:hit.id};
+  const pid=actualPartId(proj,partName,buildingId);
+  const linked=linkedSection(proj,buildingId,sectionKey);
+
+  if(linked){
+    const recs=proj.records
+      .filter(r=>r.buildingId===buildingId&&r.floor===floor&&r.processId===linked.processId&&
+        (!r.partIds||r.partIds.length===0||(pid&&(r.partIds||[]).includes(pid))))
+      .sort((a,c)=>(c.updatedAt||0)-(a.updatedAt||0));
+    if(!recs.length) return {status:'blank',note:''};
+
+    const delayed=recs.find(r=>r.status==='delayed');
+    if(delayed) return {status:'delayed',note:delayed.note||delayed.blockReason||'',recordId:delayed.id};
+
+    const waiting=recs.find(r=>['waiting_material','waiting_quote','waiting_contract','waiting_cutting','pending_confirm','blocked_predecessor'].includes(r.status));
+    if(waiting) return {status:'linked_waiting',note:waiting.note||waiting.blockReason||'',recordId:waiting.id};
+
+    const done=recs.find(r=>r.status==='done'||Number(r.progress)>=100);
+    if(done) return {status:'linked_done',note:done.note||'',recordId:done.id};
+
+    const progress=recs.find(r=>r.status==='in_progress'||Number(r.progress)>0);
+    if(progress) return {status:'linked_progress',note:progress.note||'',recordId:progress.id};
+
+    return {status:'blank',note:''};
   }
-  return {status:'blank', note:''};
+
+  const processNameById=new Map(buildingProcesses(proj,buildingId).map(p=>[p.id,p.name]));
+  const allowedStatusKeys=actualAllowedStatusKeysForSection(proj,sectionKey,buildingId);
+  const targetNames=allowedStatusKeys.map(st=>ACTUAL_PROCESS_BY_STATUS[st]).filter(Boolean);
+  const recs=proj.records.filter(r=>r.buildingId===buildingId&&r.floor===floor&&targetNames.includes(processNameById.get(r.processId))&&
+    (!r.partIds||r.partIds.length===0||(pid&&r.partIds.includes(pid))));
+  const priority=['clean','repair','silicone','panel_done','panel_install','panel_cutting','frame_survey','frame_done','frame_install','frame_material','layout_done'].filter(st=>allowedStatusKeys.includes(st));
+  for(const st of priority){
+    const name=ACTUAL_PROCESS_BY_STATUS[st];
+    const hit=recs.find(r=>processNameById.get(r.processId)===name&&(r.status==='done'||r.status==='in_progress'||Number(r.progress)>0));
+    if(hit) return {status:st,note:hit.note||'',recordId:hit.id};
+  }
+  return {status:'blank',note:''};
 }
 function actualCellData(proj, buildingId, sectionKey, floor, partName){
   ensureActualProgressSetup(proj,buildingId);
@@ -3739,10 +4445,14 @@ function renderActualSection(proj, b, section){
   }).join('');
 }
 function renderActualLegend(){
-  return ACTUAL_STATUS_ORDER.filter(k=>k!=='blank'&&k!=='slash').map(k=>{
+  const proj=currentProject(),b=currentBuilding();
+  const linked=proj&&b&&actualStructureMode(proj,b.id)==='linked';
+  const keys=linked?['linked_progress','linked_done','linked_waiting','delayed']:
+    ACTUAL_STATUS_ORDER.filter(k=>!['blank','slash','linked_progress','linked_done','linked_waiting'].includes(k));
+  return keys.map(k=>{
     const st=ACTUAL_STATUS[k];
     return `<span><span class="sw" style="background:${st.color}"></span>${esc(st.label)}</span>`;
-  }).join('') + `<span><span class="sw" style="background:#fff"></span>空白</span><span><span class="sw" style="background:linear-gradient(to bottom right, transparent 45%, #111 47%, #111 53%, transparent 55%)"></span>斜線</span>`;
+  }).join('')+`<span><span class="sw" style="background:#fff"></span>空白</span><span><span class="sw" style="background:linear-gradient(to bottom right, transparent 45%, #111 47%, #111 53%, transparent 55%)"></span>斜線</span>`;
 }
 function renderActualProgress(proj){
   const b = currentBuilding();
@@ -3752,11 +4462,12 @@ function renderActualProgress(proj){
   }
   const rows = actualSections(proj,b.id).map(sec=>renderActualSection(proj,b,sec)).join('');
   return `
+    ${renderStructureLinkBar(proj,b,'actual')}
     ${renderModuleResetToolbar('actual')}
     <div class="actual-toolbar">
       <div class="actual-title">${esc(proj.name)}｜${esc(b.name)}｜實際進度表</div>
       <button class="btn btn-sm" onclick="setView('matrix')">回樓層×工序矩陣</button>
-      <button class="btn btn-sm" onclick="openActualTableSettings()">編輯欄／列名稱</button>
+      <button class="btn btn-sm" onclick="openUnifiedStructureModal('${b.id}')">編輯樓層／工序／部位</button>
       <button class="btn btn-sm" onclick="printActualProgress()">A4 PDF</button>
       <button class="btn btn-sm btn-primary" onclick="openQuickAddModal('${b.id}')">${ICO.plus} 新增／更新進度</button>
       <div class="actual-note">以「樓層 × 位置」呈現各柱位與面向進度。點擊格子可手動設定工序；從已設定的格子拖曳時可選取矩形範圍；只會套用到同一個左側分段內反白的矩形格子，不會跨到骨架安裝／包板安裝另一段。</div>
@@ -3841,22 +4552,64 @@ function actualCellClick(ev, td){
 function setActualCellData(proj, buildingId, sectionKey, floor, part, data){
   ensureActualProgressSetup(proj,buildingId);
   const table=actualTableFor(proj,buildingId);
+  const linked=linkedSection(proj,buildingId,sectionKey);
   const k=actualKey(buildingId,sectionKey,floor,part);
-  if(!data || data.status==='blank') delete table.cells[k];
-  else table.cells[k] = {status:data.status, note:data.note||'', text:data.text||'', updatedAt:data.updatedAt||Date.now()};
-  // 同步寫入一筆 records，讓首頁、今日回報與施作紀錄也能追蹤（空白／斜線不建立）
-  if(data && data.status && !['blank','slash'].includes(data.status)){
-    const prId = actualProcessIdForStatus(proj,data.status,buildingId);
-    const partId = actualPartId(proj, part, buildingId);
-    const existing = proj.records.find(r=>r.buildingId===buildingId && r.floor===floor && r.processId===prId && partId && (r.partIds||[]).includes(partId));
-    const recStatus = data.status==='delayed' ? 'delayed' : (['layout_done','frame_material','frame_done','frame_survey','panel_cutting','panel_done','silicone','repair','clean'].includes(data.status) ? 'done' : 'in_progress');
-    const progress = recStatus==='done' ? 100 : (data.status==='delayed'?0:50);
-    if(existing){ existing.status=recStatus; existing.progress=progress; existing.note=data.note||existing.note||''; existing.updatedAt=Date.now(); }
-    else proj.records.push({id:uid('r'), buildingId, floor, processId:prId, partIds:partId?[partId]:[], progress, status:recStatus, note:data.note||'', crew:'', photo:null, blockReason:data.status==='delayed'?'其他':'', updatedAt:Date.now()});
+  const partId=actualPartId(proj,part,buildingId);
+
+  if(!data||data.status==='blank'){
+    delete table.cells[k];
+  }else{
+    table.cells[k]={status:data.status,note:data.note||'',text:data.text||'',updatedAt:data.updatedAt||Date.now()};
+  }
+
+  if(linked){
+    const matches=r=>r.buildingId===buildingId&&r.floor===floor&&r.processId===linked.processId&&partId&&(r.partIds||[]).includes(partId);
+    if(!data||['blank','slash'].includes(data.status)){
+      proj.records=proj.records.filter(r=>!matches(r));
+      return;
+    }
+
+    const statusMap={
+      linked_done:{status:'done',progress:100,blockReason:''},
+      linked_progress:{status:'in_progress',progress:50,blockReason:''},
+      linked_waiting:{status:'pending_confirm',progress:0,blockReason:'待確認'},
+      delayed:{status:'delayed',progress:0,blockReason:'其他'}
+    };
+    const mapped=statusMap[data.status]||{status:'in_progress',progress:50,blockReason:''};
+    const existing=proj.records.find(matches);
+    const payload={
+      status:mapped.status,progress:mapped.progress,
+      note:data.note||'',blockReason:mapped.blockReason,
+      updatedAt:Date.now(),autoByParts:true
+    };
+    if(existing) Object.assign(existing,payload);
+    else proj.records.push({
+      id:uid('r'),buildingId,floor,processId:linked.processId,
+      partIds:partId?[partId]:[],crew:'',photo:null,...payload
+    });
+    return;
+  }
+
+  if(data&&data.status&&!['blank','slash'].includes(data.status)){
+    const prId=actualProcessIdForStatus(proj,data.status,buildingId);
+    const existing=proj.records.find(r=>r.buildingId===buildingId&&r.floor===floor&&r.processId===prId&&partId&&(r.partIds||[]).includes(partId));
+    const recStatus=data.status==='delayed'?'delayed':(['layout_done','frame_material','frame_done','frame_survey','panel_cutting','panel_done','silicone','repair','clean'].includes(data.status)?'done':'in_progress');
+    const progress=recStatus==='done'?100:(data.status==='delayed'?0:50);
+    if(existing){existing.status=recStatus;existing.progress=progress;existing.note=data.note||existing.note||'';existing.updatedAt=Date.now();}
+    else proj.records.push({id:uid('r'),buildingId,floor,processId:prId,partIds:partId?[partId]:[],progress,status:recStatus,note:data.note||'',crew:'',photo:null,blockReason:data.status==='delayed'?'其他':'',updatedAt:Date.now()});
   }
 }
 
 function removeActualRecordForCell(proj, cell){
+  const linked=linkedSection(proj,cell.buildingId,cell.sectionKey);
+  const linkedPartId=actualPartId(proj,cell.part,cell.buildingId);
+  if(linked){
+    proj.records=proj.records.filter(r=>!(
+      r.buildingId===cell.buildingId&&r.floor===cell.floor&&r.processId===linked.processId&&
+      linkedPartId&&(r.partIds||[]).includes(linkedPartId)
+    ));
+    return;
+  }
   const allowedNames=new Set(
     actualAllowedStatusKeysForSection(proj,cell.sectionKey,cell.buildingId)
       .map(k=>ACTUAL_PROCESS_BY_STATUS[k]).filter(Boolean)
@@ -3900,7 +4653,7 @@ function resetAllActualProgress(){
   ensureActualProgressSetup(proj,b.id);
   const sections=actualSections(proj,b.id);
   const floors=b.floors||[];
-  const parts=actualParts(proj);
+  const parts=actualParts(proj,b.id);
   const cells=[];
   sections.forEach(sec=>floors.forEach(floor=>parts.forEach((part,partIndex)=>{
     cells.push({buildingId:b.id,sectionKey:sec.key,floor,part,partIndex});
@@ -3912,11 +4665,13 @@ function resetAllActualProgress(){
 
 function openActualCellModal(info){
   const proj=currentProject(); const b=proj.buildings.find(x=>x.id===info.buildingId); const data=actualCellData(proj,info.buildingId,info.sectionKey,info.floor,info.part); const cur=data.status||'blank';
-  const buttons = ACTUAL_STATUS_ORDER.map(k=>{const st=ACTUAL_STATUS[k]; return `<button type="button" class="actual-status-btn ${cur===k?'selected':''}" onclick="document.querySelectorAll('.actual-status-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');document.getElementById('actual-status-input').value='${k}'"><span class="sw" style="background:${st.color}"></span>${esc(st.label)}</button>`;}).join('');
+  const linked=linkedSection(proj,info.buildingId,info.sectionKey);
+  const palette=linked?['blank','slash','linked_progress','linked_done','linked_waiting','delayed']:ACTUAL_STATUS_ORDER.filter(k=>!['linked_progress','linked_done','linked_waiting'].includes(k));
+  const buttons = palette.map(k=>{const st=ACTUAL_STATUS[k]; return `<button type="button" class="actual-status-btn ${cur===k?'selected':''}" onclick="document.querySelectorAll('.actual-status-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');document.getElementById('actual-status-input').value='${k}'"><span class="sw" style="background:${st.color}"></span>${esc(st.label)}</button>`;}).join('');
   document.getElementById('modal-root').innerHTML = `<div class="modal-overlay" onclick="closeModal(event)"><div class="modal" onclick="event.stopPropagation()">
     <div class="modal-head"><h3>設定實際進度</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
     <div class="modal-body">
-      <div class="hint" style="margin-bottom:10px;">${esc(proj.name)}｜${esc(b?.name||'')}｜${esc(info.sectionKey)}｜${esc(info.floor||'空白列')}｜${esc(info.part||'空白欄')}</div>
+      <div class="hint" style="margin-bottom:10px;">${esc(proj.name)}｜${esc(b?.name||'')}｜${esc((actualTableFor(proj,info.buildingId).sections||[]).find(s=>s.key===info.sectionKey)?.label||info.sectionKey)}｜${esc(info.floor||'空白列')}｜${esc(info.part||'空白欄')}</div>
       <input type="hidden" id="actual-status-input" value="${esc(cur)}">
       <div class="field"><label>工序狀態</label><div class="actual-palette">${buttons}</div></div>
       <div class="field"><label>備註</label><textarea id="actual-note-input" rows="3" placeholder="可記錄卡點、收測尺寸、工班、待確認事項">${esc(data.note||'')}</textarea></div>
@@ -3933,14 +4688,127 @@ function deleteActualCell(buildingId, sectionKey, floor, part){
   const proj=currentProject(); delete actualTableFor(proj,buildingId).cells[actualKey(buildingId,sectionKey,floor,part)];
   scheduleSave(); closeModal(); render(); showToast('已清除格子');
 }
-function openActualTableSettings(){
+
+function openUnifiedStructureModal(buildingId){
+  const proj=currentProject(),b=buildingById(proj,buildingId)||currentBuilding();
+  if(!proj||!b) return;
+  const floors=(b.floors||[]).join('\n');
+  const processes=buildingProcesses(proj,b).map(x=>x.name).join('\n');
+  const parts=buildingParts(proj,b).map(x=>x.name).join('\n');
+
+  openModal(`<div class="modal modal-wide">
+    <div class="modal-head"><h3>本棟單一結構設定｜${esc(b.name)}</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
+    <div class="modal-body">
+      <div class="independent-config-note">只要在這裡設定一次，樓層／工序矩陣與案件實際進度會共同使用。設定只影響 ${esc(b.name)}，不影響其他棟。</div>
+      <div class="structure-editor-grid">
+        <div class="field"><label>樓層／列名稱（一行一個）</label><textarea id="unified-floors">${esc(floors)}</textarea></div>
+        <div class="field"><label>施工工序（一行一個）</label><textarea id="unified-processes">${esc(processes)}</textarea></div>
+        <div class="field"><label>施工部位（一行一個）</label><textarea id="unified-parts">${esc(parts)}</textarea></div>
+      </div>
+      <div class="structure-preview">
+        <strong>連動結果：</strong><br>
+        矩陣＝樓層 × 工序；實際進度＝工序分段 × 樓層 × 部位。<br>
+        例如設定 18F、19F、20F／包板、欄杆／B1柱、B2柱後，兩個頁面會立即顯示相同結構。
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveUnifiedStructure('${b.id}')">儲存並同步兩個頁面</button>
+    </div>
+  </div>`);
+}
+function cleanStructureLines(id){
+  return [...new Set((document.getElementById(id)?.value||'').split('\n').map(x=>x.trim()).filter(Boolean))];
+}
+function saveUnifiedStructure(buildingId){
+  const proj=currentProject(),b=buildingById(proj,buildingId);
+  if(!proj||!b) return;
+  const floors=cleanStructureLines('unified-floors');
+  const processNames=cleanStructureLines('unified-processes');
+  const partNames=cleanStructureLines('unified-parts');
+  if(!floors.length||!processNames.length||!partNames.length){
+    showToast('樓層、工序與部位至少各保留一項','error');return;
+  }
+
+  const oldProcesses=buildingProcesses(proj,b);
+  const oldParts=buildingParts(proj,b);
+  const oldFloors=new Set(b.floors||[]);
+  const keepProcessByName=new Map(oldProcesses.map(x=>[x.name,x]));
+  const keepPartByName=new Map(oldParts.map(x=>[normalizePartName(x.name),x]));
+
+  const removedProcesses=oldProcesses.filter(x=>!processNames.includes(x.name));
+  const removedParts=oldParts.filter(x=>!partNames.some(n=>normalizePartName(n)===normalizePartName(x.name)));
+  const removedFloors=[...oldFloors].filter(x=>!floors.includes(x));
+  const affectedRecords=proj.records.filter(r=>r.buildingId===b.id&&(
+    removedProcesses.some(x=>x.id===r.processId)||
+    removedFloors.includes(r.floor)||
+    (r.partIds||[]).some(id=>removedParts.some(p=>p.id===id))
+  )).length;
+  const affectedSchedules=proj.schedules.filter(s=>s.buildingId===b.id&&(
+    removedProcesses.some(x=>x.id===s.processId)||
+    (s.floors||[]).some(f=>removedFloors.includes(f))
+  )).length;
+
+  if((removedProcesses.length||removedParts.length||removedFloors.length)&&
+    !confirm(`此次會移除：${removedFloors.length} 個樓層、${removedProcesses.length} 個工序、${removedParts.length} 個部位。\n可能影響 ${affectedRecords} 筆進度與 ${affectedSchedules} 筆排程。確定繼續？`)) return;
+
+  const nextProcesses=processNames.map(name=>{
+    const existing=keepProcessByName.get(name);
+    if(existing) return existing;
+    const pr={id:uid('pr'),name,groupId:null};
+    proj.processes.push(pr);ensureGanttSubprocessStore(proj)[pr.id]=[];
+    return pr;
+  });
+  const nextParts=partNames.map(name=>{
+    const existing=keepPartByName.get(normalizePartName(name));
+    if(existing){existing.name=name;return existing;}
+    const pt={id:uid('pt'),name};proj.parts.push(pt);return pt;
+  });
+
+  const removedProcessIds=new Set(removedProcesses.map(x=>x.id));
+  const removedPartIds=new Set(removedParts.map(x=>x.id));
+  proj.records=proj.records.filter(r=>r.buildingId!==b.id||(
+    !removedProcessIds.has(r.processId)&&floors.includes(r.floor)
+  ));
+  proj.records.filter(r=>r.buildingId===b.id).forEach(r=>{
+    r.partIds=(r.partIds||[]).filter(id=>!removedPartIds.has(id));
+  });
+  proj.schedules=proj.schedules.filter(s=>!(s.buildingId===b.id&&removedProcessIds.has(s.processId)));
+  proj.schedules.filter(s=>s.buildingId===b.id).forEach(s=>{
+    s.floors=(s.floors||[]).filter(f=>floors.includes(f));
+  });
+
+  removedProcesses.forEach(pr=>{
+    proj.processes=proj.processes.filter(x=>x.id!==pr.id);
+    if(proj.ganttSubprocessesByProcess) delete proj.ganttSubprocessesByProcess[pr.id];
+    if(b.actualGanttOverrides) delete b.actualGanttOverrides[pr.id];
+  });
+  removedParts.forEach(pt=>proj.parts=proj.parts.filter(x=>x.id!==pt.id));
+
+  b.floors=floors;
+  b.processIds=nextProcesses.map(x=>x.id);
+  b.partIds=nextParts.map(x=>x.id);
+  ensureMatrixProcessWeights(proj,b);
+
+  const table=actualTableFor(proj,b.id);
+  table.structureMode='linked';
+  syncActualTableWithBuilding(proj,b.id);
+  scheduleSave();closeModal();render();
+  showToast(`已同步 ${b.name} 的矩陣與實際進度結構`);
+}
+
+
+function openActualTableSettings(forceCustom){
   const proj=currentProject(); const b=currentBuilding();
   if(!proj||!b){
     showToast('請先建立並選擇棟別','error');
     return;
   }
   ensureActualProgressSetup(proj,b.id);
-  const table=actualTableFor(proj,b.id); const groupsText = table.partGroups.map(g=>`${g.name}:${(g.parts||[]).join(',')}`).join('\n');
+  const table=actualTableFor(proj,b.id);
+  if(table.structureMode==='linked'&&!forceCustom){
+    openUnifiedStructureModal(b.id);return;
+  } const groupsText = table.partGroups.map(g=>`${g.name}:${(g.parts||[]).join(',')}`).join('\n');
   const floorsText = (b?.floors||[]).join('\n');
   const sectionsText = table.sections.map(s=>s.label).join('\n');
   document.getElementById('modal-root').innerHTML = `<div class="modal-overlay" onclick="closeModal(event)"><div class="modal modal-wide" onclick="event.stopPropagation()">
@@ -4007,7 +4875,7 @@ function refreshCellDOM(buildingId, floor, processId){
 /* ---------- 全棟模式：棟別摘要、自動提示、篩選、渲染 ---------- */
 function buildingSummary(proj, b){
   const avgs = buildingProcessAverages(proj, b);
-  const overall = avgs.length ? Math.round(avgs.reduce((s,x)=>s+x.avg,0)/avgs.length) : 0;
+  const overall = Math.round(matrixBuildingWeightedTotal(proj,b,b.floors||[]));
   const recs = proj.records.filter(r=>r.buildingId===b.id);
   const delayedCount = recs.filter(r=>r.status==='delayed').length
     + proj.schedules.filter(s=>s.buildingId===b.id && !s.actualCompleteDate && fromDateStr(s.endDate)<fromDateStr(todayStr())).length;
@@ -4153,13 +5021,18 @@ function renderMatrixAll(proj){
     if(processes.length===0 || floors.length===0){
       tableHtml = '<div class="hint" style="padding:16px;">此棟在目前篩選條件下沒有符合的樓層／工序。</div>';
     } else {
-      const head = processes.map(pr=>`<th>${esc(pr.name)}</th>`).join('');
+      ensureMatrixProcessWeights(proj,b);
+      const head = processes.map(pr=>renderMatrixProcessHead(proj,b,pr)).join('');
       const rows = floors.map(fl=>{
         const cells = processes.map(pr=>`<td class="mx-cell" data-b="${b.id}" data-fl="${esc(fl)}" data-pr="${pr.id}"
             onmousedown="matrixDragStart(event,this)" onmouseenter="matrixDragEnter(event,this)" onclick="matrixCellClick(event,this)">${cellInnerHTML(proj,b.id,fl,pr.id)}</td>`).join('');
-        return `<tr><td class="floor-cell">${esc(fl)}</td>${cells}</tr>`;
+        return `<tr><td class="floor-cell">${esc(fl)}</td>${cells}${renderMatrixFloorTotalCell(proj,b,fl)}</tr>`;
       }).join('');
-      tableHtml = `<table class="matrix"><thead><tr><th class="floor-head">樓層</th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+      tableHtml = `${renderMatrixWeightSummary(proj,b)}<table class="matrix">
+        <thead><tr><th class="floor-head">樓層</th>${head}<th class="matrix-total-head">樓層總進度<button onclick="openMatrixWeightModal('${b.id}')">設定權重</button></th></tr></thead>
+        <tbody>${rows}</tbody>
+        ${renderMatrixSummaryRow(proj,b,processes,b.floors)}
+      </table>`;
     }
     return `
     <div class="allmx-section">
@@ -4169,6 +5042,7 @@ function renderMatrixAll(proj){
         <span class="bh-meta">主要工序：${esc(s.mainProcess)}</span>
         <span class="bh-meta">延誤 ${s.delayedCount}　待料 ${s.waitingCount}</span>
         <span class="bh-meta">${s.lastUpdate?'最近更新 '+fmtTime(s.lastUpdate):'尚無記錄'}</span>
+        <button class="btn btn-sm" onclick="openMatrixWeightModal('${b.id}')">設定工序權重</button>
       </div>
       <div class="allmx-body">${tableHtml}</div>
     </div>`;
@@ -4184,7 +5058,7 @@ function renderMatrixAll(proj){
       <span><span class="legend-sw" style="background:${STATUS.in_progress.bg};"></span>進行中／待料／待確認</span>
       <span><span class="legend-sw" style="background:${STATUS.done.bg};"></span>完成</span>
       <span><span class="legend-sw" style="background:${STATUS.delayed.bg};"></span>延誤</span>
-      <span style="color:var(--ink-faint);">點進矩陣格後只需勾選已完成部位，系統會以已選部位數 ÷ 總部位數自動計算百分比；不需要拉進度滑軌</span>
+      <span style="color:var(--ink-faint);">每格依完成部位自動計算；右側為樓層加權總進度，底部為工序跨樓層平均。</span>
     </div>`;
 }
 
@@ -4200,23 +5074,30 @@ function renderMatrix(proj){
       <button class="btn btn-primary" onclick="openSettingsModal('processes')">${ICO.gear} 前往設定</button></div>`;
   }
   const localProcesses=buildingProcesses(proj,b);
-  const head = localProcesses.map(pr=>`<th>${esc(pr.name)}</th>`).join('');
+  ensureMatrixProcessWeights(proj,b);
+  const head = localProcesses.map(pr=>renderMatrixProcessHead(proj,b,pr)).join('');
   const rows = b.floors.map(fl=>{
     const cells = localProcesses.map(pr=>`<td class="mx-cell" data-b="${b.id}" data-fl="${esc(fl)}" data-pr="${pr.id}"
         onmousedown="matrixDragStart(event,this)" onmouseenter="matrixDragEnter(event,this)" onclick="matrixCellClick(event,this)">${cellInnerHTML(proj,b.id,fl,pr.id)}</td>`).join('');
-    return `<tr><td class="floor-cell">${esc(fl)}</td>${cells}</tr>`;
+    return `<tr><td class="floor-cell">${esc(fl)}</td>${cells}${renderMatrixFloorTotalCell(proj,b,fl)}</tr>`;
   }).join('');
   return `
+    ${renderStructureLinkBar(proj,b,'matrix')}
+    ${renderMatrixWeightSummary(proj,b)}
     ${renderModuleResetToolbar('matrix')}
     <div class="matrix-wrap">
-      <table class="matrix"><thead><tr><th class="floor-head">樓層</th>${head}</tr></thead><tbody>${rows}</tbody></table>
+      <table class="matrix">
+        <thead><tr><th class="floor-head">樓層</th>${head}<th class="matrix-total-head">樓層總進度<button onclick="openMatrixWeightModal('${b.id}')">設定權重</button></th></tr></thead>
+        <tbody>${rows}</tbody>
+        ${renderMatrixSummaryRow(proj,b,localProcesses,b.floors)}
+      </table>
     </div>
     <div class="legend">
       <span><span class="legend-sw" style="background:${STATUS.not_started.bg};"></span>未開始</span>
       <span><span class="legend-sw" style="background:${STATUS.in_progress.bg};"></span>進行中／待料／待確認</span>
       <span><span class="legend-sw" style="background:${STATUS.done.bg};"></span>完成</span>
       <span><span class="legend-sw" style="background:${STATUS.delayed.bg};"></span>延誤</span>
-      <span style="color:var(--ink-faint);">完成度自動依已完成部位 ÷ 已設定部位計算；拖曳仍只套用反白矩形範圍，套用前會再次確認</span>
+      <span style="color:var(--ink-faint);">右側＝各工序完成度 × 自訂權重；底部＝該工序在所有樓層的算術平均，不另加權。拖曳仍只套用反白矩形範圍。</span>
     </div>`;
 }
 /* 矩陣互動：點一下＝開啟該樓層/工序的施作記錄編輯視窗；
@@ -4332,16 +5213,25 @@ function handleCellClick(buildingId, floor, processId){ openCellModal(buildingId
 /* =====================  10. 甘特圖／預定工程進度表  ===================== */
 const GT_DAY_WIDTH = 34, GT_LABEL_WIDTH = 160;
 function getScheduleWindow(proj){
-  // 若使用者手動設定顯示範圍則優先採用
-  const gr = state.ganttRange;
-  if(gr && gr.start && gr.end){
-    let s = fromDateStr(gr.start), e = fromDateStr(gr.end);
-    if(e < s){ const t=s; s=e; e=t; }
-    return {start:s, end:e, manual:true};
+  const gr=state.ganttRange;
+  if(gr&&gr.start&&gr.end){
+    let s=fromDateStr(gr.start),e=fromDateStr(gr.end);
+    if(e<s){const t=s;s=e;e=t;}
+    return {start:s,end:e,manual:true};
   }
-  const today = new Date(); today.setHours(0,0,0,0);
-  let start = addDays(today,-7), end = addDays(today,90);
-  proj.schedules.forEach(s=>{ const sd=fromDateStr(s.startDate), ed=fromDateStr(s.endDate); if(sd<start) start=sd; if(ed>end) end=ed; });
+  const today=new Date();today.setHours(0,0,0,0);
+  let start=addDays(today,-7),end=addDays(today,90);
+  (proj.schedules||[]).forEach(s=>{
+    const sd=fromDateStr(s.startDate),ed=fromDateStr(s.endDate);
+    if(sd<start)start=sd;if(ed>end)end=ed;
+  });
+  (proj.buildings||[]).forEach(b=>{
+    buildingProcesses(proj,b).forEach(pr=>{
+      const tl=processActualTimeline(proj,b,pr.id);
+      if(tl.start&&tl.start<start)start=new Date(tl.start);
+      if(tl.end&&tl.end>end)end=new Date(tl.end);
+    });
+  });
   return {start,end,manual:false};
 }
 // 甘特圖顯示範圍控制
@@ -4670,6 +5560,7 @@ function ganttResetInfo(el){
     processId:el.dataset.gpr||'',
     subProcessId:el.dataset.gsub||'',
     scheduleId:el.dataset.gsid||'',
+    actualProcess:el.dataset.gactualprocess==='1',
     date:el.dataset.gdate||'',
     row:Number(el.dataset.grow||0),
     col:Number(el.dataset.gcol||0)
@@ -4710,6 +5601,7 @@ function ganttResetEnter(ev,el){
 function scheduleMatchesResetTarget(proj,s,target){
   if(target.scheduleId) return s.id===target.scheduleId;
   if(s.buildingId!==target.buildingId||s.processId!==target.processId) return false;
+  if(target.actualProcess) return true;
   if(target.subProcessId) return s.subProcessId===target.subProcessId;
   return !s.subProcessId || !visibleGanttSubprocesses(proj,s.processId).length;
 }
@@ -4842,7 +5734,7 @@ function renderGanttPresentationSwitch(){
   return `<div class="gantt-presentation-switch">
     <div class="gps-copy">
       <strong>甘特圖呈現方式</strong>
-      <span>原甘特圖保留編輯與拖曳；雙軌圖專門比較預計工期與實際執行情況。</span>
+      <span>原甘特圖編輯預定排程；雙軌圖的實際百分比直接等於矩陣最下方工序平均，時間由矩陣更新日期建立，並可拖曳或編輯。</span>
     </div>
     <div class="gps-buttons">
       <button class="${mode==='classic'?'active':''}" onclick="setGanttPresentation('classic')">原甘特圖</button>
@@ -4850,6 +5742,222 @@ function renderGanttPresentationSwitch(){
     </div>
   </div>`;
 }
+
+
+function actualGanttOverrideStore(b){
+  if(!b.actualGanttOverrides||typeof b.actualGanttOverrides!=='object') b.actualGanttOverrides={};
+  return b.actualGanttOverrides;
+}
+function processMatrixUpdateRange(proj,b,processId){
+  const validFloors=new Set(b.floors||[]);
+  const activeStatuses=new Set([
+    'in_progress','done','waiting_material','waiting_quote','waiting_contract',
+    'waiting_cutting','pending_confirm','blocked_predecessor','delayed'
+  ]);
+  const matches=(proj.records||[]).filter(r=>
+    r.buildingId===b.id &&
+    r.processId===processId &&
+    validFloors.has(r.floor) &&
+    Number(r.updatedAt||0)>0 &&
+    (Number(r.progress||0)>0 || activeStatuses.has(r.status))
+  );
+  if(!matches.length) return {start:null,end:null,count:0};
+  const times=matches.map(r=>Number(r.updatedAt)).filter(Number.isFinite).sort((a,c)=>a-c);
+  if(!times.length) return {start:null,end:null,count:0};
+  const start=new Date(times[0]);start.setHours(0,0,0,0);
+  const end=new Date(times[times.length-1]);end.setHours(0,0,0,0);
+  return {start,end,count:matches.length};
+}
+function processActualProgress(proj,b,processId){
+  return matrixProcessFloorAverage(proj,b,processId,b.floors||[]);
+}
+function processActualTimeline(proj,b,processId){
+  const auto=processMatrixUpdateRange(proj,b,processId);
+  const store=actualGanttOverrideStore(b);
+  const override=store[processId];
+  let start=auto.start,end=auto.end,manual=false;
+  if(override&&override.startDate&&override.endDate){
+    start=fromDateStr(override.startDate);
+    end=fromDateStr(override.endDate);
+    if(end<start){const t=start;start=end;end=t;}
+    manual=true;
+  }
+  return {
+    start,end,manual,
+    autoStart:auto.start,autoEnd:auto.end,
+    updateCount:auto.count,
+    progress:processActualProgress(proj,b,processId)
+  };
+}
+function processSchedules(proj,b,processId){
+  return (proj.schedules||[])
+    .filter(s=>s.buildingId===b.id&&s.processId===processId)
+    .sort((a,c)=>a.startDate.localeCompare(c.startDate)||a.endDate.localeCompare(c.endDate));
+}
+function processPlanRange(proj,b,processId){
+  const schedules=processSchedules(proj,b,processId);
+  if(!schedules.length) return {start:null,end:null,count:0,schedules:[]};
+  const start=schedules.reduce((m,s)=>{
+    const d=fromDateStr(s.startDate);return !m||d<m?d:m;
+  },null);
+  const end=schedules.reduce((m,s)=>{
+    const d=fromDateStr(s.endDate);return !m||d>m?d:m;
+  },null);
+  return {start,end,count:schedules.length,schedules};
+}
+function processPlannedProgress(proj,b,processId,dateObj){
+  const schedules=processSchedules(proj,b,processId);
+  if(!schedules.length) return 0;
+  const vals=schedules.map(s=>plannedProgressAtDate(s,dateObj));
+  return roundMatrixNumber(vals.reduce((a,c)=>a+c,0)/vals.length,1);
+}
+function processIsLate(proj,b,processId,dateObj){
+  const actual=processActualProgress(proj,b,processId);
+  return actual<100&&processSchedules(proj,b,processId).some(s=>fromDateStr(s.endDate)<dateObj);
+}
+function setActualGanttOverride(proj,b,processId,start,end){
+  const store=actualGanttOverrideStore(b);
+  store[processId]={
+    startDate:toDateStr(start),
+    endDate:toDateStr(end),
+    mode:'manual',
+    updatedAt:Date.now()
+  };
+}
+function clearActualGanttOverride(proj,b,processId){
+  const store=actualGanttOverrideStore(b);
+  delete store[processId];
+}
+function openActualGanttFromMatrix(buildingId){
+  const proj=currentProject(),b=buildingById(proj,buildingId);
+  if(!proj||!b) return;
+  state.activeBuildingId=b.id;
+  state.view='schedule';
+  state.ganttMode='single';
+  formState.ganttPresentation='compare';
+  persistLocalUiState();
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function openActualProcessTimelineModal(buildingId,processId){
+  const proj=currentProject(),b=buildingById(proj,buildingId),pr=processById(proj,processId);
+  if(!proj||!b||!pr) return;
+  const tl=processActualTimeline(proj,b,processId);
+  const autoStart=tl.autoStart?toDateStr(tl.autoStart):'';
+  const autoEnd=tl.autoEnd?toDateStr(tl.autoEnd):'';
+  const effectiveStart=tl.start?toDateStr(tl.start):'';
+  const effectiveEnd=tl.end?toDateStr(tl.end):'';
+
+  openModal(`<div class="modal">
+    <div class="modal-head"><h3>編輯實際進度時間｜${esc(b.name)}・${esc(pr.name)}</h3><button class="icon-btn" onclick="closeModal()">${ICO.close}</button></div>
+    <div class="modal-body">
+      <div class="actual-timeline-info">
+        <div><span>矩陣工序平均</span><strong>${matrixPercentText(tl.progress)}</strong></div>
+        <div><span>矩陣自動開始</span><strong>${autoStart||'尚無紀錄'}</strong></div>
+        <div><span>矩陣最後更新</span><strong>${autoEnd||'尚無紀錄'}</strong></div>
+      </div>
+      <div class="actual-timeline-help">
+        實際甘特的完成百分比固定讀取矩陣最下方的工序平均，不能在甘特圖另改百分比。時間預設取本工序第一筆與最後一筆矩陣更新日期；可在下方改成自訂日期，也可直接拖曳甘特圖下軌。
+      </div>
+      <div class="field-row" style="margin-top:12px;">
+        <div class="field"><label>實際開始日</label><input type="date" id="actual-process-start" value="${effectiveStart}"></div>
+        <div class="field"><label>實際更新／完成日</label><input type="date" id="actual-process-end" value="${effectiveEnd}"></div>
+      </div>
+      <div class="hint">${tl.manual?'目前使用人工調整時間。':'目前使用矩陣更新時間。'}${tl.updateCount?`　共讀取 ${tl.updateCount} 筆更新紀錄。`:''}</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="resetActualProcessTimeline('${b.id}','${pr.id}')">改回矩陣更新時間</button>
+      <span style="flex:1"></span>
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveActualProcessTimeline('${b.id}','${pr.id}')">儲存自訂時間</button>
+    </div>
+  </div>`);
+}
+function saveActualProcessTimeline(buildingId,processId){
+  const proj=currentProject(),b=buildingById(proj,buildingId);
+  if(!proj||!b) return;
+  const startValue=document.getElementById('actual-process-start')?.value||'';
+  const endValue=document.getElementById('actual-process-end')?.value||'';
+  if(!startValue||!endValue){
+    showToast('請填寫實際開始日與實際更新／完成日','error');return;
+  }
+  let start=fromDateStr(startValue),end=fromDateStr(endValue);
+  if(end<start){const t=start;start=end;end=t;}
+  setActualGanttOverride(proj,b,processId,start,end);
+  scheduleSave();closeModal();render();
+  showToast('已儲存實際甘特自訂時間');
+}
+function resetActualProcessTimeline(buildingId,processId){
+  const proj=currentProject(),b=buildingById(proj,buildingId);
+  if(!proj||!b) return;
+  clearActualGanttOverride(proj,b,processId);
+  scheduleSave();closeModal();render();
+  showToast('已改回矩陣更新時間');
+}
+
+/* 實際甘特拖曳：拖曳整條移動，左右端點可調整起訖。 */
+let actualGanttDragState={active:false,moved:false};
+let actualGanttSuppressClick=false;
+function actualGanttDragStart(e,el,buildingId,processId,mode){
+  if(e.button!==0||isResetMode('gantt')) return;
+  const proj=currentProject(),b=buildingById(proj,buildingId);
+  if(!proj||!b) return;
+  const tl=processActualTimeline(proj,b,processId);
+  if(!tl.start||!tl.end) return;
+  e.preventDefault();e.stopPropagation();
+  actualGanttDragState={
+    active:true,moved:false,el,buildingId,processId,mode,
+    startX:e.clientX,
+    origStart:new Date(tl.start),
+    origEnd:new Date(tl.end),
+    previewStart:new Date(tl.start),
+    previewEnd:new Date(tl.end)
+  };
+  el.classList.add('actual-dragging');
+}
+function actualGanttBarClick(e,buildingId,processId){
+  e.stopPropagation();
+  if(actualGanttSuppressClick) return;
+  openActualProcessTimelineModal(buildingId,processId);
+}
+document.addEventListener('mousemove',function(e){
+  const d=actualGanttDragState;
+  if(!d.active) return;
+  const delta=Math.round((e.clientX-d.startX)/GT_DAY_WIDTH);
+  if(delta!==0) d.moved=true;
+  let start=new Date(d.origStart),end=new Date(d.origEnd);
+  if(d.mode==='move'){
+    start=addDays(start,delta);end=addDays(end,delta);
+  }else if(d.mode==='start'){
+    start=addDays(start,delta);
+    if(start>end) start=new Date(end);
+  }else{
+    end=addDays(end,delta);
+    if(end<start) end=new Date(start);
+  }
+  d.previewStart=start;d.previewEnd=end;
+  const win=getScheduleWindow(currentProject());
+  const clip=clipToWindow(start,end,win.start,win.end);
+  if(clip&&d.el){
+    d.el.style.gridColumn=`${clip.colStart}/span ${clip.span}`;
+    d.el.title=`實際：${toDateStr(start)}～${toDateStr(end)}（拖曳預覽）`;
+  }
+});
+document.addEventListener('mouseup',function(){
+  const d=actualGanttDragState;
+  if(!d.active) return;
+  if(d.el) d.el.classList.remove('actual-dragging');
+  actualGanttDragState={active:false,moved:false};
+  if(!d.moved) return;
+  const proj=currentProject(),b=buildingById(proj,d.buildingId);
+  if(!proj||!b) return;
+  setActualGanttOverride(proj,b,d.processId,d.previewStart,d.previewEnd);
+  actualGanttSuppressClick=true;
+  setTimeout(()=>actualGanttSuppressClick=false,250);
+  scheduleSave();render();
+  showToast('已拖曳調整實際進度時間');
+});
+
 
 function plannedProgressAtDate(s, dateObj){
   const start=fromDateStr(s.startDate), end=fromDateStr(s.endDate);
@@ -4886,31 +5994,24 @@ function inferredScheduleActualStart(proj,s){
 function scheduleVariance(actualPct,planPct){
   return actualPct-planPct;
 }
-function dualScheduleRows(proj, buildings){
+function dualProcessRows(proj,buildings){
   const rows=[];
   buildings.forEach(b=>{
     if(buildings.length>1) rows.push({type:'building',b});
-    const schedules=[...proj.schedules]
-      .filter(s=>s.buildingId===b.id)
-      .sort((a,c)=>a.startDate.localeCompare(c.startDate)||a.endDate.localeCompare(c.endDate));
-    let lastGroup='',lastProcess='';
-    schedules.forEach(s=>{
-      const pr=proj.processes.find(x=>x.id===s.processId);
-      if(!pr) return;
-      const group=proj.processGroups.find(g=>g.id===pr.groupId);
-      const groupName=group?.name||'未分組';
-      if(groupName!==lastGroup){
-        rows.push({type:'group',b,name:groupName});
-        lastGroup=groupName;lastProcess='';
-      }
-      const sub=ganttSubprocessName(proj,s.processId,s.subProcessId);
-      const processKey=pr.id+'|'+(sub||'');
-      if(processKey!==lastProcess){
-        rows.push({type:'processHeader',b,pr,sub});
-        lastProcess=processKey;
-      }
-      rows.push({type:'schedule',b,pr,sub,s});
+    const processes=buildingProcesses(proj,b);
+    const groups=buildingProcessGroups(proj,b);
+    const grouped=new Set();
+
+    groups.forEach(group=>{
+      const members=processes.filter(pr=>pr.groupId===group.id);
+      if(!members.length) return;
+      rows.push({type:'group',b,name:group.name});
+      members.forEach(pr=>{grouped.add(pr.id);rows.push({type:'process',b,pr});});
     });
+
+    const ungrouped=processes.filter(pr=>!grouped.has(pr.id));
+    if(ungrouped.length&&groups.length) rows.push({type:'group',b,name:'未分組'});
+    ungrouped.forEach(pr=>rows.push({type:'process',b,pr}));
   });
   return rows;
 }
@@ -4920,26 +6021,26 @@ function renderDualTrackGantt(proj){
   if(!buildings.length){
     return `<div class="empty-state"><h3>尚未建立棟別</h3><button class="btn btn-primary" onclick="openAddBuildingModal()">${ICO.plus} 新增棟別</button></div>`;
   }
-  if(!proj.schedules.length){
-    return `<div class="empty-state"><h3>尚未建立排程</h3><p>請先切回原甘特圖，雙擊日期格建立排程。</p><button class="btn btn-primary" onclick="setGanttPresentation('classic')">回到原甘特圖</button></div>`;
+  if(!buildings.some(b=>buildingProcesses(proj,b).length)){
+    return `<div class="empty-state"><h3>尚未建立工序</h3><p>請先設定本棟工序；矩陣與實際甘特將使用同一份工序。</p></div>`;
   }
 
   const {start,end}=getScheduleWindow(proj);
   const days=dateRangeArray(start,end);
   const today=fromDateStr(todayStr());
   const todayS=todayStr();
-  const rows=dualScheduleRows(proj,buildings);
-  const labelWidth=255;
+  const rows=dualProcessRows(proj,buildings);
+  const labelWidth=285;
 
-  const scheduleRows=rows.filter(r=>r.type==='schedule');
-  const stats=scheduleRows.map(r=>{
-    const actual=scheduleActualProgress(proj,r.b,r.s);
-    const plan=plannedProgressAtDate(r.s,today);
-    return {actual,plan,variance:actual-plan,late:!r.s.actualCompleteDate&&fromDateStr(r.s.endDate)<today&&actual<100};
+  const processRows=rows.filter(r=>r.type==='process');
+  const stats=processRows.map(r=>{
+    const actual=processActualProgress(proj,r.b,r.pr.id);
+    const plan=processPlannedProgress(proj,r.b,r.pr.id,today);
+    return {actual,plan,variance:roundMatrixNumber(actual-plan,1),late:processIsLate(proj,r.b,r.pr.id,today)};
   });
-  const avgActual=stats.length?Math.round(stats.reduce((a,x)=>a+x.actual,0)/stats.length):0;
-  const avgPlan=stats.length?Math.round(stats.reduce((a,x)=>a+x.plan,0)/stats.length):0;
-  const avgVar=avgActual-avgPlan;
+  const avgActual=stats.length?roundMatrixNumber(stats.reduce((a,x)=>a+x.actual,0)/stats.length,1):0;
+  const avgPlan=stats.length?roundMatrixNumber(stats.reduce((a,x)=>a+x.plan,0)/stats.length,1):0;
+  const avgVar=roundMatrixNumber(avgActual-avgPlan,1);
   const lateCount=stats.filter(x=>x.late).length;
 
   const head=days.map((d,i)=>{
@@ -4961,49 +6062,54 @@ function renderDualTrackGantt(proj){
       const cells=days.map((d,i)=>`<div class="dual-group-cell" style="grid-column:${i+2};grid-row:${gr};"></div>`).join('');
       return `<div class="dual-group-label" style="grid-column:1;grid-row:${gr};">${esc(row.name)}</div>${cells}`;
     }
-    if(row.type==='processHeader'){
-      const cells=days.map((d,i)=>`<div class="dual-group-cell" style="grid-column:${i+2};grid-row:${gr};background:#F8FAFC;"></div>`).join('');
-      return `<div class="dual-group-label" style="grid-column:1;grid-row:${gr};background:var(--navy-2);padding-left:22px;">${esc(row.pr.name)}${row.sub?'／'+esc(row.sub):''}</div>${cells}`;
-    }
 
-    const s=row.s,b=row.b,pr=row.pr;
-    const actualPct=scheduleActualProgress(proj,b,s);
-    const planPct=plannedProgressAtDate(s,today);
-    const variance=scheduleVariance(actualPct,planPct);
-    const actualStart=inferredScheduleActualStart(proj,s);
-    const actualEnd=s.actualCompleteDate?fromDateStr(s.actualCompleteDate):(actualStart?today:null);
-    const isLate=!s.actualCompleteDate&&fromDateStr(s.endDate)<today&&actualPct<100;
-    const isDone=!!s.actualCompleteDate||actualPct>=100;
+    const b=row.b,pr=row.pr;
+    const actualPct=processActualProgress(proj,b,pr.id);
+    const planPct=processPlannedProgress(proj,b,pr.id,today);
+    const variance=roundMatrixNumber(actualPct-planPct,1);
+    const timeline=processActualTimeline(proj,b,pr.id);
+    const planInfo=processPlanRange(proj,b,pr.id);
+    const isLate=processIsLate(proj,b,pr.id,today);
+    const isDone=actualPct>=100;
     const actualCls=isDone?'done':(isLate?'late':(variance>=10?'ahead':''));
     const varianceCls=variance>3?'good':(variance<-3?'bad':'neutral');
-    const varianceText=variance>0?`實際超前 ${variance}%`:(variance<0?`實際落後 ${Math.abs(variance)}%`:'實際符合計畫');
-    const floorLabel=taskFloorLabel(b,s.floors)||compressFloorLabel(b,s.floors);
-    const label=`<div class="dual-label" style="grid-column:1;grid-row:${gr};" onclick="openScheduleEditModal('${s.id}')">
-      <div class="dl-name">${esc(floorLabel||'未指定樓層')}</div>
-      <div class="dl-meta">預計 ${esc(s.startDate)}～${esc(s.endDate)}${s.actualStartDate?'｜實際起 '+esc(s.actualStartDate):''}</div>
-      <div class="dl-variance ${varianceCls}">計畫 ${planPct}%｜實際 ${actualPct}%｜${varianceText}</div>
+    const varianceText=variance>0?`實際超前 ${matrixPercentText(variance)}`:(variance<0?`實際落後 ${matrixPercentText(Math.abs(variance))}`:'實際符合計畫');
+    const planText=planInfo.start?`${toDateStr(planInfo.start)}～${toDateStr(planInfo.end)}（${planInfo.count}筆）`:'尚未排定';
+    const actualTextLabel=timeline.start?`${toDateStr(timeline.start)}～${toDateStr(timeline.end)}`:'尚無矩陣更新時間';
+    const sourceLabel=timeline.manual?'人工調整':'矩陣更新時間';
+
+    const label=`<div class="dual-label" style="grid-column:1;grid-row:${gr};" onclick="openActualProcessTimelineModal('${b.id}','${pr.id}')">
+      <div class="dl-name">${esc(pr.name)} <span class="dl-source ${timeline.manual?'manual':''}">${sourceLabel}</span></div>
+      <div class="dl-meta">全部 ${b.floors.length} 層｜預計 ${esc(planText)}｜實際 ${esc(actualTextLabel)}</div>
+      <div class="dl-variance ${varianceCls}">計畫 ${matrixPercentText(planPct)}｜實際 ${matrixPercentText(actualPct)}｜${varianceText}</div>
     </div>`;
+
     const cells=days.map((d,i)=>{
       const wk=d.getDay()===0||d.getDay()===6;
-      return `<div class="dual-cell ${wk?'weekend':''}" data-greset="1" data-gsid="${s.id}" data-gb="${b.id}" data-gpr="${pr.id}" data-gsub="${s.subProcessId||''}" data-gdate="${toDateStr(d)}" data-grow="${gr}" data-gcol="${i+2}" style="grid-column:${i+2};grid-row:${gr};" onmousedown="ganttResetStart(event,this)" onmouseenter="ganttResetEnter(event,this)" ondblclick="if(!isResetMode('gantt'))openScheduleCreateModal('${b.id}','${pr.id}','${toDateStr(d)}'${s.subProcessId?`,'${s.subProcessId}'`:''})"></div>`;
+      return `<div class="dual-cell ${wk?'weekend':''}" data-greset="1" data-gactualprocess="1" data-gb="${b.id}" data-gpr="${pr.id}" data-gsub="" data-gdate="${toDateStr(d)}" data-grow="${gr}" data-gcol="${i+2}" style="grid-column:${i+2};grid-row:${gr};" onmousedown="ganttResetStart(event,this)" onmouseenter="ganttResetEnter(event,this)" ondblclick="if(!isResetMode('gantt'))openScheduleCreateModal('${b.id}','${pr.id}','${toDateStr(d)}')"></div>`;
     }).join('');
 
-    const planClip=clipToWindow(fromDateStr(s.startDate),fromDateStr(s.endDate),start,end);
-    const planBar=planClip?`<div class="dual-plan-bar" style="grid-column:${planClip.colStart}/span ${planClip.span};grid-row:${gr};" title="預計：${esc(s.startDate)}～${esc(s.endDate)}"></div>`:'';
+    const planBars=planInfo.schedules.map(s=>{
+      const clip=clipToWindow(fromDateStr(s.startDate),fromDateStr(s.endDate),start,end);
+      return clip?`<div class="dual-plan-bar" style="grid-column:${clip.colStart}/span ${clip.span};grid-row:${gr};" title="預定：${esc(s.startDate)}～${esc(s.endDate)}｜${esc(taskFloorLabel(b,s.floors)||compressFloorLabel(b,s.floors)||'未指定樓層')}"></div>`:'';
+    }).join('');
 
-    let actualBar='';
-    let actualText='';
-    if(actualStart&&actualEnd){
-      const ac=clipToWindow(actualStart,actualEnd,start,end);
+    let actualBar='',pctLabel='';
+    if(timeline.start&&timeline.end){
+      const ac=clipToWindow(timeline.start,timeline.end,start,end);
       if(ac){
-        actualBar=`<div class="dual-actual-bar ${actualCls}" style="grid-column:${ac.colStart}/span ${ac.span};grid-row:${gr};" onclick="openScheduleEditModal('${s.id}')" title="實際：${toDateStr(actualStart)}～${s.actualCompleteDate?esc(s.actualCompleteDate):'進行中'}｜完成 ${actualPct}%"></div>`;
+        actualBar=`<div class="dual-actual-bar actual-editable ${actualCls} ${timeline.manual?'actual-manual':''}" data-actual-bar="1" data-building-id="${b.id}" data-process-id="${pr.id}" style="grid-column:${ac.colStart}/span ${ac.span};grid-row:${gr};" onmousedown="actualGanttDragStart(event,this,'${b.id}','${pr.id}','move')" onclick="actualGanttBarClick(event,'${b.id}','${pr.id}')" title="實際：${toDateStr(timeline.start)}～${toDateStr(timeline.end)}｜完成 ${matrixPercentText(actualPct)}｜${sourceLabel}">
+          <span class="actual-drag-handle left" onmousedown="actualGanttDragStart(event,this.parentElement,'${b.id}','${pr.id}','start')"></span>
+          <span class="actual-drag-handle right" onmousedown="actualGanttDragStart(event,this.parentElement,'${b.id}','${pr.id}','end')"></span>
+        </div>`;
         const labelCol=Math.min(days.length+1,ac.colStart+ac.span);
-        actualText=`<div class="dual-actual-pct" style="grid-column:${labelCol};grid-row:${gr};">${actualPct}%</div>`;
+        pctLabel=`<div class="dual-actual-pct" style="grid-column:${labelCol};grid-row:${gr};">${matrixPercentText(actualPct)}</div>`;
       }
     }else{
-      actualText=`<div class="dual-no-actual" style="grid-column:2/span ${Math.min(4,days.length)};grid-row:${gr};">尚無實際開始紀錄</div>`;
+      pctLabel=`<div class="dual-no-actual" style="grid-column:2/span ${Math.min(7,days.length)};grid-row:${gr};" onclick="openActualProcessTimelineModal('${b.id}','${pr.id}')">尚無矩陣更新時間｜點此編輯</div>`;
     }
-    return label+cells+planBar+actualBar+actualText;
+
+    return label+cells+planBars+actualBar+pctLabel;
   }).join('');
 
   const todayIdx=diffDays(start,today);
@@ -5014,29 +6120,29 @@ function renderDualTrackGantt(proj){
     ${renderGanttBuildingConfigPanel(proj,buildings)}
     ${renderGanttRangeBar(proj)}
     <div class="dual-summary-row">
-      <div class="dual-summary-card"><div class="dsc-label">目前計畫進度</div><div class="dsc-value">${avgPlan}%</div><div class="dsc-sub">依今日日期與預定工期推算</div></div>
-      <div class="dual-summary-card ${avgVar>=0?'good':'bad'}"><div class="dsc-label">目前實際進度</div><div class="dsc-value">${avgActual}%</div><div class="dsc-sub">依矩陣各樓層工序完成度彙整</div></div>
-      <div class="dual-summary-card ${avgVar>=0?'good':'bad'}"><div class="dsc-label">進度差異</div><div class="dsc-value">${avgVar>0?'+':''}${avgVar}%</div><div class="dsc-sub">${avgVar>=0?'整體符合或超前':'整體落後計畫'}</div></div>
-      <div class="dual-summary-card ${lateCount?'bad':'good'}"><div class="dsc-label">逾期未完成</div><div class="dsc-value">${lateCount}</div><div class="dsc-sub">預定完成日已過且未達 100%</div></div>
+      <div class="dual-summary-card"><div class="dsc-label">目前計畫進度</div><div class="dsc-value">${matrixPercentText(avgPlan)}</div><div class="dsc-sub">依各工序預定排程平均</div></div>
+      <div class="dual-summary-card ${avgVar>=0?'good':'bad'}"><div class="dsc-label">目前實際進度</div><div class="dsc-value">${matrixPercentText(avgActual)}</div><div class="dsc-sub">等於矩陣最下方各工序平均</div></div>
+      <div class="dual-summary-card ${avgVar>=0?'good':'bad'}"><div class="dsc-label">進度差異</div><div class="dsc-value">${avgVar>0?'+':''}${matrixPercentText(avgVar)}</div><div class="dsc-sub">${avgVar>=0?'整體符合或超前':'整體落後計畫'}</div></div>
+      <div class="dual-summary-card ${lateCount?'bad':'good'}"><div class="dsc-label">逾期未完成工序</div><div class="dsc-value">${lateCount}</div><div class="dsc-sub">有預定排程逾期且工序未達100%</div></div>
     </div>
     <div class="dual-gantt-scroll">
       <div class="dual-gantt-grid" style="grid-template-columns:${labelWidth}px repeat(${days.length},${GT_DAY_WIDTH}px);grid-template-rows:40px repeat(${rows.length},58px);">
-        <div class="dual-corner" style="grid-column:1;grid-row:1;">工序／樓層｜計畫與實際</div>
+        <div class="dual-corner" style="grid-column:1;grid-row:1;">工序｜預定與矩陣實際</div>
         ${head}${body}${todayLine}
       </div>
     </div>
     <div class="dual-track-legend">
-      <span><i class="plan"></i>上軌：預計工期</span>
-      <span><i style="background:var(--orange);"></i>下軌：實際進行中</span>
-      <span><i style="background:var(--green);"></i>實際完成</span>
+      <span><i class="plan"></i>上軌：預定排程</span>
+      <span><i style="background:var(--orange);"></i>下軌：矩陣實際進行</span>
+      <span><i style="background:var(--green);"></i>工序平均100%</span>
       <span><i style="background:var(--red);"></i>逾期未完成</span>
       <span><i style="background:var(--blue);"></i>實際明顯超前計畫</span>
-      <span>實際百分比來自樓層／工序矩陣，不需在甘特圖另外拉百分比。</span>
+      <span>下軌時間預設為第一筆至最後一筆矩陣更新日；拖曳整條可平移，左右端點可改起訖，點擊可輸入日期。</span>
     </div>
     <div style="margin-top:14px;">
       <button class="btn" onclick="exportDualGanttPDF()">${ICO.printer} 匯出預計 vs 實際 PDF（A4橫向）</button>
       <button class="btn" onclick="setGanttPresentation('classic')">返回原甘特圖編輯排程</button>
-      <span class="hint">${allMode?'請由上方各棟卡片分別編輯工序與部位。':'目前只顯示 '+esc(buildings[0]?.name||'目前棟別')+' 的獨立工序。'}</span>
+      <span class="hint">${allMode?'各棟工序與實際時間分開計算。':'實際百分比與 '+esc(buildings[0]?.name||'目前棟別')+' 矩陣底部完全一致。'}</span>
     </div>`;
 }
 
@@ -5210,145 +6316,101 @@ function buildGanttPrintHTML(proj, b){
 const DUAL_PRINT_DAYS_PER_PAGE = 28;
 const DUAL_PRINT_ITEMS_PER_PAGE = 14;
 
-function dualPrintSummary(proj,b,schedules){
+function dualPrintSummary(proj,b,processes){
   const today=fromDateStr(todayStr());
-  const stats=schedules.map(s=>{
-    const actual=scheduleActualProgress(proj,b,s);
-    const plan=plannedProgressAtDate(s,today);
-    return {
-      actual,plan,
-      variance:actual-plan,
-      late:!s.actualCompleteDate&&fromDateStr(s.endDate)<today&&actual<100
-    };
+  const stats=processes.map(pr=>{
+    const actual=processActualProgress(proj,b,pr.id);
+    const plan=processPlannedProgress(proj,b,pr.id,today);
+    return {actual,plan,variance:actual-plan,late:processIsLate(proj,b,pr.id,today)};
   });
-  const avgActual=stats.length?Math.round(stats.reduce((a,x)=>a+x.actual,0)/stats.length):0;
-  const avgPlan=stats.length?Math.round(stats.reduce((a,x)=>a+x.plan,0)/stats.length):0;
-  const variance=avgActual-avgPlan;
+  const avgActual=stats.length?roundMatrixNumber(stats.reduce((a,x)=>a+x.actual,0)/stats.length,1):0;
+  const avgPlan=stats.length?roundMatrixNumber(stats.reduce((a,x)=>a+x.plan,0)/stats.length,1):0;
+  const variance=roundMatrixNumber(avgActual-avgPlan,1);
   const lateCount=stats.filter(x=>x.late).length;
   return {avgActual,avgPlan,variance,lateCount};
 }
-
-function dualPrintScheduleLabel(proj,b,s){
-  const pr=proj.processes.find(x=>x.id===s.processId);
-  const group=proj.processGroups.find(g=>g.id===pr?.groupId);
-  const sub=ganttSubprocessName(proj,s.processId,s.subProcessId);
-  const floorLabel=taskFloorLabel(b,s.floors)||compressFloorLabel(b,s.floors)||'未指定樓層';
-  const hierarchy=[
-    group?.name||'未分組',
-    pr?.name||'未命名工序',
-    sub||''
-  ].filter(Boolean).join('／');
-  return {hierarchy,floorLabel};
+function dualPrintProcessLabel(proj,b,pr){
+  const group=buildingProcessGroups(proj,b).find(g=>g.id===pr.groupId);
+  return {
+    hierarchy:[group?.name||'未分組',pr.name].join('／'),
+    floorLabel:`全部 ${b.floors.length} 層`
+  };
 }
-
 function dualPrintTrackCells(days,pageStart,pageEnd,startDate,endDate,barClass,emptyText){
-  if(!startDate || !endDate){
-    return `<td class="dgp-empty" colspan="${days.length}">${esc(emptyText||'尚無實際開始紀錄')}</td>`;
+  if(!startDate||!endDate){
+    return `<td class="dgp-empty" colspan="${days.length}">${esc(emptyText||'尚無紀錄')}</td>`;
   }
-
   const sd=startDate instanceof Date?startDate:fromDateStr(startDate);
   const ed=endDate instanceof Date?endDate:fromDateStr(endDate);
-  if(ed<pageStart || sd>pageEnd){
-    return `<td class="dgp-day" colspan="${days.length}"></td>`;
-  }
-
+  if(ed<pageStart||sd>pageEnd) return `<td class="dgp-day" colspan="${days.length}"></td>`;
   const clipStart=sd<pageStart?pageStart:sd;
   const clipEnd=ed>pageEnd?pageEnd:ed;
   const startIdx=diffDays(pageStart,clipStart);
   const span=Math.max(1,diffDays(clipStart,clipEnd)+1);
   let cells='';
-
-  if(startIdx>0){
-    cells+=`<td class="dgp-day" colspan="${startIdx}"></td>`;
-  }
+  if(startIdx>0) cells+=`<td class="dgp-day" colspan="${startIdx}"></td>`;
   cells+=`<td class="dgp-bar-cell" colspan="${span}"><div class="dgp-bar ${barClass}"></div></td>`;
   const remain=days.length-startIdx-span;
-  if(remain>0){
-    cells+=`<td class="dgp-day" colspan="${remain}"></td>`;
-  }
+  if(remain>0) cells+=`<td class="dgp-day" colspan="${remain}"></td>`;
   return cells;
 }
-
 function buildDualGanttPrintHTML(proj,b){
-  const schedules=[...proj.schedules]
-    .filter(s=>s.buildingId===b.id)
-    .sort((a,c)=>a.startDate.localeCompare(c.startDate)||a.endDate.localeCompare(c.endDate));
-
-  if(!schedules.length) return '';
+  const processes=buildingProcesses(proj,b);
+  if(!processes.length) return '';
 
   const {start,end}=getScheduleWindow(proj);
   const allDays=dateRangeArray(start,end);
   const dayPages=[];
-  for(let i=0;i<allDays.length;i+=DUAL_PRINT_DAYS_PER_PAGE){
-    dayPages.push(allDays.slice(i,i+DUAL_PRINT_DAYS_PER_PAGE));
-  }
+  for(let i=0;i<allDays.length;i+=DUAL_PRINT_DAYS_PER_PAGE) dayPages.push(allDays.slice(i,i+DUAL_PRINT_DAYS_PER_PAGE));
   if(!dayPages.length) dayPages.push([]);
 
   const itemPages=[];
-  for(let i=0;i<schedules.length;i+=DUAL_PRINT_ITEMS_PER_PAGE){
-    itemPages.push(schedules.slice(i,i+DUAL_PRINT_ITEMS_PER_PAGE));
-  }
+  for(let i=0;i<processes.length;i+=DUAL_PRINT_ITEMS_PER_PAGE) itemPages.push(processes.slice(i,i+DUAL_PRINT_ITEMS_PER_PAGE));
   if(!itemPages.length) itemPages.push([]);
 
-  const summary=dualPrintSummary(proj,b,schedules);
+  const summary=dualPrintSummary(proj,b,processes);
   const totalPages=dayPages.length*itemPages.length;
-  const labelMm=47;
-  const trackMm=8;
+  const labelMm=47,trackMm=8;
   const maxDays=Math.max(1,...dayPages.map(x=>x.length));
   const dayMm=Math.min(8.1,Math.floor(((279-labelMm-trackMm)/maxDays)*10)/10);
   const todayS=todayStr();
   const pages=[];
 
   dayPages.forEach((days,dayPageIndex)=>{
-    const pageStart=days[0];
-    const pageEnd=days[days.length-1];
-    const colgroup=`<colgroup>
-      <col style="width:${labelMm}mm">
-      <col style="width:${trackMm}mm">
-      ${days.map(()=>`<col style="width:${dayMm}mm">`).join('')}
-    </colgroup>`;
-
+    const pageStart=days[0],pageEnd=days[days.length-1];
+    const colgroup=`<colgroup><col style="width:${labelMm}mm"><col style="width:${trackMm}mm">${days.map(()=>`<col style="width:${dayMm}mm">`).join('')}</colgroup>`;
     const dateHead=`<tr style="height:8mm">
-      <th class="dgp-name-head">大項目／母工序／子工序・樓層</th>
+      <th class="dgp-name-head">大項目／工序・全部樓層</th>
       <th class="dgp-track-head">軌道</th>
       ${days.map(d=>{
-        const ds=toDateStr(d);
-        const weekend=d.getDay()===0||d.getDay()===6;
-        const wd=['日','一','二','三','四','五','六'][d.getDay()];
+        const ds=toDateStr(d),weekend=d.getDay()===0||d.getDay()===6,wd=['日','一','二','三','四','五','六'][d.getDay()];
         return `<th class="dgp-date-head ${weekend?'weekend':''} ${ds===todayS?'today':''}">${d.getMonth()+1}/${d.getDate()}<br>(${wd})</th>`;
       }).join('')}
     </tr>`;
 
     itemPages.forEach((items,itemPageIndex)=>{
-      const body=items.map(s=>{
-        const label=dualPrintScheduleLabel(proj,b,s);
-        const actualPct=scheduleActualProgress(proj,b,s);
-        const planPct=plannedProgressAtDate(s,fromDateStr(todayS));
-        const variance=actualPct-planPct;
+      const body=items.map(pr=>{
+        const label=dualPrintProcessLabel(proj,b,pr);
+        const actualPct=processActualProgress(proj,b,pr.id);
+        const planPct=processPlannedProgress(proj,b,pr.id,fromDateStr(todayS));
+        const variance=roundMatrixNumber(actualPct-planPct,1);
         const varianceCls=variance>3?'good':(variance<-3?'bad':'neutral');
-        const varianceText=variance>0?`超前 ${variance}%`:(variance<0?`落後 ${Math.abs(variance)}%`:'符合計畫');
-        const actualStart=inferredScheduleActualStart(proj,s);
-        const actualEnd=s.actualCompleteDate?fromDateStr(s.actualCompleteDate):(actualStart?fromDateStr(todayS):null);
-        const isLate=!s.actualCompleteDate&&fromDateStr(s.endDate)<fromDateStr(todayS)&&actualPct<100;
-        const isDone=!!s.actualCompleteDate||actualPct>=100;
+        const varianceText=variance>0?`超前 ${matrixPercentText(variance)}`:(variance<0?`落後 ${matrixPercentText(Math.abs(variance))}`:'符合計畫');
+        const timeline=processActualTimeline(proj,b,pr.id);
+        const planInfo=processPlanRange(proj,b,pr.id);
+        const isLate=processIsLate(proj,b,pr.id,fromDateStr(todayS));
+        const isDone=actualPct>=100;
         const actualCls=isDone?'dgp-actual done':(isLate?'dgp-actual late':(variance>=10?'dgp-actual ahead':'dgp-actual'));
+        const source=timeline.manual?'人工調整':'矩陣更新時間';
 
         const nameCell=`<td class="dgp-name" rowspan="2">
           <div class="dgp-main-label">${esc(label.hierarchy)}</div>
-          <div class="sub">${esc(label.floorLabel)}｜預計 ${esc(s.startDate)} - ${esc(s.endDate)}</div>
-          <div class="variance ${varianceCls}">計畫 ${planPct}%｜實際 ${actualPct}%｜${varianceText}</div>
+          <div class="sub">${esc(label.floorLabel)}｜實際來源：${source}</div>
+          <div class="variance ${varianceCls}">計畫 ${matrixPercentText(planPct)}｜實際 ${matrixPercentText(actualPct)}｜${varianceText}</div>
         </td>`;
 
-        const planCells=dualPrintTrackCells(
-          days,pageStart,pageEnd,
-          fromDateStr(s.startDate),fromDateStr(s.endDate),
-          'dgp-plan',''
-        );
-        const actualCells=dualPrintTrackCells(
-          days,pageStart,pageEnd,
-          actualStart,actualEnd,
-          actualCls,'尚無實際開始紀錄'
-        );
+        const planCells=dualPrintTrackCells(days,pageStart,pageEnd,planInfo.start,planInfo.end,'dgp-plan','尚未建立預定排程');
+        const actualCells=dualPrintTrackCells(days,pageStart,pageEnd,timeline.start,timeline.end,actualCls,'尚無矩陣更新時間');
 
         return `<tr style="height:4.7mm">${nameCell}<td class="dgp-track">預計</td>${planCells}</tr>
           <tr style="height:4.7mm"><td class="dgp-track">實際</td>${actualCells}</tr>`;
@@ -5357,38 +6419,28 @@ function buildDualGanttPrintHTML(proj,b){
       const pageNo=dayPageIndex*itemPages.length+itemPageIndex+1;
       pages.push(`<div class="dual-print-page">
         <div class="dgp-header">
-          <div>
-            <strong>${esc(proj.name)}｜${esc(b.name)}｜預計 vs 實際進度甘特圖</strong>
-            日期範圍：${days.length?toDateStr(pageStart)+' - '+toDateStr(pageEnd):'—'}　
-            列印時間：${esc(new Date().toLocaleString('zh-TW'))}
-          </div>
-          <div>第 ${pageNo} / ${totalPages} 頁${itemPages.length>1?`｜工項 ${itemPageIndex+1}/${itemPages.length}`:''}</div>
+          <div><strong>${esc(proj.name)}｜${esc(b.name)}｜預計 vs 實際進度甘特圖</strong>
+          日期範圍：${days.length?toDateStr(pageStart)+' - '+toDateStr(pageEnd):'—'}　列印時間：${esc(new Date().toLocaleString('zh-TW'))}</div>
+          <div>第 ${pageNo} / ${totalPages} 頁${itemPages.length>1?`｜工序 ${itemPageIndex+1}/${itemPages.length}`:''}</div>
         </div>
         <div class="dgp-summary">
-          <div class="dgp-summary-item"><span>目前計畫進度</span><b>${summary.avgPlan}%</b></div>
-          <div class="dgp-summary-item ${summary.variance>=0?'good':'bad'}"><span>目前實際進度</span><b>${summary.avgActual}%</b></div>
-          <div class="dgp-summary-item ${summary.variance>=0?'good':'bad'}"><span>進度差異</span><b>${summary.variance>0?'+':''}${summary.variance}%</b></div>
-          <div class="dgp-summary-item ${summary.lateCount?'bad':'good'}"><span>逾期未完成</span><b>${summary.lateCount}</b></div>
+          <div class="dgp-summary-item"><span>目前計畫進度</span><b>${matrixPercentText(summary.avgPlan)}</b></div>
+          <div class="dgp-summary-item ${summary.variance>=0?'good':'bad'}"><span>目前實際進度</span><b>${matrixPercentText(summary.avgActual)}</b></div>
+          <div class="dgp-summary-item ${summary.variance>=0?'good':'bad'}"><span>進度差異</span><b>${summary.variance>0?'+':''}${matrixPercentText(summary.variance)}</b></div>
+          <div class="dgp-summary-item ${summary.lateCount?'bad':'good'}"><span>逾期未完成工序</span><b>${summary.lateCount}</b></div>
         </div>
-        <div class="dgp-table-wrap">
-          <table class="dgp-table">
-            ${colgroup}
-            <thead>${dateHead}</thead>
-            <tbody>${body}</tbody>
-          </table>
-        </div>
+        <div class="dgp-table-wrap"><table class="dgp-table">${colgroup}<thead>${dateHead}</thead><tbody>${body}</tbody></table></div>
         <div class="dgp-legend">
-          <span><i class="plan"></i>預計工期</span>
-          <span><i style="background:#E97B2F"></i>實際進行中</span>
-          <span><i style="background:#1E8E5A"></i>實際完成</span>
+          <span><i class="plan"></i>預定排程</span>
+          <span><i style="background:#E97B2F"></i>矩陣實際進行</span>
+          <span><i style="background:#1E8E5A"></i>工序平均100%</span>
           <span><i style="background:#C6453A"></i>逾期未完成</span>
           <span><i style="background:#2E6EA6"></i>實際明顯超前</span>
-          <span>實際百分比由樓層／工序矩陣自動彙整</span>
+          <span>實際百分比等於矩陣最下方工序平均；時間取矩陣更新日期或人工調整日期</span>
         </div>
       </div>`);
     });
   });
-
   return pages.join('');
 }
 
@@ -5406,7 +6458,7 @@ function exportDualGanttPDF(){
 
   const html=targets.map(b=>buildDualGanttPrintHTML(proj,b)).filter(Boolean).join('');
   if(!html){
-    showToast('目前沒有可輸出的排程','error');
+    showToast('目前沒有可輸出的工序','error');
     return;
   }
 
@@ -5507,10 +6559,9 @@ function renderScheduleForm(){
             <div class="field"><label>預定開始日</label><input type="date" id="sched-start" value="${fs.startDate}" required></div>
             <div class="field"><label>預定完成日</label><input type="date" id="sched-end" value="${fs.endDate}" required></div>
           </div>
-          <div class="field-row">
-            <div class="field"><label>實際開始日（選填）</label><input type="date" id="sched-actual-start" value="${fs.actualStartDate||''}"><div class="hint">未填時，雙軌甘特圖會嘗試以第一筆進度回報日期推估。</div></div>
-            <div class="field"><label>實際完成日（選填，填寫後視為已完成）</label><input type="date" id="sched-actual" value="${fs.actualCompleteDate||''}"></div>
-          </div>
+          <input type="hidden" id="sched-actual-start" value="${fs.actualStartDate||''}">
+          <input type="hidden" id="sched-actual" value="${fs.actualCompleteDate||''}">
+          <div class="independent-config-note">工序的「實際甘特時間」已改由樓層／工序矩陣的第一筆與最後一筆更新日期自動建立。請在「預計 vs 實際」頁面拖曳下軌，或點擊下軌輸入實際日期。</div>
           <div class="field">
             <label>前置任務（需先完成才能施作此項目；沒有勾選代表可與其他項目並行作業）</label>
             <div class="chip-group">${depChips}</div>
@@ -6069,6 +7120,7 @@ function addProcess(e){
   e.preventDefault();const proj=settingsProject(),b=settingsBuilding(),name=document.getElementById('new-process').value.trim();
   if(!name)return false;if(buildingProcesses(proj,b).some(x=>x.name===name)){showToast('本棟已有相同工序','error');return false;}
   const pr={id:uid('pr'),name,groupId:null};proj.processes.push(pr);b.processIds.push(pr.id);ensureGanttSubprocessStore(proj)[pr.id]=[];
+  b.matrixProcessWeights=equalMatrixWeights(buildingProcesses(proj,b));
   scheduleSave();renderSettingsModal();return false;
 }
 function deleteProcess(id){
@@ -6081,7 +7133,10 @@ function deleteProcess(id){
   const removed=new Set(proj.schedules.filter(s=>s.buildingId===b.id&&s.processId===id).map(s=>s.id));
   proj.schedules=proj.schedules.filter(s=>!(s.buildingId===b.id&&s.processId===id));
   proj.schedules.forEach(s=>s.dependsOn=(s.dependsOn||[]).filter(x=>!removed.has(x)));
-  delete proj.ganttSubprocessesByProcess[id];scheduleSave();renderSettingsModal();
+  delete proj.ganttSubprocessesByProcess[id];
+  if(b.actualGanttOverrides) delete b.actualGanttOverrides[id];
+  b.matrixProcessWeights=normalizedMatrixWeights(buildingProcesses(proj,b),b.matrixProcessWeights||{});
+  scheduleSave();renderSettingsModal();
 }
 function moveProcess(id,dir){
   const b=settingsBuilding(),idx=b.processIds.indexOf(id),ni=idx+dir;if(idx<0||ni<0||ni>=b.processIds.length)return;
