@@ -2042,6 +2042,24 @@ table.matrix th.matrix-process-head{
   line-height:1.65;
 }
 
+/* ---------- EF 棟 3D 包版整合 ---------- */
+.panel3d-page{display:flex;flex-direction:column;gap:12px;min-height:calc(100vh - 116px);}
+.panel3d-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:15px 17px;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(135deg,#fff,#F1F6F7);box-shadow:var(--shadow-sm);}
+.panel3d-head h2{margin:0;color:var(--navy);font-size:19px;}
+.panel3d-head p{margin:5px 0 0;color:var(--ink-mute);font-size:11.5px;line-height:1.65;}
+.panel3d-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;}
+.panel3d-note{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid #C7DCEA;border-radius:9px;background:#EDF5FA;color:#31566E;font-size:10.5px;line-height:1.55;}
+.panel3d-note b{color:var(--navy);}
+.panel3d-frame-wrap{position:relative;flex:1;min-height:720px;overflow:hidden;border:1px solid var(--line-strong);border-radius:14px;background:#E8EEF0;box-shadow:var(--shadow);}
+.panel3d-frame{display:block;width:100%;height:100%;min-height:720px;border:0;background:#E8EEF0;}
+@media(max-width:760px){
+  .panel3d-page{min-height:calc(100vh - 154px);}
+  .panel3d-head{align-items:stretch;flex-direction:column;padding:12px;}
+  .panel3d-actions{justify-content:stretch;}
+  .panel3d-actions .btn{flex:1;justify-content:center;}
+  .panel3d-frame-wrap,.panel3d-frame{min-height:calc(100vh - 285px);}
+}
+
 </style>
 </head>
 <body>
@@ -3860,6 +3878,7 @@ function render(){
 function renderViewContent(proj){
   switch(state.view){
     case 'home': return renderHome();
+    case 'panel3d': return renderPanel3D(proj);
     case 'handover': return renderHandover(proj);
     case 'buildings': return renderBuildingBoard(proj);
     case 'matrix': return renderMatrix(proj);
@@ -3875,6 +3894,7 @@ function renderMobileNav(){
   const items = [
     {v:'home', ico:ICO.home, label:'首頁'},
     {v:'actual', ico:ICO.grid, label:'實況'},
+    {v:'panel3d', ico:ICO.building, label:'3D包版'},
     {v:'schedule', ico:ICO.gantt, label:'甘特'},
     {v:'records', ico:ICO.list, label:'日誌'},
     {v:'tasks', ico:ICO.clipboard, label:'代辦'},
@@ -3915,6 +3935,7 @@ function renderSidebar(){
       <div class="sidebar-nav-title">現場控制</div>
       ${navBtn('home',ICO.home,'控制台')}
       ${navBtn('actual',ICO.grid,'案件實際進度')}
+      ${navBtn('panel3d',ICO.building,'EF 棟 3D 包版')}
       ${navBtn('matrix',ICO.grid,'樓層／工序矩陣')}
       ${navBtn('records',ICO.list,'施作日誌／紀錄')}
       ${navBtn('photos',ICO.camera,'工程照片')}
@@ -3949,8 +3970,8 @@ function renderTopbar(proj){
     <button class="building-chip ${x.id===state.activeBuildingId?'active':''}" onclick="selectBuilding('${x.id}')">
       ${esc(x.name)}<span class="bc-edit" onclick="event.stopPropagation();openEditBuildingModal('${x.id}')" title="編輯棟別">${ICO.edit}</span>
     </button>`).join('');
-  const titleMap = {home:'控制台', handover:'專案內容／交接', buildings:'棟別進度看板', matrix:'樓層／工序矩陣', actual:'案件實際進度', schedule:'預計進度甘特圖', records:'施作日誌／紀錄', tasks:'日期代辦與提醒', photos:'工程照片'};
-  const subMap = {home:'跨案場風險、今日工作與進度差異', handover:'聯絡人、工班、置料與交接重點', buildings:'各棟總進度與目前施工階段', matrix:'快速查看各樓層工序完成度', actual:'樓層 × 位置 × 施工階段', schedule:'保留原甘特圖，並可切換預計 vs 實際雙軌比較', records:'依日期與關鍵字查詢施工回報', tasks:'自訂日期事件、排程、卡點與截止日集中管理', photos:'依案場位置與工序整理施工照片'};
+  const titleMap = {home:'控制台', panel3d:'EF 棟 3D 包版', handover:'專案內容／交接', buildings:'棟別進度看板', matrix:'樓層／工序矩陣', actual:'案件實際進度', schedule:'預計進度甘特圖', records:'施作日誌／紀錄', tasks:'日期代辦與提醒', photos:'工程照片'};
+  const subMap = {home:'跨案場風險、今日工作與進度差異', panel3d:'包版編號、安裝狀態與 1.5 cm 矽膠縫追蹤', handover:'聯絡人、工班、置料與交接重點', buildings:'各棟總進度與目前施工階段', matrix:'快速查看各樓層工序完成度', actual:'樓層 × 位置 × 施工階段', schedule:'保留原甘特圖，並可切換預計 vs 實際雙軌比較', records:'依日期與關鍵字查詢施工回報', tasks:'自訂日期事件、排程、卡點與截止日集中管理', photos:'依案場位置與工序整理施工照片'};
   const modeKey = state.view==='matrix' ? 'matrixMode' : (state.view==='schedule' ? 'ganttMode' : null);
   const curMode = modeKey ? state[modeKey] : null;
   const modeToggle = modeKey ? `<div class="mode-toggle"><button class="${curMode==='single'?'active':''}" onclick="setScopeMode('${modeKey}','single')">單棟</button><button class="${curMode==='all'?'active':''}" onclick="setScopeMode('${modeKey}','all')">全棟</button></div>` : '';
@@ -3965,7 +3986,7 @@ function renderTopbar(proj){
       </div>
       <div class="command-scope">${showBuildings && curMode!=='all' ? bChips : ''}</div>
       <div class="command-actions">
-        ${state.view!=='home' ? `<button class="btn btn-ghost" onclick="openSettingsModal('processes','${proj.id}','${currentBuilding()?.id||''}')">${ICO.gear} 編輯目前棟工序及部位</button>` : ''}
+        ${!['home','panel3d'].includes(state.view) ? `<button class="btn btn-ghost" onclick="openSettingsModal('processes','${proj.id}','${currentBuilding()?.id||''}')">${ICO.gear} 編輯目前棟工序及部位</button>` : ''}
         <button class="btn btn-ghost" onclick="manualRefresh()">${ICO.refresh} 更新</button>
         <button class="btn btn-primary" onclick="openQuickAddModal()">${ICO.plus} 快速回報</button>
       </div>
@@ -3996,7 +4017,7 @@ document.addEventListener('pointerup', ()=>{ navPointerStart=null; }, true);
 let navSwitchLock = false;
 function setView(v){
   if(Date.now() < navBlockedUntil || navSwitchLock) return;
-  const validViews = ['home','handover','buildings','matrix','actual','schedule','records','tasks','photos'];
+  const validViews = ['home','panel3d','handover','buildings','matrix','actual','schedule','records','tasks','photos'];
   if(!validViews.includes(v)) return;
 
   if(state.view===v){
@@ -4014,6 +4035,35 @@ function setView(v){
   render();
   setTimeout(()=>{ navSwitchLock=false; }, 260);
 }
+
+const PANEL3D_URL = 'https://ef-panel-tracker.j32272.chatgpt.site/';
+function reloadPanel3D(){
+  const frame = document.getElementById('panel3d-frame');
+  if(frame){ frame.src = PANEL3D_URL; showToast('正在重新載入 3D 包版'); }
+}
+function openPanel3DFullscreen(){
+  window.open(PANEL3D_URL, '_blank', 'noopener,noreferrer');
+}
+function renderPanel3D(proj){
+  return `
+  <section class="panel3d-page">
+    <div class="panel3d-head">
+      <div>
+        <h2>EF 棟 3D 包版施工追蹤</h2>
+        <p>目前案場：${esc(proj.name)}。在同一個 APP 內管理各樓層包版編號、已安裝／需調整狀態，以及四邊 1.5 cm 矽膠施工進度。</p>
+      </div>
+      <div class="panel3d-actions">
+        <button class="btn" onclick="reloadPanel3D()">${ICO.refresh} 重新載入</button>
+        <button class="btn btn-primary" onclick="openPanel3DFullscreen()">另開全螢幕</button>
+      </div>
+    </div>
+    <div class="panel3d-note"><b>整合模式</b><span>3D 工具已嵌入本 APP；若畫面要求登入，請先登入後重新載入，手機上也可使用「另開全螢幕」。</span></div>
+    <div class="panel3d-frame-wrap">
+      <iframe id="panel3d-frame" class="panel3d-frame" src="${PANEL3D_URL}" title="EF 棟 3D 包版施工追蹤" loading="lazy" allowfullscreen></iframe>
+    </div>
+  </section>`;
+}
+
 function selectProject(id){
   state.activeProjectId=id;
   const p=currentProject();
